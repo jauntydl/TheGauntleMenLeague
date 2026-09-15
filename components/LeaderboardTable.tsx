@@ -96,8 +96,10 @@ const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: B
   killsPerMatch: { icon: '💀', detail: (r) => `kills — ${r.killsPerMatch?.toFixed(1)} per match` },
   spm: { icon: '⭐', detail: (r) => `score — ${fmtInt(Math.round(r.spm ?? 0))} per minute` },
   objPtsPerHour: {
-    icon: '🚩',
-    detail: (r) => `objective work — ${r.objPtsPerHour?.toFixed(0)} points per hour`,
+    // A flag read as "captured a point". This is the carry badge — the player
+    // doing the work the round is actually decided on — so it lifts instead.
+    icon: '🏋️',
+    detail: (r) => `carrying the objective — ${r.objPtsPerHour?.toFixed(0)} points per hour`,
   },
   revivesPerHour: {
     icon: <MedicCross />,
