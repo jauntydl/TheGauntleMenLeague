@@ -98,13 +98,20 @@ quietly disagree with the code. Set 2026-09-15.
 
 | Weight | Metric | Why |
 |---|---|---|
-| 30% | Win rate | Last squad standing is the whole point of the mode |
-| 20% | Objective points per hour | Gauntlet eliminates squads on objectives; unlike a win it is attributable to one player |
+| 35% | Win rate | Last squad standing is the whole point of the mode |
+| 15% | Objective points per hour | Gauntlet eliminates squads on objectives; unlike a win it is attributable to one player |
 | 12% | K/D | Staying alive matters when dying ends your squad's round |
 | 12% | Kills per **minute** | Per-minute, not per-match — see below |
 | 12% | Score per minute | Picks up the spotting and support work no other field sees |
 | 10% | Revives per hour | Picking people up keeps a squad in the bracket |
 | 4% | Damage per minute | Already counted once inside the kills it sets up |
+
+The board mirrors the weights: the rated columns sit together straight after
+the player, ordered heaviest first, with their headers lit in amber and a
+legend above the table saying so. `RATED_FIELDS` in `components/LeaderboardTable.tsx`
+derives that set from `RATING_WEIGHTS`, and tests assert both the set and the
+order — so retuning a weight moves the columns and the marking with it, and a
+hand-kept list cannot drift.
 
 **Objective points are Kricked's formula**, from the community spreadsheet,
 used as written: `0.1 × seconds on objective + 10 × destroyed + 5 × disarmed +

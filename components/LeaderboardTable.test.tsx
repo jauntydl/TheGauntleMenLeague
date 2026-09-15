@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LeaderboardTable, fmtPct, fmtNum, fmtHours, fmtInt, badges } from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
-import { STANDOUT_TRAITS } from '@/lib/rating';
+import { RATING_WEIGHTS, STANDOUT_TRAITS } from '@/lib/rating';
 
 const row = (over: Partial<BoardRow>): BoardRow => {
   const base: BoardRow = {
@@ -219,6 +219,40 @@ describe('LeaderboardTable', () => {
       Object.defineProperty(window, 'matchMedia', { writable: true, configurable: true, value: original });
     }
   };
+
+  it('marks exactly the rated columns in the header, and no others', () => {
+    // Derived from RATING_WEIGHTS on both sides, so this cannot be satisfied
+    // by a hand-kept list drifting alongside the weights. It asserts the set
+    // is exact: a context column picking up the marking would claim to feed
+    // the rating when it does not.
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Marked' })]} />);
+      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
+        .map((el) => el.getAttribute('data-field'));
+      expect(new Set(marked)).toEqual(new Set(Object.keys(RATING_WEIGHTS)));
+    });
+  });
+
+  it('orders the rated columns by weight, heaviest first', () => {
+    // The legend promises "heaviest first". This is what makes that true.
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Ordered' })]} />);
+      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
+        .map((el) => el.getAttribute('data-field') as keyof typeof RATING_WEIGHTS);
+      const byWeight = [...marked].sort((a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a]);
+      expect(marked).toEqual(byWeight);
+    });
+  });
+
+  it('says what the marking means and links to the explanation', () => {
+    // Colour alone tells a reader these columns differ, not why.
+    render(<LeaderboardTable rows={[row({ displayName: 'Legend' })]} />);
+    expect(screen.getByText(/Rating is built from, heaviest first/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /how the rating works/i })).toHaveAttribute(
+      'href',
+      '/rating',
+    );
+  });
 
   it('shows only rank, player, rating and win rate on a phone', () => {
     // A 400px phone has roughly 368px usable. These four total 324px; adding

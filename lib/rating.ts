@@ -3,8 +3,8 @@ import type { BoardRow } from './types';
 /**
  * How much each metric contributes to the overall rating.
  *
- * Winning leads at 30% because it is the actual goal, with objective work
- * just behind at 20%. Gauntlet eliminates squads on objective points, so the
+ * Winning leads at 35% because it is the actual goal, with objective work
+ * behind it at 15%. Gauntlet eliminates squads on objective points, so the
  * rate at which someone does that work is the nearest thing to the win that is
  * attributable to one player — a win is shared with three teammates, an
  * objective held is not.
@@ -22,8 +22,8 @@ import type { BoardRow } from './types';
  * already measures. Kills per match keeps its badge; see STANDOUT_TRAITS.
  */
 export const RATING_WEIGHTS = {
-  winPct: 0.3,
-  objPtsPerHour: 0.2,
+  winPct: 0.35,
+  objPtsPerHour: 0.15,
   kd: 0.12,
   kpm: 0.12,
   spm: 0.12,

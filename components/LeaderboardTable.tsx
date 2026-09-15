@@ -3,14 +3,22 @@
 import * as React from 'react';
 import { DataGrid, type GridColDef, type GridComparatorFn, type GridSortDirection } from '@mui/x-data-grid';
 import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
-import type { StandoutTrait } from '@/lib/rating';
+import { RATING_WEIGHTS, type StandoutTrait } from '@/lib/rating';
 
 const DASH = '—';
+
+/**
+ * The columns that feed the Rating, marked in the header so the board shows
+ * its own working. Derived from RATING_WEIGHTS rather than listed here: a
+ * hand-kept copy would quietly start lying the first time a weight moved.
+ */
+const RATED_FIELDS: ReadonlySet<string> = new Set(Object.keys(RATING_WEIGHTS));
 
 // Grids with 100 rows or fewer show every row without paging, so the footer
 // (page size / page controls) has nothing useful to control — hide it.
@@ -302,19 +310,77 @@ export function LeaderboardTable({
           );
         },
       },
-      { field: 'matches', headerName: 'M', width: 70 },
-      {
-        field: 'record',
-        headerName: 'W–L',
-        width: 84,
-        valueGetter: (_v, r) => `${r.wins}–${r.losses}`,
-      },
+      // The rated columns come first, in descending weight, so reading left to
+      // right walks the rating from its largest component to its smallest —
+      // and the seven that produce the Rating sit together instead of being
+      // interleaved with the volume stats. Keep this order in step with
+      // RATING_WEIGHTS; if a weight is retuned, the columns move with it.
       {
         field: 'winPct',
         headerName: 'Win %',
         width: 84,
         renderCell: (p) => fmtPct(p.row.winPct),
         getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'objPtsPerHour',
+        headerName: 'OBJ/h',
+        width: 88,
+        description:
+          'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
+        renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
+        getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'kd',
+        headerName: 'K/D',
+        width: 80,
+        renderCell: (p) => fmtNum(p.row.kd),
+        getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'kpm',
+        headerName: 'KPM',
+        width: 80,
+        // Spelled out because K/match is also on the board and both start
+        // with K — they no longer sit side by side, which makes the tooltip
+        // more load-bearing rather than less.
+        description: 'Kills per minute',
+        renderCell: (p) => fmtNum(p.row.kpm),
+        getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'spm',
+        headerName: 'SPM',
+        width: 84,
+        description: 'Score per minute',
+        renderCell: (p) => fmtNum(p.row.spm, 0),
+        getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'revivesPerHour',
+        headerName: 'Rev/h',
+        width: 84,
+        description: 'Revives per hour played',
+        renderCell: (p) => fmtNum(p.row.revivesPerHour, 1),
+        getSortComparator: nullsLastComparator,
+      },
+      {
+        field: 'dpm',
+        headerName: 'DPM',
+        width: 84,
+        renderCell: (p) => fmtNum(p.row.dpm, 0),
+        getSortComparator: nullsLastComparator,
+      },
+
+      // Everything below here is context, not rating input: volume, record and
+      // the two counts the rating deliberately does not read.
+      { field: 'matches', headerName: 'M', width: 70 },
+      {
+        field: 'record',
+        headerName: 'W–L',
+        width: 84,
+        valueGetter: (_v, r) => `${r.wins}–${r.losses}`,
       },
       {
         field: 'kills',
@@ -330,69 +396,24 @@ export function LeaderboardTable({
         renderCell: (p) => fmtInt(p.row.headshots),
       },
       {
-        field: 'kd',
-        headerName: 'K/D',
-        width: 80,
-        renderCell: (p) => fmtNum(p.row.kd),
-        getSortComparator: nullsLastComparator,
-      },
-      {
         field: 'killsPerMatch',
         headerName: 'K/match',
         width: 84,
-        description: 'Kills per match',
+        description: 'Kills per match — earns a badge, but is not part of the rating',
         renderCell: (p) => fmtNum(p.row.killsPerMatch, 1),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'kpm',
-        headerName: 'KPM',
-        width: 80,
-        // Spelled out because K/match sits next to it and both start with K.
-        description: 'Kills per minute',
-        renderCell: (p) => fmtNum(p.row.kpm),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'dpm',
-        headerName: 'DPM',
-        width: 84,
-        renderCell: (p) => fmtNum(p.row.dpm, 0),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'spm',
-        headerName: 'SPM',
-        width: 84,
-        description: 'Score per minute',
-        renderCell: (p) => fmtNum(p.row.spm, 0),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'objPtsPerHour',
-        headerName: 'OBJ/h',
-        width: 88,
-        description:
-          'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
-        renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'revivesPerHour',
-        headerName: 'Rev/h',
-        width: 84,
-        description: 'Revives per hour played',
-        renderCell: (p) => fmtNum(p.row.revivesPerHour, 1),
         getSortComparator: nullsLastComparator,
       },
       { field: 'timeSec', headerName: 'Time', width: 84, renderCell: (p) => fmtHours(p.row.timeSec) },
     ];
 
     // Alignment applied in one place rather than on fifteen definitions.
+    // headerClassName lands after the spread so a column cannot opt out of
+    // being marked as rated by setting its own.
     return base.map((c) => ({
       align: COLUMN_ALIGN[c.field] ?? 'center',
       headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
       ...c,
+      headerClassName: RATED_FIELDS.has(c.field) ? 'rated-col' : undefined,
     }));
   }, [isNarrow]);
 
@@ -411,15 +432,15 @@ export function LeaderboardTable({
       sniperPct: !isNarrow,
       kd: !isNarrow,
       killsPerMatch: !isNarrow,
+      // Objective work is the second-heaviest part of the rating, so it earns
+      // a place alongside them rather than with the supporting rates.
+      objPtsPerHour: !isNarrow,
       // Only on a wide screen: the supporting detail.
       kills: !isMedium,
       headshots: !isMedium,
       kpm: !isMedium,
       dpm: !isMedium,
       spm: !isMedium,
-      // Objective work is a quarter of the rating, so it earns a place a step
-      // earlier than the other supporting rates.
-      objPtsPerHour: !isNarrow,
       revivesPerHour: !isMedium,
       timeSec: !isMedium,
     }),
@@ -435,7 +456,25 @@ export function LeaderboardTable({
   }
 
   return (
-    <DataGrid
+    <Box>
+      {/* The marking on the headers is only half an explanation — it says
+          these columns are different without saying why. This says why, and
+          points at the page carrying the weights. */}
+      <Typography
+        variant="caption"
+        component="p"
+        sx={{ mb: 0.75, color: 'text.secondary', letterSpacing: '0.04em' }}
+      >
+        Columns in{' '}
+        <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
+          amber
+        </Box>{' '}
+        are the ones the Rating is built from, heaviest first.{' '}
+        <Link href="/rating" sx={{ color: 'secondary.main' }}>
+          How the rating works
+        </Link>
+      </Typography>
+      <DataGrid
       rows={rows}
       columns={columns}
       getRowId={(r) => r.eaId}
@@ -474,6 +513,18 @@ export function LeaderboardTable({
           letterSpacing: '0.06em',
           color: 'text.secondary',
         },
+        // Rated columns are lit in the panel amber and underscored, so the
+        // seven that produce the Rating read as a group at a glance and the
+        // context columns visibly are not. The legend above the table says
+        // what the marking means — colour alone would only tell someone that
+        // these columns are different, not why.
+        '& .MuiDataGrid-columnHeader.rated-col': {
+          boxShadow: 'inset 0 -2px 0 rgba(255,176,32,0.85)',
+        },
+        '& .MuiDataGrid-columnHeader.rated-col .MuiDataGrid-columnHeaderTitle': {
+          color: 'primary.main',
+          fontWeight: 700,
+        },
         // A scanning highlight rather than a card hover: the row lights up
         // along its leading edge, like a selected line on an instrument panel.
         '& .MuiDataGrid-row:hover': {
@@ -483,6 +534,7 @@ export function LeaderboardTable({
         '& .MuiDataGrid-footerContainer': { borderColor: 'divider' },
         '& .MuiDataGrid-columnSeparator': { color: 'rgba(27,38,52,0.9)' },
       }}
-    />
+      />
+    </Box>
   );
 }
