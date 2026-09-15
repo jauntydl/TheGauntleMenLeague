@@ -3,13 +3,18 @@ import type { BoardRow } from './types';
 /**
  * How much each metric contributes to the overall rating.
  *
- * Winning is half the rating because it is the actual goal. The other half
- * splits across the ways a player earns it. Three carry equal weight: staying
- * alive (K/D), killing at a rate a long match cannot inflate (kills per
- * minute), and score per minute, which is the only counter that picks up the
- * objective play, spotting and support work no other field here sees.
- * Reviving is just under them. Damage stays a token weight because it is
- * already counted once inside the kills it sets up.
+ * Winning leads at 30% because it is the actual goal, with objective work
+ * just behind at 20%. Gauntlet eliminates squads on objective points, so the
+ * rate at which someone does that work is the nearest thing to the win that is
+ * attributable to one player — a win is shared with three teammates, an
+ * objective held is not.
+ *
+ * The remaining half splits across how a player fights. Three carry equal
+ * weight: staying alive (K/D), killing at a rate a long match cannot inflate
+ * (kills per minute), and score per minute, which picks up the spotting and
+ * support work no other field here sees. Reviving is just under them. Damage
+ * stays a token weight because it is already counted once inside the kills it
+ * sets up.
  *
  * Kills per minute rather than kills per match: every other rate in the
  * rating is per unit of time, and a Gauntlet match has no fixed length, so
@@ -17,7 +22,8 @@ import type { BoardRow } from './types';
  * already measures. Kills per match keeps its badge; see STANDOUT_TRAITS.
  */
 export const RATING_WEIGHTS = {
-  winPct: 0.5,
+  winPct: 0.3,
+  objPtsPerHour: 0.2,
   kd: 0.12,
   kpm: 0.12,
   spm: 0.12,
@@ -47,6 +53,7 @@ export const STANDOUT_TRAITS = [
   'kd',
   'killsPerMatch',
   'spm',
+  'objPtsPerHour',
   'revivesPerHour',
   'sniperPerMatch',
   'autoPerMatch',

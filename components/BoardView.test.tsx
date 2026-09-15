@@ -9,7 +9,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', platform: 'pc', region: 'NA West', mainMode: 'gauntlet',
   matches: 20, wins: 10, losses: 10, kills: 100, headshots: 25, deaths: 50, damage: 1000,
   assists: 0, revives: 0, score: 42000, timeSec: 3600,
-  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
+  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
   ...over,
   // The Player column shows the in-game id, so fixtures are named by it.
   displayName: over.displayName ?? over.eaId ?? 'X',

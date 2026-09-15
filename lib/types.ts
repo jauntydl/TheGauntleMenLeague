@@ -72,8 +72,17 @@ export type Metrics = {
   /** Per hour, not per minute: revives are rare enough that a per-minute rate
    *  reads as 0.0x for everyone. */
   /** Objective plays per match: armed + defended + destroyed + disarmed.
-   *  Not a column — it feeds the rating, which is what Gauntlet scores on. */
+   *  Superseded by objPtsPerHour and read by nothing — kept only because it is
+   *  already in the committed JSON. Do not add it to the rating. */
   objPerMatch: number | null;
+  /** Weighted objective points: 0.1/sec on the objective + 10 per destroyed +
+   *  5 per disarmed + 3 per intel pickup. */
+  objPts: number;
+  /** Objective points per hour played. Per hour, not per match, because
+   *  Gauntlet match length varies — winning squads play more rounds, so a
+   *  per-match average flatters them for their team's depth rather than their
+   *  own rate of objective work. */
+  objPtsPerHour: number | null;
   revivesPerHour: number | null;
   /** Overall rating, 0-100, percentile-weighted against the ranked field. */
   rating: number | null;

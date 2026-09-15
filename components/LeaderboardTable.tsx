@@ -95,6 +95,10 @@ const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: B
   kd: { icon: '🛡️', detail: (r) => `K/D — ${r.kd?.toFixed(2)}` },
   killsPerMatch: { icon: '💀', detail: (r) => `kills — ${r.killsPerMatch?.toFixed(1)} per match` },
   spm: { icon: '⭐', detail: (r) => `score — ${fmtInt(Math.round(r.spm ?? 0))} per minute` },
+  objPtsPerHour: {
+    icon: '🚩',
+    detail: (r) => `objective work — ${r.objPtsPerHour?.toFixed(0)} points per hour`,
+  },
   revivesPerHour: {
     icon: <MedicCross />,
     detail: (r) => `revives — ${r.revivesPerHour?.toFixed(1)} per hour`,
@@ -363,6 +367,15 @@ export function LeaderboardTable({
         getSortComparator: nullsLastComparator,
       },
       {
+        field: 'objPtsPerHour',
+        headerName: 'OBJ/h',
+        width: 88,
+        description:
+          'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
+        renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
+        getSortComparator: nullsLastComparator,
+      },
+      {
         field: 'revivesPerHour',
         headerName: 'Rev/h',
         width: 84,
@@ -402,6 +415,9 @@ export function LeaderboardTable({
       kpm: !isMedium,
       dpm: !isMedium,
       spm: !isMedium,
+      // Objective work is a quarter of the rating, so it earns a place a step
+      // earlier than the other supporting rates.
+      objPtsPerHour: !isNarrow,
       revivesPerHour: !isMedium,
       timeSec: !isMedium,
     }),

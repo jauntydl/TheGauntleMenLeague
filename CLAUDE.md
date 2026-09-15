@@ -98,12 +98,22 @@ quietly disagree with the code. Set 2026-09-15.
 
 | Weight | Metric | Why |
 |---|---|---|
-| 50% | Win rate | Last squad standing is the whole point of the mode |
+| 30% | Win rate | Last squad standing is the whole point of the mode |
+| 20% | Objective points per hour | Gauntlet eliminates squads on objectives; unlike a win it is attributable to one player |
 | 12% | K/D | Staying alive matters when dying ends your squad's round |
 | 12% | Kills per **minute** | Per-minute, not per-match — see below |
-| 12% | Score per minute | The only counter that sees objective play, spotting and support |
+| 12% | Score per minute | Picks up the spotting and support work no other field sees |
 | 10% | Revives per hour | Picking people up keeps a squad in the bracket |
 | 4% | Damage per minute | Already counted once inside the kills it sets up |
+
+**Objective points are Kricked's formula**, from the community spreadsheet,
+used as written: `0.1 × seconds on objective + 10 × destroyed + 5 × disarmed +
+3 × intel pickups`, divided by hours played. Credit the source if the
+coefficients are ever retuned. Per hour rather than per match because Gauntlet
+is an elimination format — winning squads play more rounds, so a per-match
+average measures how deep the team went rather than the player's own rate.
+Kricked's sheet runs this over lifetime totals; the board runs it per season
+like every other stat, so the figures will not match the sheet one-for-one.
 
 Scoring is **percentile against the season's ranked field**, not a points
 formula — the units aren't comparable (a 3.0 K/D and 420 DPM), and any

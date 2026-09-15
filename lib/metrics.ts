@@ -55,8 +55,31 @@ export function computeMetrics(slice: StatSlice): Metrics {
   const minutes = timeSec / 60;
   const hours = timeSec / 3600;
 
-  // Objective plays. Gauntlet eliminates squads on objective points, so this
-  // feeds the rating even though it is not shown as its own column.
+  // Weighted objective points. Gauntlet eliminates squads on objective points,
+  // so this is the closest thing to measuring the work that actually decides a
+  // round.
+  //
+  // The formula and its coefficients are **Kricked's**, from the community
+  // spreadsheet, and are used as written: a tenth of a point per second held,
+  // ten per objective destroyed, five per disarm, three per intel pickup. They
+  // are an editorial judgement, not anything the API reports — if they are ever
+  // retuned, credit the source of the change too.
+  //
+  // Kricked's sheet computes this over lifetime Gauntlet totals. The board is
+  // per-season like every other stat here, so the same formula runs against a
+  // season slice and the figures will not match the sheet one-for-one.
+  //
+  // Every input is read from its mode-suffixed field, and this matters as much
+  // here as anywhere: Obj_Time_Total reads 2018 against a true
+  // obj_time_gm_gntgauntlet of 4405 in the same Season 4 slice.
+  const objPts =
+    0.1 * num(slice, 'obj_time_gm_gntgauntlet') +
+    10 * num(slice, 'obj_destroyed_gm_gntgauntlet') +
+    5 * num(slice, 'obj_disarmed_gm_gntgauntlet') +
+    3 * num(slice, 'intel_pickup_gm_gntgauntlet');
+
+  // Superseded by the weighted objective points below, and read by nothing.
+  // Kept only because it is already in the committed JSON.
   const objActions =
     num(slice, 'obj_armed_gm_gntgauntlet') +
     num(slice, 'obj_defended_gm_gntgauntlet') +
@@ -112,6 +135,11 @@ export function computeMetrics(slice: StatSlice): Metrics {
     // the remaining rating weights renormalise instead.
     spm: minutes > 0 && score > 0 ? score / minutes : null,
     objPerMatch: matches > 0 ? objActions / matches : null,
+    objPts,
+    // Null rather than 0 when the counters are absent, for the same reason spm
+    // is: the objective fields are mode counters and start at Season 3, and a
+    // fabricated zero would sit that player at the bottom of a 25% percentile.
+    objPtsPerHour: hours > 0 && objPts > 0 ? objPts / hours : null,
     revivesPerHour: hours > 0 ? revives / hours : null,
     // Both filled in by rateAll once the whole field is known.
     rating: null,

@@ -44,6 +44,13 @@ const scoreSlice: StatSlice = {
   tp_gm_gntgauntlet: 76182,
   kills_gm_gntgauntlet: 1026,
   scorein_gm_gntgauntlet: 979385,
+  obj_time_gm_gntgauntlet: 4405,
+  obj_destroyed_gm_gntgauntlet: 20,
+  obj_disarmed_gm_gntgauntlet: 4,
+  intel_pickup_gm_gntgauntlet: 119,
+  // The rollup that sits beside obj_time in the same slice and disagrees with
+  // it. Real: 2018 against a true 4405.
+  Obj_Time_Total: 2018,
 };
 
 describe('computeMetrics', () => {
@@ -203,6 +210,29 @@ describe('computeMetrics', () => {
     const m = computeMetrics(chaseSlice);
     expect(m.score).toBe(0);
     expect(m.spm).toBeNull();
+  });
+
+  it('weights objective points and rates them per hour', () => {
+    // 0.1*4405 + 10*20 + 5*4 + 3*119 = 440.5 + 200 + 20 + 357 = 1017.5
+    const m = computeMetrics(scoreSlice);
+    expect(m.objPts).toBeCloseTo(1017.5, 6);
+    // Per hour, not per match: Gauntlet match length varies with how deep the
+    // squad went, so a per-match average would flatter winning teams.
+    expect(m.objPtsPerHour).toBeCloseTo(1017.5 / (76182 / 3600), 6);
+  });
+
+  it('reads objective time from the mode counter, not Obj_Time_Total', () => {
+    // scoreSlice carries Obj_Time_Total = 2018 against obj_time = 4405. Reading
+    // the rollup would knock 238.7 points off the total.
+    const m = computeMetrics(scoreSlice);
+    expect(m.objPts).not.toBeCloseTo(0.1 * 2018 + 200 + 20 + 357, 3);
+  });
+
+  it('reports no objective rate when the counters are absent', () => {
+    // Objective counters are mode counters, so they start at Season 3 too.
+    const m = computeMetrics(chaseSlice);
+    expect(m.objPts).toBe(0);
+    expect(m.objPtsPerHour).toBeNull();
   });
 
   it('reports the weapon mix as a share of weapon kills', () => {

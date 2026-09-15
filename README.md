@@ -13,8 +13,10 @@ page-load time.
 
 ## Ranking
 
-Ranked on an overall **rating** out of 100: win rate 50%, K/D 12%, kills per
-minute 12%, score per minute 12%, revives per hour 10%, damage per minute 4%.
+Ranked on an overall **rating** out of 100: win rate 30%, objective points per
+hour 20%, K/D 12%, kills per minute 12%, score per minute 12%, revives per hour
+10%, damage per minute 4%. The objective formula is Kricked's, from the
+community spreadsheet.
 Each part scores you by where you sit among everyone else ranked that season,
 so the rating needs no invented coefficients — and it moves when other people
 play. You need at least **30 matches** in a season to be ranked; below that you

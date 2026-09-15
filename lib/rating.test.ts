@@ -6,7 +6,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 50, wins: 25, losses: 25, kills: 100, headshots: 25, deaths: 50, damage: 1000,
   assists: 0, revives: 0, score: 42000, timeSec: 3600,
-  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5,
+  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60,
   revivesPerHour: 3, rating: null, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: null,
   ...over,
 });
@@ -35,22 +35,28 @@ describe('rateAll', () => {
     // The invariant, not the figure: winning outweighs anything else, and the
     // weights total one so the explainer's percentages add up on the page.
     const weights = Object.values(RATING_WEIGHTS);
+    // Winning leads outright; objective work is second and nothing else comes
+    // near either of them.
     expect(RATING_WEIGHTS.winPct).toBe(Math.max(...weights));
+    expect(RATING_WEIGHTS.objPtsPerHour).toBeLessThan(RATING_WEIGHTS.winPct);
+    expect(RATING_WEIGHTS.objPtsPerHour).toBe(
+      Math.max(...weights.filter((w) => w !== RATING_WEIGHTS.winPct)),
+    );
     expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
   });
 
-  it('rates the six metrics the explainer promises, and nothing else', () => {
+  it('rates the seven metrics the explainer promises, and nothing else', () => {
     // Pinned as a list, not just as a sum: dropping a metric or slipping an
     // unrated one in would otherwise still total 1 and pass silently.
     expect(Object.keys(RATING_WEIGHTS)).toEqual([
-      'winPct', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
+      'winPct', 'objPtsPerHour', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
   });
 
   it('scores a stronger player above a weaker one', () => {
     const [weak, strong] = rateAll([
-      row({ eaId: 'weak', winPct: 20, kd: 1, kpm: 0.4, dpm: 5, spm: 200, objPerMatch: 0.2, revivesPerHour: 1 }),
-      row({ eaId: 'strong', winPct: 90, kd: 5, kpm: 2.4, dpm: 400, spm: 1400, objPerMatch: 3, revivesPerHour: 9 }),
+      row({ eaId: 'weak', winPct: 20, kd: 1, kpm: 0.4, dpm: 5, spm: 200, objPtsPerHour: 12, revivesPerHour: 1 }),
+      row({ eaId: 'strong', winPct: 90, kd: 5, kpm: 2.4, dpm: 400, spm: 1400, objPtsPerHour: 140, revivesPerHour: 9 }),
     ]);
     expect(strong.rating!).toBeGreaterThan(weak.rating!);
   });
@@ -67,7 +73,7 @@ describe('rateAll', () => {
 
   it('returns null when a player has no rateable metric at all', () => {
     const [only] = rateAll([
-      row({ winPct: null, kd: null, kpm: null, dpm: null, spm: null, objPerMatch: null, revivesPerHour: null }),
+      row({ winPct: null, kd: null, kpm: null, dpm: null, spm: null, objPtsPerHour: null, revivesPerHour: null }),
     ]);
     expect(only.rating).toBeNull();
   });

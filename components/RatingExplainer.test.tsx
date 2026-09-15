@@ -12,11 +12,26 @@ describe('RatingExplainer', () => {
     }
   });
 
-  it('shows the weights the code actually uses', () => {
+  it('shows the weights the code actually uses, against the right metric', () => {
     // Read from RATING_WEIGHTS rather than repeated in prose: retuning a
-    // weight must not leave the page quietly lying about it.
+    // weight must not leave the page quietly lying about it. Pinned per row —
+    // win rate and objective work are both 25%, so merely finding the text
+    // somewhere on the page would no longer prove either row is right.
     render(<RatingExplainer />);
-    expect(screen.getByText(`${Math.round(RATING_WEIGHTS.winPct * 100)}%`)).toBeInTheDocument();
+    const rowFor = (label: string) => screen.getByText(label).closest('tr');
+    expect(rowFor('Win rate')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.winPct * 100)}%`,
+    );
+    expect(rowFor('Objective points per hour')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.objPtsPerHour * 100)}%`,
+    );
+  });
+
+  it('credits the objective formula to its author and states it in full', () => {
+    render(<RatingExplainer />);
+    expect(screen.getAllByText(/Kricked/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/0\.1 per second on the objective/)).toBeInTheDocument();
+    expect(screen.getByText(/elimination format and match length varies/)).toBeInTheDocument();
   });
 
   it('states the match floor from the constant', () => {

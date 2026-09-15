@@ -23,7 +23,11 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   },
   spm: {
     label: 'Score per minute',
-    why: 'Catches the objective work, spotting and support a kill count never sees.',
+    why: 'Catches the spotting and support work a kill count never sees.',
+  },
+  objPtsPerHour: {
+    label: 'Objective points per hour',
+    why: 'Gauntlet eliminates squads on objectives, and unlike the win this is yours alone.',
   },
   dpm: { label: 'Damage per minute', why: 'Counts the shots that set up a teammate’s kill — lightly, since the kill itself is already counted.' },
   revivesPerHour: {
@@ -44,7 +48,7 @@ export function RatingExplainer() {
       </Typography>
 
       <Typography sx={{ mb: 2 }}>
-        Every ranked player gets a score out of 100. It blends six things,
+        Every ranked player gets a score out of 100. It blends seven things,
         because winning alone does not say whether you carried your squad or
         were carried by it.
       </Typography>
@@ -71,12 +75,38 @@ export function RatingExplainer() {
       </Table>
 
       <Typography variant="h6" component="h2" gutterBottom>
+        Where the objective figure comes from
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        Objective points are{' '}
+        <strong>
+          0.1 per second on the objective, plus 10 per objective destroyed, plus
+          5 per disarm, plus 3 per intel pickup
+        </strong>{' '}
+        — divided by hours played. The formula and its weightings are{' '}
+        <strong>Kricked</strong>&rsquo;s, from the community spreadsheet, and the
+        board uses them as written.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        Per <strong>hour</strong> rather than per match, because Gauntlet is an
+        elimination format and match length varies — a winning squad plays more
+        rounds, so a per-match average would flatter you for how deep your team
+        went rather than for the objective work you actually did. Per hour
+        measures the rate of that work, independent of your team&rsquo;s run.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        One difference worth naming: Kricked&rsquo;s sheet totals this over your
+        whole Gauntlet lifetime. This board is per season, like every other stat
+        on it, so the numbers here will not match the sheet one-for-one.
+      </Typography>
+
+      <Typography variant="h6" component="h2" gutterBottom>
         You are scored against the field, not against a target
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        For each of the six, we work out where you sit among everyone else
+        For each of the seven, we work out where you sit among everyone else
         ranked this season. Top of the field on a stat is worth 100, bottom is
-        worth 0, middle is 50. Those six positions are then blended using the
+        worth 0, middle is 50. Those seven positions are then blended using the
         weights above.
       </Typography>
       <Typography sx={{ mb: 2 }}>
@@ -103,8 +133,9 @@ export function RatingExplainer() {
       <Typography sx={{ mb: 2 }}>
         The icons beside a name are not part of the rating. Each one marks the
         top {100 - STANDOUT_FLOOR}% of the ranked field on one stat — win rate,
-        K/D, kills per match, score per minute, revives per hour, scoped kills
-        per match or automatic kills per match — plus one for flying jets. Hover a badge to see which stat it is and what your figure
+        K/D, kills per match, score per minute, objective points per hour,
+        revives per hour, scoped kills per match or automatic kills per match —
+        plus one for flying jets. Hover a badge to see which stat it is and what your figure
         was. Most players hold none, which is what makes the rest worth
         something.
       </Typography>
