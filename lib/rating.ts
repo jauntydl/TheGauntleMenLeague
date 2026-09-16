@@ -34,6 +34,39 @@ export const RATING_WEIGHTS = {
 export type RatedMetric = keyof typeof RATING_WEIGHTS;
 
 /**
+ * Short names for the rated metrics, for prose that has to list them inline.
+ *
+ * Typed as a total Record so adding a metric to RATING_WEIGHTS without naming
+ * it here is a compile error rather than a page that quietly describes the old
+ * rating. The board's summary line said "win rate, K/D, kills, damage and
+ * revives" for a while after the rating had stopped working that way — this
+ * exists so that cannot happen again.
+ */
+export const RATED_LABELS: Record<RatedMetric, string> = {
+  winPct: 'win rate',
+  objPtsPerHour: 'objective work',
+  kd: 'K/D',
+  kpm: 'kills per minute',
+  spm: 'score per minute',
+  revivesPerHour: 'revives',
+  dpm: 'damage',
+};
+
+/** Every rated metric, heaviest first. */
+export function ratedByWeight(): RatedMetric[] {
+  return (Object.keys(RATING_WEIGHTS) as RatedMetric[]).sort(
+    (a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a],
+  );
+}
+
+/** Those names as an English list: "a, b and c", heaviest first. */
+export function ratedSummary(): string {
+  const names = ratedByWeight().map((m) => RATED_LABELS[m]);
+  const last = names.pop() as string;
+  return `${names.join(', ')} and ${last}`;
+}
+
+/**
  * Traits that can earn a badge.
  *
  * Every one of these is a column on the board, so nobody is decorated for

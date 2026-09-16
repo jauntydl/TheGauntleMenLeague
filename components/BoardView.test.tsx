@@ -25,7 +25,37 @@ const board: BoardFile = {
   unresolved: [],
 };
 
+import { RATING_WEIGHTS, RATED_LABELS, ratedSummary, type RatedMetric } from '@/lib/rating';
+
 describe('BoardView', () => {
+  it('names every rated metric in the summary line', () => {
+    // This line said "win rate, K/D, kills, damage and revives" for a while
+    // after the rating had stopped working that way. Derived from
+    // RATING_WEIGHTS on both sides so it cannot drift again. Matched on the
+    // container because an inline <Link> splits the sentence across nodes.
+    const { container } = render(<BoardView board={board} />);
+    expect(container).toHaveTextContent(ratedSummary());
+    for (const m of Object.keys(RATING_WEIGHTS) as RatedMetric[]) {
+      expect(ratedSummary()).toContain(RATED_LABELS[m]);
+    }
+  });
+
+  it('lists the rated metrics heaviest first', () => {
+    const summary = ratedSummary();
+    const positions = (Object.keys(RATING_WEIGHTS) as RatedMetric[])
+      .sort((a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a])
+      .map((m) => summary.indexOf(RATED_LABELS[m]));
+    expect(positions.every((p) => p >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it('promises a refresh "after" the scheduled time, not at it', () => {
+    // GitHub schedules are best-effort and this job has run hours late every
+    // time. Saying "next refresh <time>" made lateness look like breakage.
+    render(<BoardView board={board} />);
+    expect(screen.getByText(/next refresh after/)).toBeInTheDocument();
+  });
+
   it('puts the signup call to action in the header', () => {
     // A visitor who is not on the board should not have to scroll past the
     // whole table to find out they can add themselves.

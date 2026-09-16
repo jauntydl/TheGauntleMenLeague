@@ -2,9 +2,15 @@ name: Daily stats refresh
 
 on:
   schedule:
-    # 09:00 UTC daily. gametools caches upstream for 10 minutes, so exact
+    # 09:23 UTC daily. gametools caches upstream for 10 minutes, so exact
     # timing does not matter — only that we call it once a day.
-    - cron: '0 9 * * *'
+    #
+    # Deliberately NOT on the hour. GitHub runs scheduled workflows on shared
+    # capacity and delays or drops them under load, and :00 is the most
+    # contended minute there is. At '0 9 * * *' this job never once started on
+    # time: the two runs it managed began at 14:16 and 15:49 UTC, five and
+    # nearly seven hours late, and 2026-09-16 was skipped outright.
+    - cron: '23 9 * * *'
   workflow_dispatch:
 
 permissions:

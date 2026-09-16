@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import { LeaderboardTable } from './LeaderboardTable';
 import { MIN_MATCHES } from '@/lib/ranking';
 import { formatEastern, nextRefreshAfter } from '@/lib/schedule';
+import { ratedSummary } from '@/lib/rating';
 import type { BoardFile } from '@/lib/types';
 
 export function BoardView({ board }: { board: BoardFile }) {
@@ -62,7 +63,7 @@ export function BoardView({ board }: { board: BoardFile }) {
             className="tnum"
             sx={{ color: 'text.secondary', opacity: 0.75, display: 'block', mt: 0.5 }}
           >
-            Stats read {formatEastern(new Date(board.meta.builtAt))} · next refresh{' '}
+            Stats read {formatEastern(new Date(board.meta.builtAt))} · next refresh after{' '}
             {formatEastern(nextRefreshAfter(new Date(board.meta.builtAt)))}
           </Typography>
         </Box>
@@ -111,7 +112,7 @@ export function BoardView({ board }: { board: BoardFile }) {
           not have to scroll to learn what qualified these players. */}
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
         Ranked by overall rating, minimum {MIN_MATCHES} matches this season. Rating
-        blends win rate, K/D, kills, damage and revives, each scored against the
+        blends {ratedSummary()}, each scored against the
         rest of the field — <Link href="/rating">how that works</Link>.
         Fewer matches and you appear under Provisional.
       </Typography>

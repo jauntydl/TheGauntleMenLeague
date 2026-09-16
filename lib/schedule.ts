@@ -1,13 +1,19 @@
 /**
  * When the board refreshes its stats.
  *
- * The daily workflow runs at 09:00 UTC (.github/workflows/daily.yml). This
+ * The daily workflow runs at 09:23 UTC (.github/workflows/daily.yml). This
  * module is the single place that knows it, so the page and the cron cannot
  * quietly disagree about when the next refresh lands.
+ *
+ * This is the time the job is *scheduled*, which is not the time it runs.
+ * GitHub schedules are best-effort: observed starts have been hours late and
+ * one day was skipped entirely. The page says "after" for that reason — see
+ * nextRefreshAfter.
  */
 
 /** Must match the cron in .github/workflows/daily.yml. */
 export const REFRESH_HOUR_UTC = 9;
+export const REFRESH_MINUTE_UTC = 23;
 
 /**
  * The first scheduled refresh strictly after `after`.
@@ -18,7 +24,7 @@ export const REFRESH_HOUR_UTC = 9;
  */
 export function nextRefreshAfter(after: Date): Date {
   const next = new Date(after);
-  next.setUTCHours(REFRESH_HOUR_UTC, 0, 0, 0);
+  next.setUTCHours(REFRESH_HOUR_UTC, REFRESH_MINUTE_UTC, 0, 0);
   if (next <= after) next.setUTCDate(next.getUTCDate() + 1);
   return next;
 }

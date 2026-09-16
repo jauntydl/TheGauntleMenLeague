@@ -67,6 +67,27 @@ TypeScript cannot see the field is missing; at runtime the new column reads
 `null`, so `undefined.toFixed()` throws. Ship code and regenerated data in the
 same push.
 
+## The daily refresh is best-effort, and has never been on time
+
+The cron says 09:23 UTC. GitHub runs scheduled workflows on shared capacity and
+delays or drops them under load, so that is a request, not a promise. Observed:
+the job started at 14:16 UTC one day, 15:49 UTC the next — five and nearly seven
+hours late — and skipped 2026-09-16 entirely.
+
+Two things follow. The schedule was moved off the top of the hour (:00 is the
+most contended minute) to improve the odds. And the board says "next refresh
+**after** <time>", because promising a time the job has never hit made ordinary
+lateness look like the site was broken.
+
+If a day is missed, the fix is to run `npm run data` locally and push — the
+same thing the workflow does. `gh workflow run` needs admin on the repo, and
+the `gh` CLI here is authenticated as a different account than `origin`
+(which uses the personal SSH key), so dispatching from the CLI fails with 403.
+
+Note that signups keep committing board data between refreshes, so the board is
+never truly stale — but `meta.builtAt` only moves on a real refresh, which is
+what the page reports.
+
 ## Be a polite API consumer
 
 gametools.network is free, donation-funded, unofficial, and the only option —
