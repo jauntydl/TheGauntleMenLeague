@@ -1440,5 +1440,17 @@
     "personaId": "1010651028069",
     "nucleusId": "1023622828069",
     "source": "selfserve"
+  },
+  {
+    "eaId": "phem0r",
+    "displayName": "phem0r",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "369761442",
+    "nucleusId": "2255426686",
+    "source": "selfserve",
+    "inGameName": "phem0r",
+    "inGamePlatform": "ea"
   }
 ]
