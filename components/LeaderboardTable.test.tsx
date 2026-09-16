@@ -12,6 +12,7 @@ import {
   CONTAINER_CHROME_PX,
   WIDE_TIER_MIN_PX,
   PLAYER_MIN_WIDTH_PX,
+  columnDescription,
 } from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
 import { RATING_WEIGHTS, STANDOUT_TRAITS } from '@/lib/rating';
@@ -252,6 +253,38 @@ describe('LeaderboardTable', () => {
         .map((el) => el.getAttribute('data-field') as keyof typeof RATING_WEIGHTS);
       const byWeight = [...marked].sort((a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a]);
       expect(marked).toEqual(byWeight);
+    });
+  });
+
+  it('gives every rated column a tooltip naming its weight', () => {
+    // The amber marks these columns as special; the tooltip says why, and how
+    // much. Both sides read RATING_WEIGHTS, so a retuned weight cannot leave
+    // a tooltip quoting the old one.
+    //
+    // Asserted on the description rather than by hovering: MUI opens the
+    // tooltip on a real pointer, and jsdom never opens it.
+    for (const m of Object.keys(RATING_WEIGHTS) as (keyof typeof RATING_WEIGHTS)[]) {
+      const text = columnDescription(m, undefined, 'Header');
+      expect(text).toContain(`${Math.round(RATING_WEIGHTS[m] * 100)}% of the Rating`);
+    }
+  });
+
+  it('keeps an existing description and appends the weight to it', () => {
+    const text = columnDescription('spm', 'Score per minute', 'SPM');
+    expect(text).toBe(`Score per minute · ${Math.round(RATING_WEIGHTS.spm * 100)}% of the Rating`);
+  });
+
+  it('leaves an unrated column\'s description alone', () => {
+    expect(columnDescription('headshots', 'Headshot kills', 'HS')).toBe('Headshot kills');
+    expect(columnDescription('timeSec', undefined, 'Time')).toBeUndefined();
+  });
+
+  it('marks every rated column and no unrated one', () => {
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Set' })]} />);
+      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
+        .map((el) => el.getAttribute('data-field'));
+      expect(new Set(marked)).toEqual(new Set(Object.keys(RATING_WEIGHTS)));
     });
   });
 

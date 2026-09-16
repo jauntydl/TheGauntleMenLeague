@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
-import { RATING_WEIGHTS, type StandoutTrait } from '@/lib/rating';
+import { RATING_WEIGHTS, type RatedMetric, type StandoutTrait } from '@/lib/rating';
 
 const DASH = '—';
 
@@ -31,13 +31,24 @@ export const WIDE_TIER_MIN_PX = 1400;
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
 
-
 /**
- * The columns that feed the Rating, marked in the header so the board shows
- * its own working. Derived from RATING_WEIGHTS rather than listed here: a
- * hand-kept copy would quietly start lying the first time a weight moved.
+ * The tooltip a column carries in its header.
+ *
+ * The amber marks the rated columns as special; this is what says why, and
+ * how much. The figure is read from RATING_WEIGHTS rather than written out,
+ * so a retuned weight cannot leave a tooltip quoting the old one. Unrated
+ * columns keep whatever description they already had, or none.
  */
-const RATED_FIELDS: ReadonlySet<string> = new Set(Object.keys(RATING_WEIGHTS));
+export function columnDescription(
+  field: string,
+  base: string | undefined,
+  headerName: string | undefined,
+): string | undefined {
+  const weight = RATING_WEIGHTS[field as RatedMetric] as number | undefined;
+  if (weight === undefined) return base;
+  return `${base ?? headerName} · ${Math.round(weight * 100)}% of the Rating`;
+}
+
 
 // Grids with 100 rows or fewer show every row without paging, so the footer
 // (page size / page controls) has nothing useful to control — hide it.
@@ -351,6 +362,7 @@ export function LeaderboardTable({
         field: 'winPct',
         headerName: 'Win %',
         width: 76,
+        description: 'Share of Gauntlet matches won',
         renderCell: (p) => fmtPct(p.row.winPct),
         getSortComparator: nullsLastComparator,
       },
@@ -367,6 +379,7 @@ export function LeaderboardTable({
         field: 'kd',
         headerName: 'K/D',
         width: 68,
+        description: 'Kills per death',
         renderCell: (p) => fmtNum(p.row.kd),
         getSortComparator: nullsLastComparator,
       },
@@ -401,6 +414,7 @@ export function LeaderboardTable({
         field: 'dpm',
         headerName: 'DPM',
         width: 76,
+        description: 'Damage per minute',
         renderCell: (p) => fmtNum(p.row.dpm, 0),
         getSortComparator: nullsLastComparator,
       },
@@ -438,14 +452,18 @@ export function LeaderboardTable({
     ];
 
     // Alignment applied in one place rather than on fifteen definitions.
-    // headerClassName lands after the spread so a column cannot opt out of
-    // being marked as rated by setting its own.
-    return base.map((c) => ({
-      align: COLUMN_ALIGN[c.field] ?? 'center',
-      headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
-      ...c,
-      headerClassName: RATED_FIELDS.has(c.field) ? 'rated-col' : undefined,
-    }));
+    // headerClassName and description land after the spread so a column
+    // cannot opt out of being marked as rated by setting its own.
+    return base.map((c) => {
+      const rated = RATING_WEIGHTS[c.field as RatedMetric] !== undefined;
+      return {
+        align: COLUMN_ALIGN[c.field] ?? 'center',
+        headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
+        ...c,
+        headerClassName: rated ? 'rated-col' : undefined,
+        description: columnDescription(c.field, c.description, c.headerName),
+      };
+    });
   }, [isNarrow]);
 
   // Actually remove secondary columns from DataGrid's own column set on
