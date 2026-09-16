@@ -1476,5 +1476,17 @@
     "source": "selfserve",
     "inGameName": "johocodafo",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Nolimitken",
+    "displayName": "Nolimitken",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "178430194",
+    "nucleusId": "2268375760",
+    "source": "selfserve",
+    "inGameName": "Nolimitken",
+    "inGamePlatform": "ea"
   }
 ]
