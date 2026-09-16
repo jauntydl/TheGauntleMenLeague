@@ -1430,5 +1430,15 @@
     "source": "selfserve",
     "inGameName": "Antimere99",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "xOdersydx",
+    "displayName": "xOdersydx",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1010651028069",
+    "nucleusId": "1023622828069",
+    "source": "selfserve"
   }
 ]
