@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BoardView } from './BoardView';
 import type { BoardFile, BoardRow } from '@/lib/types';
@@ -82,10 +82,33 @@ describe('BoardView', () => {
     expect(screen.getByText('Archived')).toBeInTheDocument();
   });
 
-  it('shows the provisional section', () => {
+  it('reaches the provisional players through the toggle', () => {
+    // Ranked and Provisional take turns in one table so the board fits one
+    // viewport. Provisional is therefore a click away, not a scroll away.
     render(<BoardView board={board} />);
-    expect(screen.getByRole('heading', { name: /provisional/i })).toBeInTheDocument();
+    expect(screen.queryByText('Rookie')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /provisional \(1\)/i }));
     expect(screen.getByText('Rookie')).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`fewer than ${MIN_MATCHES} matches`, 'i'))).toBeInTheDocument();
+  });
+
+  it('counts both sides on the toggle, so an empty one is not a dead end', () => {
+    render(<BoardView board={board} />);
+    // Counts read from the fixture, so growing it cannot silently pass.
+    const r = board.seasons.Season4.length;
+    const pv = board.provisional.Season4.length;
+    expect(screen.getByRole('button', { name: new RegExp(`ranked \\(${r}\\)`, 'i') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(`provisional \\(${pv}\\)`, 'i') })).toBeInTheDocument();
+  });
+
+  it('keeps the page to one viewport so only the table scrolls', () => {
+    // The pinned header is only worth having if the body cannot scroll past
+    // it. jsdom lays out no scrollbars, so this asserts the contract that
+    // produces that — a viewport-height, overflow-hidden shell — rather than
+    // the scrollbar itself, which nothing here can observe.
+    const { container } = render(<BoardView board={board} />);
+    const shell = container.firstElementChild as HTMLElement;
+    expect(shell).toHaveStyle({ height: '100dvh', overflow: 'hidden' });
   });
 
   it('states the ranking rule and the match floor on the board', () => {
@@ -94,6 +117,22 @@ describe('BoardView', () => {
     // Provisional section, which a reader may never scroll to.
     expect(screen.getByText(/ranked by overall rating/i)).toBeInTheDocument();
     expect(screen.getByText(new RegExp(`minimum ${MIN_MATCHES} matches`, 'i'))).toBeInTheDocument();
+  });
+
+  it('points at the rating explanation exactly once', () => {
+    // Three separate links pointed at /rating at one stage — the header, the
+    // summary line and the table legend. The legend is the one that earns it:
+    // it sits directly above the amber columns it explains.
+    render(<BoardView board={board} />);
+    const toRating = screen
+      .getAllByRole('link')
+      .filter((el) => el.getAttribute('href') === '/rating');
+    expect(toRating).toHaveLength(1);
+  });
+
+  it('states the ranking rule on one line, without the old subtitle', () => {
+    render(<BoardView board={board} />);
+    expect(screen.queryByText(/eight squads start/i)).not.toBeInTheDocument();
   });
 
   it('links to the rating explanation', () => {

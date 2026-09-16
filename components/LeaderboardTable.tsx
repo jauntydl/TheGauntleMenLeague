@@ -155,9 +155,17 @@ export function badges(row: BoardRow): Badge[] {
 export function LeaderboardTable({
   rows,
   provisional = false,
+  fill = false,
 }: {
   rows: BoardRow[];
   provisional?: boolean;
+  /**
+   * Fill the parent's height and scroll inside, instead of growing to fit
+   * every row. The parent must have a definite height and min-height: 0 — a
+   * percentage height against an auto-height parent resolves to auto, and the
+   * grid quietly goes back to pushing the page taller than the screen.
+   */
+  fill?: boolean;
 }) {
   // noSsr: true avoids a hydration mismatch — without it the server always
   // renders the desktop (non-matching) layout and the client immediately
@@ -456,14 +464,20 @@ export function LeaderboardTable({
   }
 
   return (
-    <Box>
+    <Box
+      sx={
+        fill
+          ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }
+          : undefined
+      }
+    >
       {/* The marking on the headers is only half an explanation — it says
           these columns are different without saying why. This says why, and
           points at the page carrying the weights. */}
       <Typography
         variant="caption"
         component="p"
-        sx={{ mb: 0.75, color: 'text.secondary', letterSpacing: '0.04em' }}
+        sx={{ flex: '0 0 auto', mb: 0.75, color: 'text.secondary', letterSpacing: '0.04em' }}
       >
         Columns in{' '}
         <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
@@ -491,6 +505,11 @@ export function LeaderboardTable({
         pagination: { paginationModel: { pageSize: FOOTER_ROW_THRESHOLD } },
       }}
       sx={{
+        // Take the space the parent has left rather than the space the rows
+        // want. DataGrid renders its column headers outside the virtual
+        // scroller, so bounding the height is all it takes to pin them — the
+        // rows scroll underneath and the header row stays.
+        ...(fill ? { flex: 1, minHeight: 0 } : {}),
         opacity: provisional ? 0.68 : 1,
         border: '1px solid',
         borderColor: 'divider',
