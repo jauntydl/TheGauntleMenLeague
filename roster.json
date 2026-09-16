@@ -1464,5 +1464,17 @@
     "source": "selfserve",
     "inGameName": "fatalX1337",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "johocodafo",
+    "displayName": "johocodafo",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1007326676346",
+    "nucleusId": "1016172076346",
+    "source": "selfserve",
+    "inGameName": "johocodafo",
+    "inGamePlatform": "ea"
   }
 ]
