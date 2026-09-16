@@ -1418,5 +1418,17 @@
     "source": "selfserve",
     "inGameName": "vinnydot-",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Antimere99",
+    "displayName": "Antimere99",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009147098363",
+    "nucleusId": "1019078298363",
+    "source": "selfserve",
+    "inGameName": "Antimere99",
+    "inGamePlatform": "ea"
   }
 ]
