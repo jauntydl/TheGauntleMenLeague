@@ -25,30 +25,7 @@ const board: BoardFile = {
   unresolved: [],
 };
 
-import { RATING_WEIGHTS, RATED_LABELS, ratedSummary, type RatedMetric } from '@/lib/rating';
-
 describe('BoardView', () => {
-  it('names every rated metric in the summary line', () => {
-    // This line said "win rate, K/D, kills, damage and revives" for a while
-    // after the rating had stopped working that way. Derived from
-    // RATING_WEIGHTS on both sides so it cannot drift again. Matched on the
-    // container because an inline <Link> splits the sentence across nodes.
-    const { container } = render(<BoardView board={board} />);
-    expect(container).toHaveTextContent(ratedSummary());
-    for (const m of Object.keys(RATING_WEIGHTS) as RatedMetric[]) {
-      expect(ratedSummary()).toContain(RATED_LABELS[m]);
-    }
-  });
-
-  it('lists the rated metrics heaviest first', () => {
-    const summary = ratedSummary();
-    const positions = (Object.keys(RATING_WEIGHTS) as RatedMetric[])
-      .sort((a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a])
-      .map((m) => summary.indexOf(RATED_LABELS[m]));
-    expect(positions.every((p) => p >= 0)).toBe(true);
-    expect(positions).toEqual([...positions].sort((a, b) => a - b));
-  });
-
   it('promises a refresh "after" the scheduled time, not at it', () => {
     // GitHub schedules are best-effort and this job has run hours late every
     // time. Saying "next refresh <time>" made lateness look like breakage.
@@ -89,7 +66,6 @@ describe('BoardView', () => {
     expect(screen.queryByText('Rookie')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /provisional \(1\)/i }));
     expect(screen.getByText('Rookie')).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`fewer than ${MIN_MATCHES} matches`, 'i'))).toBeInTheDocument();
   });
 
   it('counts both sides on the toggle, so an empty one is not a dead end', () => {
@@ -111,14 +87,6 @@ describe('BoardView', () => {
     expect(shell).toHaveStyle({ height: '100dvh', overflow: 'hidden' });
   });
 
-  it('states the ranking rule and the match floor on the board', () => {
-    render(<BoardView board={board} />);
-    // The rule has to be visible where the ranking is, not only inside the
-    // Provisional section, which a reader may never scroll to.
-    expect(screen.getByText(/ranked by overall rating/i)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`minimum ${MIN_MATCHES} matches`, 'i'))).toBeInTheDocument();
-  });
-
   it('points at the rating explanation exactly once', () => {
     // Three separate links pointed at /rating at one stage — the header, the
     // summary line and the table legend. The legend is the one that earns it:
@@ -130,9 +98,13 @@ describe('BoardView', () => {
     expect(toRating).toHaveLength(1);
   });
 
-  it('states the ranking rule on one line, without the old subtitle', () => {
+  it('carries no masthead subtitle and no rules paragraph', () => {
+    // The board is the explanation now: the table legend names what builds
+    // the Rating and links to the page that gives the weights. Everything
+    // else above the table was prose the reader had to step over.
     render(<BoardView board={board} />);
     expect(screen.queryByText(/eight squads start/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ranked by overall rating/i)).not.toBeInTheDocument();
   });
 
   it('links to the rating explanation', () => {

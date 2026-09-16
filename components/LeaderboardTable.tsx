@@ -383,7 +383,6 @@ export function LeaderboardTable({
 
       // Everything below here is context, not rating input: volume, record and
       // the two counts the rating deliberately does not read.
-      { field: 'matches', headerName: 'M', width: 70 },
       {
         field: 'record',
         headerName: 'W–L',
@@ -434,7 +433,6 @@ export function LeaderboardTable({
       // A phone keeps only rank, player, rating and win rate — 310px of the
       // ~368px available. Match count and record go; the rating already
       // encodes them and the floor guarantees a meaningful sample.
-      matches: !isNarrow,
       record: !isNarrow,
       // From a tablet up: how they play and their headline combat rates.
       sniperPct: !isNarrow,
@@ -475,9 +473,14 @@ export function LeaderboardTable({
           these columns are different without saying why. This says why, and
           points at the page carrying the weights. */}
       <Typography
-        variant="caption"
         component="p"
-        sx={{ flex: '0 0 auto', mb: 0.75, color: 'text.secondary', letterSpacing: '0.04em' }}
+        sx={{
+          flex: '0 0 auto',
+          mb: 0.9,
+          color: 'text.secondary',
+          letterSpacing: '0.02em',
+          fontSize: { xs: '0.9rem', sm: '1rem' },
+        }}
       >
         Columns in{' '}
         <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>

@@ -12,9 +12,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { LeaderboardTable } from './LeaderboardTable';
-import { MIN_MATCHES } from '@/lib/ranking';
 import { formatEastern, nextRefreshAfter } from '@/lib/schedule';
-import { ratedSummary } from '@/lib/rating';
 import type { BoardFile } from '@/lib/types';
 
 export function BoardView({ board }: { board: BoardFile }) {
@@ -164,23 +162,6 @@ export function BoardView({ board }: { board: BoardFile }) {
           <ToggleButton value="provisional">Provisional ({provisional.length})</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-
-      {/* State the rule where the ranking is — someone looking at the board
-          should not have to go anywhere to learn what qualified these
-          players. */}
-      <Typography
-        variant="body2"
-        component="h2"
-        sx={{ flex: '0 0 auto', color: 'text.secondary', mt: 1, mb: 1, fontWeight: 400 }}
-      >
-        {showingProvisional ? (
-          <>Provisional · fewer than {MIN_MATCHES} matches this season, so not yet ranked</>
-        ) : (
-          <>
-            Ranked by overall rating · minimum {MIN_MATCHES} matches · blends {ratedSummary()}
-          </>
-        )}
-      </Typography>
 
       {/* min-height: 0 is load-bearing. A flex child defaults to min-height
           auto, which refuses to shrink below its content — so without it the

@@ -254,6 +254,18 @@ describe('LeaderboardTable', () => {
     );
   });
 
+  it('shows no match-count column — W-L already carries it', () => {
+    // 492-75 is 567 matches and says more doing it, so the M column was pure
+    // duplication taking width from a board that has none to spare.
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'NoM' })]} />);
+      const fields = [...container.querySelectorAll('.MuiDataGrid-columnHeader')]
+        .map((el) => el.getAttribute('data-field'));
+      expect(fields).not.toContain('matches');
+      expect(fields).toContain('record');
+    });
+  });
+
   it('shows only rank, player, rating and win rate on a phone', () => {
     // A 400px phone has roughly 368px usable. These four total 324px; adding
     // K/D would push it past that and bring back the horizontal scroll.
@@ -261,7 +273,7 @@ describe('LeaderboardTable', () => {
       render(<LeaderboardTable rows={[row({ displayName: 'Phone' })]} />);
       expect(screen.getByText('Rating')).toBeInTheDocument();
       expect(screen.getByText('Win %')).toBeInTheDocument();
-      for (const hidden of ['M', 'W–L', 'Badges', 'K/D', 'Kills', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
+      for (const hidden of ['W–L', 'Badges', 'K/D', 'Kills', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
         expect(screen.queryByText(hidden)).not.toBeInTheDocument();
       }
     });
@@ -270,7 +282,7 @@ describe('LeaderboardTable', () => {
   it('adds playstyle and combat rates on a tablet, but not the wide-screen detail', () => {
     withViewport(['max-width:1280px'], () => {
       render(<LeaderboardTable rows={[row({ displayName: 'Tablet' })]} />);
-      for (const shown of ['Rating', 'Win %', 'M', 'W–L', 'Badges', 'K/D', 'K/match']) {
+      for (const shown of ['Rating', 'Win %', 'W–L', 'Badges', 'K/D', 'K/match']) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }
       for (const hidden of ['Kills', 'HS', 'KPM', 'DPM', 'Rev/h', 'Time']) {
