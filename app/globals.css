@@ -75,6 +75,56 @@ body::after {
   }
 }
 
+/*
+ * Scrollbars.
+ *
+ * The board scrolls inside itself now, so its scrollbar sits in the middle of
+ * the panel rather than at the edge of the window — and the platform default
+ * is a bright light-grey bar straight through a dark tactical readout.
+ *
+ * Styled globally, not scoped to the grid, and that is deliberate: MUI X
+ * measures the scrollbar width at runtime using a probe element outside the
+ * grid, then reserves that many pixels. Narrowing the bar only inside the grid
+ * would leave the reservation set to the platform width and open a gap down
+ * the right-hand side. One global rule keeps the measurement and the paint
+ * agreeing.
+ *
+ * Square, not rounded: everything else on this board has square corners.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 176, 32, 0.34) rgba(6, 8, 13, 0.9);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(6, 8, 13, 0.9);
+  border-left: 1px solid var(--line);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 176, 32, 0.34);
+  /* A border in the track colour insets the thumb without needing padding. */
+  border: 2px solid rgba(6, 8, 13, 0.9);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 176, 32, 0.62);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--amber);
+}
+
+/* Where the two bars meet, so the elbow is not a light square. */
+*::-webkit-scrollbar-corner {
+  background: rgba(6, 8, 13, 0.9);
+}
+
 /* Tabular figures everywhere numbers are compared down a column. */
 .tnum {
   font-variant-numeric: tabular-nums;
