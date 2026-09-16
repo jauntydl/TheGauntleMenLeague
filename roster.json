@@ -1452,5 +1452,17 @@
     "source": "selfserve",
     "inGameName": "phem0r",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "fatalX1337",
+    "displayName": "fatalX1337",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1010841061204",
+    "nucleusId": "1023878861204",
+    "source": "selfserve",
+    "inGameName": "fatalX1337",
+    "inGamePlatform": "ea"
   }
 ]
