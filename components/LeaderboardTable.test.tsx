@@ -1,7 +1,18 @@
 // components/LeaderboardTable.test.tsx
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { LeaderboardTable, fmtPct, fmtNum, fmtHours, fmtInt, badges } from './LeaderboardTable';
+import {
+  LeaderboardTable,
+  fmtPct,
+  fmtNum,
+  fmtHours,
+  fmtInt,
+  badges,
+  COLUMN_BUDGET_PX,
+  CONTAINER_CHROME_PX,
+  WIDE_TIER_MIN_PX,
+  PLAYER_MIN_WIDTH_PX,
+} from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
 import { RATING_WEIGHTS, STANDOUT_TRAITS } from '@/lib/rating';
 
@@ -244,14 +255,25 @@ describe('LeaderboardTable', () => {
     });
   });
 
-  it('says what the marking means and links to the explanation', () => {
-    // Colour alone tells a reader these columns differ, not why.
-    render(<LeaderboardTable rows={[row({ displayName: 'Legend' })]} />);
-    expect(screen.getByText(/Rating is built from, heaviest first/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /how the rating works/i })).toHaveAttribute(
-      'href',
-      '/rating',
-    );
+  it('keeps the wide tier inside its width budget', () => {
+    // The board scrolled sideways twice — once when SPM landed, again with
+    // OBJ/h — because columns were added without anyone re-adding up the
+    // widths. This does the addition. The Player column is flex, so jsdom
+    // reports it as 0 and its declared minimum stands in.
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Budget' })]} />);
+      const headers = [...container.querySelectorAll('.MuiDataGrid-columnHeader')];
+      const fixed = headers
+        .filter((el) => el.getAttribute('data-field') !== 'eaId')
+        .reduce((total, el) => total + parseInt((el as HTMLElement).style.width || '0', 10), 0);
+      expect(fixed + PLAYER_MIN_WIDTH_PX).toBe(COLUMN_BUDGET_PX);
+    });
+  });
+
+  it('only offers the wide tier on a viewport that can hold it', () => {
+    // The breakpoint sat at 1280px while the columns needed ~1400px, which is
+    // the whole reason the full board scrolled sideways on a laptop.
+    expect(COLUMN_BUDGET_PX + CONTAINER_CHROME_PX).toBeLessThanOrEqual(WIDE_TIER_MIN_PX);
   });
 
   it('shows no match-count column — W-L already carries it', () => {
@@ -269,7 +291,7 @@ describe('LeaderboardTable', () => {
   it('shows only rank, player, rating and win rate on a phone', () => {
     // A 400px phone has roughly 368px usable. These four total 324px; adding
     // K/D would push it past that and bring back the horizontal scroll.
-    withViewport(['max-width:600px', 'max-width:1280px'], () => {
+    withViewport(['max-width:600px', `max-width:${WIDE_TIER_MIN_PX - 1}px`], () => {
       render(<LeaderboardTable rows={[row({ displayName: 'Phone' })]} />);
       expect(screen.getByText('Rating')).toBeInTheDocument();
       expect(screen.getByText('Win %')).toBeInTheDocument();
@@ -280,7 +302,7 @@ describe('LeaderboardTable', () => {
   });
 
   it('adds playstyle and combat rates on a tablet, but not the wide-screen detail', () => {
-    withViewport(['max-width:1280px'], () => {
+    withViewport([`max-width:${WIDE_TIER_MIN_PX - 1}px`], () => {
       render(<LeaderboardTable rows={[row({ displayName: 'Tablet' })]} />);
       for (const shown of ['Rating', 'Win %', 'W–L', 'Badges', 'K/D', 'K/match']) {
         expect(screen.getByText(shown)).toBeInTheDocument();

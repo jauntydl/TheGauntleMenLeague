@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { DataGrid, type GridColDef, type GridComparatorFn, type GridSortDirection } from '@mui/x-data-grid';
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -12,6 +11,26 @@ import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
 import { RATING_WEIGHTS, type StandoutTrait } from '@/lib/rating';
 
 const DASH = '—';
+
+/**
+ * What the wide tier costs, and the width it therefore needs.
+ *
+ * Every fixed column width below, plus the Player column's minimum. Adding a
+ * column without widening WIDE_TIER_MIN_PX puts the board back to scrolling
+ * sideways, which has now happened twice — once when SPM landed and again
+ * with OBJ/h. A test sums the rendered columns against this.
+ */
+export const COLUMN_BUDGET_PX = 1314;
+
+/** Container padding (24px a side), the grid border, and its scrollbar. */
+export const CONTAINER_CHROME_PX = 65;
+
+/** Narrowest viewport allowed to show every column. */
+export const WIDE_TIER_MIN_PX = 1400;
+
+/** The Player column flexes; this is the floor it will not go below. */
+export const PLAYER_MIN_WIDTH_PX = 150;
+
 
 /**
  * The columns that feed the Rating, marked in the header so the board shows
@@ -170,12 +189,17 @@ export function LeaderboardTable({
   // noSsr: true avoids a hydration mismatch — without it the server always
   // renders the desktop (non-matching) layout and the client immediately
   // re-renders narrow, producing a visible flash and a markup mismatch.
-  // Three tiers, because two were not enough: the full board is ~1330px of
-  // columns, which overflows a 1280px laptop even at full container width.
-  // Rather than let it scroll sideways, progressively drop the columns a
-  // reader is least likely to be scanning for.
+  // Three tiers, because two were not enough. Rather than let the board
+  // scroll sideways, progressively drop the columns a reader is least likely
+  // to be scanning for.
+  //
+  // The wide tier costs COLUMN_BUDGET_PX of columns plus the container's own
+  // padding, border and scrollbar, so it may only be offered above that. The
+  // breakpoint was 1280px while the columns needed ~1400px, which is why the
+  // full board scrolled sideways on anything narrower than a large desktop —
+  // keep this threshold above COLUMN_BUDGET_PX + CONTAINER_CHROME_PX.
   const isNarrow = useMediaQuery('(max-width:600px)', { noSsr: true });
-  const isMedium = useMediaQuery('(max-width:1280px)', { noSsr: true });
+  const isMedium = useMediaQuery(`(max-width:${WIDE_TIER_MIN_PX - 1}px)`, { noSsr: true });
 
   // Depends on isNarrow: a phone has roughly 368px of usable width, so the
   // handful of columns it does show have to be narrower too, not just fewer.
@@ -186,7 +210,7 @@ export function LeaderboardTable({
       {
         field: 'rank',
         headerName: '#',
-        width: isNarrow ? 44 : 68,
+        width: isNarrow ? 44 : 56,
         // The one place this board raises its voice. Gauntlet is an
         // elimination mode, so position is the story — the numeral is lit
         // like a panel readout, brightest at the top and falling away.
@@ -222,7 +246,7 @@ export function LeaderboardTable({
         field: 'eaId',
         headerName: 'Player',
         flex: 1,
-        minWidth: isNarrow ? 104 : 150,
+        minWidth: isNarrow ? 104 : PLAYER_MIN_WIDTH_PX,
         description:
           'The name on the scoreboard in game. Hover a player for their EA ID and the name they go by in Discord.',
         // Sort on what is read, not on the EA ID behind it.
@@ -265,7 +289,7 @@ export function LeaderboardTable({
       {
         field: 'rating',
         headerName: 'Rating',
-        width: isNarrow ? 92 : 124,
+        width: isNarrow ? 88 : 96,
         description:
           'Overall rating out of 100: win rate 40%, objectives 15%, K/D 15%, kills per match 12%, damage per minute 10%, revives per hour 8% — each scored against the rest of the ranked field.',
         renderCell: (p) =>
@@ -281,7 +305,7 @@ export function LeaderboardTable({
       {
         field: 'sniperPct',
         headerName: 'Badges',
-        width: 130,
+        width: 116,
         sortable: false,
         description:
           'Earned by finishing in the top 10% of the season on a stat, or by flying jets. Hover a badge to see which.',
@@ -326,14 +350,14 @@ export function LeaderboardTable({
       {
         field: 'winPct',
         headerName: 'Win %',
-        width: 84,
+        width: 76,
         renderCell: (p) => fmtPct(p.row.winPct),
         getSortComparator: nullsLastComparator,
       },
       {
         field: 'objPtsPerHour',
         headerName: 'OBJ/h',
-        width: 88,
+        width: 72,
         description:
           'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
         renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
@@ -342,14 +366,14 @@ export function LeaderboardTable({
       {
         field: 'kd',
         headerName: 'K/D',
-        width: 80,
+        width: 68,
         renderCell: (p) => fmtNum(p.row.kd),
         getSortComparator: nullsLastComparator,
       },
       {
         field: 'kpm',
         headerName: 'KPM',
-        width: 80,
+        width: 68,
         // Spelled out because K/match is also on the board and both start
         // with K — they no longer sit side by side, which makes the tooltip
         // more load-bearing rather than less.
@@ -360,7 +384,7 @@ export function LeaderboardTable({
       {
         field: 'spm',
         headerName: 'SPM',
-        width: 84,
+        width: 72,
         description: 'Score per minute',
         renderCell: (p) => fmtNum(p.row.spm, 0),
         getSortComparator: nullsLastComparator,
@@ -368,7 +392,7 @@ export function LeaderboardTable({
       {
         field: 'revivesPerHour',
         headerName: 'Rev/h',
-        width: 84,
+        width: 76,
         description: 'Revives per hour played',
         renderCell: (p) => fmtNum(p.row.revivesPerHour, 1),
         getSortComparator: nullsLastComparator,
@@ -376,7 +400,7 @@ export function LeaderboardTable({
       {
         field: 'dpm',
         headerName: 'DPM',
-        width: 84,
+        width: 76,
         renderCell: (p) => fmtNum(p.row.dpm, 0),
         getSortComparator: nullsLastComparator,
       },
@@ -386,31 +410,31 @@ export function LeaderboardTable({
       {
         field: 'record',
         headerName: 'W–L',
-        width: 84,
+        width: 80,
         valueGetter: (_v, r) => `${r.wins}–${r.losses}`,
       },
       {
         field: 'kills',
         headerName: 'Kills',
-        width: 88,
+        width: 80,
         renderCell: (p) => fmtInt(p.row.kills),
       },
       {
         field: 'headshots',
         headerName: 'HS',
-        width: 88,
+        width: 76,
         description: 'Headshot kills',
         renderCell: (p) => fmtInt(p.row.headshots),
       },
       {
         field: 'killsPerMatch',
         headerName: 'K/match',
-        width: 84,
+        width: 76,
         description: 'Kills per match — earns a badge, but is not part of the rating',
         renderCell: (p) => fmtNum(p.row.killsPerMatch, 1),
         getSortComparator: nullsLastComparator,
       },
-      { field: 'timeSec', headerName: 'Time', width: 84, renderCell: (p) => fmtHours(p.row.timeSec) },
+      { field: 'timeSec', headerName: 'Time', width: 76, renderCell: (p) => fmtHours(p.row.timeSec) },
     ];
 
     // Alignment applied in one place rather than on fifteen definitions.
@@ -462,36 +486,7 @@ export function LeaderboardTable({
   }
 
   return (
-    <Box
-      sx={
-        fill
-          ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }
-          : undefined
-      }
-    >
-      {/* The marking on the headers is only half an explanation — it says
-          these columns are different without saying why. This says why, and
-          points at the page carrying the weights. */}
-      <Typography
-        component="p"
-        sx={{
-          flex: '0 0 auto',
-          mb: 0.9,
-          color: 'text.secondary',
-          letterSpacing: '0.02em',
-          fontSize: { xs: '0.9rem', sm: '1rem' },
-        }}
-      >
-        Columns in{' '}
-        <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-          amber
-        </Box>{' '}
-        are the ones the Rating is built from, heaviest first.{' '}
-        <Link href="/rating" sx={{ color: 'secondary.main' }}>
-          How the rating works
-        </Link>
-      </Typography>
-      <DataGrid
+    <DataGrid
       rows={rows}
       columns={columns}
       getRowId={(r) => r.eaId}
@@ -556,7 +551,6 @@ export function LeaderboardTable({
         '& .MuiDataGrid-footerContainer': { borderColor: 'divider' },
         '& .MuiDataGrid-columnSeparator': { color: 'rgba(27,38,52,0.9)' },
       }}
-      />
-    </Box>
+    />
   );
 }

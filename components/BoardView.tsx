@@ -98,6 +98,9 @@ export function BoardView({ board }: { board: BoardFile }) {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
+          <Link href="/rating" variant="body2">
+            How the rating works
+          </Link>
           <Link href="/not-listed" variant="body2">
             Not listed?
           </Link>
