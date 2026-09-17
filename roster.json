@@ -121,7 +121,7 @@
     "nucleusId": "2302564474",
     "source": "community",
     "inGameName": "JonPM1",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "SidewalkEnf0rcer",
@@ -217,7 +217,7 @@
     "nucleusId": "1005724991407",
     "source": "imported",
     "inGameName": "Unreal413",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "wyldd00d",
@@ -289,7 +289,7 @@
     "nucleusId": "2277398072",
     "source": "imported",
     "inGameName": "Cit1es",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "PIRRS3D",
@@ -361,7 +361,7 @@
     "nucleusId": "1012116938659",
     "source": "imported",
     "inGameName": "MhT0k3n",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "ronr",
@@ -385,7 +385,7 @@
     "nucleusId": "1020367874660",
     "source": "imported",
     "inGameName": "aslyums",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "HerbL",
@@ -529,7 +529,7 @@
     "nucleusId": "1000492366086",
     "source": "imported",
     "inGameName": "MeowMix",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "EnriqueTheKid",
@@ -577,7 +577,7 @@
     "nucleusId": "2276811353",
     "source": "imported",
     "inGameName": "TheOnlineSniper",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Shmike",
@@ -613,7 +613,7 @@
     "nucleusId": "2381580389",
     "source": "imported",
     "inGameName": "pscreen86",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "Horrorphex",
@@ -649,7 +649,7 @@
     "nucleusId": "1000099782978",
     "source": "imported",
     "inGameName": "DaddyDemocracy",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "WhalersAPA",
@@ -901,7 +901,7 @@
     "nucleusId": "1003410165640",
     "source": "imported",
     "inGameName": "BananaBoat581",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "BashK1ng",
@@ -937,7 +937,7 @@
     "nucleusId": "1014532602658",
     "source": "imported",
     "inGameName": "MorsOrtu",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "lmafo7",
@@ -1069,7 +1069,7 @@
     "nucleusId": "1004632467399",
     "source": "imported",
     "inGameName": "Meecheel",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "jomoorigotto",
@@ -1249,7 +1249,7 @@
     "nucleusId": "1019844073746",
     "source": "selfserve",
     "inGameName": "DIA6711",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Grizzzvg",
@@ -1439,7 +1439,9 @@
     "mainMode": "gauntlet",
     "personaId": "1010651028069",
     "nucleusId": "1023622828069",
-    "source": "selfserve"
+    "source": "selfserve",
+    "inGameName": "xOdersydx",
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "phem0r",
