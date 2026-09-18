@@ -1490,5 +1490,17 @@
     "source": "selfserve",
     "inGameName": "Nolimitken",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "elevate1871",
+    "displayName": "elevate1871",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "317625483",
+    "nucleusId": "2328678137",
+    "source": "selfserve",
+    "inGameName": "elevate1871",
+    "inGamePlatform": "ea"
   }
 ]
