@@ -1502,5 +1502,17 @@
     "source": "selfserve",
     "inGameName": "elevate1871",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "BEARTACULAR",
+    "displayName": "BEARTACULAR",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "931847003",
+    "nucleusId": "2836228466",
+    "source": "selfserve",
+    "inGameName": "bear",
+    "inGamePlatform": "steam"
   }
 ]
