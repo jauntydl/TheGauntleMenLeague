@@ -1514,5 +1514,17 @@
     "source": "selfserve",
     "inGameName": "bear",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "xpwnja",
+    "displayName": "xpwnja",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1698986655",
+    "nucleusId": "1002958714143",
+    "source": "selfserve",
+    "inGameName": "Pwnja",
+    "inGamePlatform": "steam"
   }
 ]

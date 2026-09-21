@@ -23,7 +23,7 @@
       "objPts": 6349.3,
       "objPtsPerHour": 47.36,
       "revivesPerHour": 6.81,
-      "rating": 90.14,
+      "rating": 90.27,
       "standouts": [
         "winPct",
         "kd",
@@ -68,7 +68,7 @@
       "objPts": 4956.2,
       "objPtsPerHour": 43.27,
       "revivesPerHour": 7.42,
-      "rating": 85.99,
+      "rating": 86.18,
       "standouts": [
         "winPct",
         "spm",
@@ -112,7 +112,7 @@
       "objPts": 7163.3,
       "objPtsPerHour": 40.43,
       "revivesPerHour": 12.96,
-      "rating": 79.62,
+      "rating": 79.73,
       "standouts": [
         "kd",
         "revivesPerHour",
@@ -156,7 +156,7 @@
       "objPts": 4384,
       "objPtsPerHour": 34.81,
       "revivesPerHour": 7.56,
-      "rating": 78.92,
+      "rating": 79.2,
       "standouts": [
         "killsPerMatch",
         "spm"
@@ -199,7 +199,7 @@
       "objPts": 683.8,
       "objPtsPerHour": 39.66,
       "revivesPerHour": 3.48,
-      "rating": 78.26,
+      "rating": 78.42,
       "standouts": [
         "spm",
         "kd",
@@ -220,50 +220,6 @@
       "region": "US",
       "mainMode": "unknown",
       "rank": 5
-    },
-    {
-      "matches": 95,
-      "wins": 86,
-      "losses": 9,
-      "kills": 2571,
-      "headshots": 366,
-      "deaths": 999,
-      "damage": 649851,
-      "assists": 813,
-      "revives": 181,
-      "score": 2058825,
-      "timeSec": 134727,
-      "winPct": 90.53,
-      "kd": 2.57,
-      "killsPerMatch": 27.06,
-      "kpm": 1.14,
-      "dpm": 289.41,
-      "spm": 916.89,
-      "objPerMatch": 2.33,
-      "objPts": 2825.1,
-      "objPtsPerHour": 75.49,
-      "revivesPerHour": 4.84,
-      "rating": 76.93,
-      "standouts": [
-        "objPtsPerHour",
-        "winPct",
-        "spm"
-      ],
-      "sniperPct": 0.09,
-      "autoPct": 93.21,
-      "sniperKills": 2,
-      "autoKills": 1992,
-      "sniperPerMatch": 0.021052631578947368,
-      "autoPerMatch": 20.96842105263158,
-      "jetPct": 0,
-      "eaId": "fobia_571",
-      "displayName": "fobia_571",
-      "inGameName": "fobia_571",
-      "inGamePlatform": "ea",
-      "platform": "ea",
-      "region": "US",
-      "mainMode": "unknown",
-      "rank": 6
     },
     {
       "matches": 864,
@@ -287,11 +243,11 @@
       "objPts": 9700.4,
       "objPtsPerHour": 28.37,
       "revivesPerHour": 5.56,
-      "rating": 76.93,
+      "rating": 77.24,
       "standouts": [
-        "sniperPerMatch",
         "winPct",
         "kd",
+        "sniperPerMatch",
         "spm"
       ],
       "sniperPct": 52.14,
@@ -308,6 +264,50 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
+      "rank": 6
+    },
+    {
+      "matches": 95,
+      "wins": 86,
+      "losses": 9,
+      "kills": 2571,
+      "headshots": 366,
+      "deaths": 999,
+      "damage": 649851,
+      "assists": 813,
+      "revives": 181,
+      "score": 2058825,
+      "timeSec": 134727,
+      "winPct": 90.53,
+      "kd": 2.57,
+      "killsPerMatch": 27.06,
+      "kpm": 1.14,
+      "dpm": 289.41,
+      "spm": 916.89,
+      "objPerMatch": 2.33,
+      "objPts": 2825.1,
+      "objPtsPerHour": 75.49,
+      "revivesPerHour": 4.84,
+      "rating": 76.92,
+      "standouts": [
+        "objPtsPerHour",
+        "winPct",
+        "spm"
+      ],
+      "sniperPct": 0.09,
+      "autoPct": 93.21,
+      "sniperKills": 2,
+      "autoKills": 1992,
+      "sniperPerMatch": 0.021052631578947368,
+      "autoPerMatch": 20.96842105263158,
+      "jetPct": 0,
+      "eaId": "fobia_571",
+      "displayName": "fobia_571",
+      "inGameName": "fobia_571",
+      "inGamePlatform": "ea",
+      "platform": "ea",
+      "region": "US",
+      "mainMode": "unknown",
       "rank": 7
     },
     {
@@ -332,10 +332,9 @@
       "objPts": 1335,
       "objPtsPerHour": 37.71,
       "revivesPerHour": 6.19,
-      "rating": 74.27,
+      "rating": 74.46,
       "standouts": [
-        "kd",
-        "sniperPerMatch"
+        "kd"
       ],
       "sniperPct": 45.02,
       "autoPct": 41.79,
@@ -377,8 +376,8 @@
       "revivesPerHour": 3.22,
       "rating": 73.7,
       "standouts": [
-        "sniperPerMatch",
-        "winPct"
+        "winPct",
+        "sniperPerMatch"
       ],
       "sniperPct": 47.36,
       "autoPct": 51.85,
@@ -418,7 +417,7 @@
       "objPts": 2069.1,
       "objPtsPerHour": 49.65,
       "revivesPerHour": 8.97,
-      "rating": 73.29,
+      "rating": 73.33,
       "standouts": [],
       "sniperPct": 8.38,
       "autoPct": 87.42,
@@ -458,7 +457,7 @@
       "objPts": 3603.4,
       "objPtsPerHour": 28.1,
       "revivesPerHour": 7.84,
-      "rating": 71.47,
+      "rating": 71.85,
       "standouts": [
         "autoPerMatch",
         "killsPerMatch",
@@ -502,7 +501,7 @@
       "objPts": 1528.6,
       "objPtsPerHour": 20.23,
       "revivesPerHour": 8.44,
-      "rating": 71.16,
+      "rating": 70.97,
       "standouts": [
         "winPct"
       ],
@@ -544,7 +543,7 @@
       "objPts": 1560.5,
       "objPtsPerHour": 30.4,
       "revivesPerHour": 11.69,
-      "rating": 68.66,
+      "rating": 68.7,
       "standouts": [
         "winPct"
       ],
@@ -586,7 +585,7 @@
       "objPts": 8765.5,
       "objPtsPerHour": 27.36,
       "revivesPerHour": 6.29,
-      "rating": 66.22,
+      "rating": 66.35,
       "standouts": [],
       "sniperPct": 42.64,
       "autoPct": 54.74,
@@ -626,7 +625,7 @@
       "objPts": 7956.3,
       "objPtsPerHour": 36.5,
       "revivesPerHour": 4.15,
-      "rating": 66.01,
+      "rating": 66.09,
       "standouts": [],
       "sniperPct": 35.88,
       "autoPct": 60.47,
@@ -666,7 +665,7 @@
       "objPts": 5364.5,
       "objPtsPerHour": 61.52,
       "revivesPerHour": 5.99,
-      "rating": 65.89,
+      "rating": 65.81,
       "standouts": [
         "objPtsPerHour",
         "autoPerMatch"
@@ -709,7 +708,7 @@
       "objPts": 1949.9,
       "objPtsPerHour": 48.75,
       "revivesPerHour": 5.98,
-      "rating": 63.37,
+      "rating": 63.32,
       "standouts": [],
       "sniperPct": 0.14,
       "autoPct": 95.16,
@@ -726,49 +725,6 @@
       "region": "US",
       "mainMode": "unknown",
       "rank": 17
-    },
-    {
-      "matches": 226,
-      "wins": 163,
-      "losses": 63,
-      "kills": 7025,
-      "headshots": 975,
-      "deaths": 2205,
-      "damage": 1288812,
-      "assists": 1987,
-      "revives": 1163,
-      "score": 4517805,
-      "timeSec": 327386,
-      "winPct": 72.12,
-      "kd": 3.19,
-      "killsPerMatch": 31.08,
-      "kpm": 1.29,
-      "dpm": 236.2,
-      "spm": 827.98,
-      "objPerMatch": 1.31,
-      "objPts": 3922.3,
-      "objPtsPerHour": 43.13,
-      "revivesPerHour": 12.79,
-      "rating": 62.49,
-      "standouts": [
-        "revivesPerHour",
-        "autoPerMatch"
-      ],
-      "sniperPct": 0.24,
-      "autoPct": 96.84,
-      "sniperKills": 16,
-      "autoKills": 6375,
-      "sniperPerMatch": 0.07079646017699115,
-      "autoPerMatch": 28.207964601769913,
-      "jetPct": 0,
-      "eaId": "vinnydot-",
-      "displayName": "vinnydot-",
-      "inGameName": "vinnydot-",
-      "inGamePlatform": "ea",
-      "platform": "pc",
-      "region": "unknown",
-      "mainMode": "gauntlet",
-      "rank": 18
     },
     {
       "matches": 389,
@@ -792,7 +748,7 @@
       "objPts": 6931.9,
       "objPtsPerHour": 44.08,
       "revivesPerHour": 5.96,
-      "rating": 62.32,
+      "rating": 62.28,
       "standouts": [],
       "sniperPct": 8,
       "autoPct": 91.08,
@@ -808,7 +764,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 19
+      "rank": 18
     },
     {
       "matches": 314,
@@ -832,7 +788,7 @@
       "objPts": 5923.6,
       "objPtsPerHour": 46.11,
       "revivesPerHour": 9.44,
-      "rating": 62.27,
+      "rating": 62.24,
       "standouts": [],
       "sniperPct": 15.99,
       "autoPct": 80.9,
@@ -848,6 +804,49 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
+      "rank": 19
+    },
+    {
+      "matches": 226,
+      "wins": 163,
+      "losses": 63,
+      "kills": 7025,
+      "headshots": 975,
+      "deaths": 2205,
+      "damage": 1288812,
+      "assists": 1987,
+      "revives": 1163,
+      "score": 4517805,
+      "timeSec": 327386,
+      "winPct": 72.12,
+      "kd": 3.19,
+      "killsPerMatch": 31.08,
+      "kpm": 1.29,
+      "dpm": 236.2,
+      "spm": 827.98,
+      "objPerMatch": 1.31,
+      "objPts": 3922.3,
+      "objPtsPerHour": 43.13,
+      "revivesPerHour": 12.79,
+      "rating": 62.15,
+      "standouts": [
+        "revivesPerHour",
+        "autoPerMatch"
+      ],
+      "sniperPct": 0.24,
+      "autoPct": 96.84,
+      "sniperKills": 16,
+      "autoKills": 6375,
+      "sniperPerMatch": 0.07079646017699115,
+      "autoPerMatch": 28.207964601769913,
+      "jetPct": 0,
+      "eaId": "vinnydot-",
+      "displayName": "vinnydot-",
+      "inGameName": "vinnydot-",
+      "inGamePlatform": "ea",
+      "platform": "pc",
+      "region": "unknown",
+      "mainMode": "gauntlet",
       "rank": 20
     },
     {
@@ -872,7 +871,7 @@
       "objPts": 3524.1,
       "objPtsPerHour": 57.91,
       "revivesPerHour": 5.85,
-      "rating": 62.04,
+      "rating": 61.92,
       "standouts": [
         "sniperPerMatch",
         "killsPerMatch"
@@ -915,7 +914,7 @@
       "objPts": 4788.8,
       "objPtsPerHour": 55.41,
       "revivesPerHour": 6.81,
-      "rating": 61.21,
+      "rating": 61.09,
       "standouts": [
         "autoPerMatch",
         "killsPerMatch"
@@ -958,7 +957,7 @@
       "objPts": 8629,
       "objPtsPerHour": 43.09,
       "revivesPerHour": 10.72,
-      "rating": 60.44,
+      "rating": 60.34,
       "standouts": [
         "autoPerMatch"
       ],
@@ -1000,7 +999,7 @@
       "objPts": 1059.7,
       "objPtsPerHour": 47.72,
       "revivesPerHour": 4.91,
-      "rating": 60.42,
+      "rating": 60.32,
       "standouts": [],
       "sniperPct": 0.06,
       "autoPct": 93.52,
@@ -1040,7 +1039,7 @@
       "objPts": 5118.7,
       "objPtsPerHour": 37.84,
       "revivesPerHour": 8.05,
-      "rating": 60.36,
+      "rating": 60.04,
       "standouts": [],
       "sniperPct": 6.09,
       "autoPct": 89.85,
@@ -1080,7 +1079,7 @@
       "objPts": 7971.5,
       "objPtsPerHour": 61.48,
       "revivesPerHour": 11.54,
-      "rating": 59.58,
+      "rating": 59.32,
       "standouts": [
         "autoPerMatch",
         "objPtsPerHour"
@@ -1123,7 +1122,7 @@
       "objPts": 11436.8,
       "objPtsPerHour": 51.23,
       "revivesPerHour": 7.96,
-      "rating": 58.55,
+      "rating": 58.57,
       "standouts": [],
       "sniperPct": 14.13,
       "autoPct": 79.89,
@@ -1163,7 +1162,7 @@
       "objPts": 8384,
       "objPtsPerHour": 73.6,
       "revivesPerHour": 6.74,
-      "rating": 57.67,
+      "rating": 57.39,
       "standouts": [
         "objPtsPerHour"
       ],
@@ -1205,7 +1204,7 @@
       "objPts": 5666,
       "objPtsPerHour": 42.06,
       "revivesPerHour": 3.17,
-      "rating": 56.68,
+      "rating": 56.5,
       "standouts": [
         "sniperPerMatch"
       ],
@@ -1226,45 +1225,45 @@
       "rank": 29
     },
     {
-      "matches": 163,
-      "wins": 111,
-      "losses": 52,
-      "kills": 4784,
-      "headshots": 666,
-      "deaths": 1444,
-      "damage": 954956,
-      "assists": 1456,
-      "revives": 887,
-      "score": 3278705,
-      "timeSec": 245205,
-      "winPct": 68.1,
-      "kd": 3.31,
-      "killsPerMatch": 29.35,
-      "kpm": 1.17,
-      "dpm": 233.67,
-      "spm": 802.28,
-      "objPerMatch": 2.23,
-      "objPts": 3116,
-      "objPtsPerHour": 45.75,
-      "revivesPerHour": 13.02,
-      "rating": 55.88,
+      "matches": 212,
+      "wins": 158,
+      "losses": 54,
+      "kills": 7174,
+      "headshots": 4902,
+      "deaths": 1617,
+      "damage": 1316967,
+      "assists": 2518,
+      "revives": 314,
+      "score": 4056648,
+      "timeSec": 300733,
+      "winPct": 74.53,
+      "kd": 4.44,
+      "killsPerMatch": 33.84,
+      "kpm": 1.43,
+      "dpm": 262.75,
+      "spm": 809.35,
+      "objPerMatch": 1.34,
+      "objPts": 2199.6,
+      "objPtsPerHour": 26.33,
+      "revivesPerHour": 3.76,
+      "rating": 55.77,
       "standouts": [
-        "revivesPerHour"
+        "sniperPerMatch"
       ],
-      "sniperPct": 0,
-      "autoPct": 99.62,
-      "sniperKills": 0,
-      "autoKills": 4191,
-      "sniperPerMatch": 0,
-      "autoPerMatch": 25.711656441717793,
+      "sniperPct": 88.29,
+      "autoPct": 10.45,
+      "sniperKills": 5846,
+      "autoKills": 692,
+      "sniperPerMatch": 27.57547169811321,
+      "autoPerMatch": 3.2641509433962264,
       "jetPct": 0,
-      "eaId": "WhalersAPA",
-      "displayName": "WhalersAPA",
-      "inGameName": "WhalersAPA",
-      "inGamePlatform": "ea",
-      "platform": "ea",
-      "region": "US",
-      "mainMode": "unknown",
+      "eaId": "xpwnja",
+      "displayName": "xpwnja",
+      "inGameName": "Pwnja",
+      "inGamePlatform": "steam",
+      "platform": "pc",
+      "region": "unknown",
+      "mainMode": "gauntlet",
       "rank": 30
     },
     {
@@ -1289,7 +1288,7 @@
       "objPts": 6573.6,
       "objPtsPerHour": 47.16,
       "revivesPerHour": 8.92,
-      "rating": 55.51,
+      "rating": 55.57,
       "standouts": [],
       "sniperPct": 3.47,
       "autoPct": 95.43,
@@ -1306,6 +1305,48 @@
       "region": "unknown",
       "mainMode": "gauntlet",
       "rank": 31
+    },
+    {
+      "matches": 163,
+      "wins": 111,
+      "losses": 52,
+      "kills": 4784,
+      "headshots": 666,
+      "deaths": 1444,
+      "damage": 954956,
+      "assists": 1456,
+      "revives": 887,
+      "score": 3278705,
+      "timeSec": 245205,
+      "winPct": 68.1,
+      "kd": 3.31,
+      "killsPerMatch": 29.35,
+      "kpm": 1.17,
+      "dpm": 233.67,
+      "spm": 802.28,
+      "objPerMatch": 2.23,
+      "objPts": 3116,
+      "objPtsPerHour": 45.75,
+      "revivesPerHour": 13.02,
+      "rating": 55.46,
+      "standouts": [
+        "revivesPerHour"
+      ],
+      "sniperPct": 0,
+      "autoPct": 99.62,
+      "sniperKills": 0,
+      "autoKills": 4191,
+      "sniperPerMatch": 0,
+      "autoPerMatch": 25.711656441717793,
+      "jetPct": 0,
+      "eaId": "WhalersAPA",
+      "displayName": "WhalersAPA",
+      "inGameName": "WhalersAPA",
+      "inGamePlatform": "ea",
+      "platform": "ea",
+      "region": "US",
+      "mainMode": "unknown",
+      "rank": 32
     },
     {
       "matches": 79,
@@ -1329,7 +1370,7 @@
       "objPts": 2025.2,
       "objPtsPerHour": 66.28,
       "revivesPerHour": 11.39,
-      "rating": 54.88,
+      "rating": 54.7,
       "standouts": [
         "objPtsPerHour"
       ],
@@ -1347,7 +1388,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 32
+      "rank": 33
     },
     {
       "matches": 92,
@@ -1371,7 +1412,7 @@
       "objPts": 1607.5,
       "objPtsPerHour": 43.1,
       "revivesPerHour": 8.18,
-      "rating": 54.48,
+      "rating": 54.55,
       "standouts": [],
       "sniperPct": 5.41,
       "autoPct": 93.17,
@@ -1387,7 +1428,7 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 33
+      "rank": 34
     },
     {
       "matches": 489,
@@ -1411,7 +1452,7 @@
       "objPts": 11818.5,
       "objPtsPerHour": 60.71,
       "revivesPerHour": 2.86,
-      "rating": 53.58,
+      "rating": 53.11,
       "standouts": [],
       "sniperPct": 1.11,
       "autoPct": 97.33,
@@ -1427,7 +1468,7 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 34
+      "rank": 35
     },
     {
       "matches": 359,
@@ -1451,7 +1492,7 @@
       "objPts": 6481.1,
       "objPtsPerHour": 44.48,
       "revivesPerHour": 12.02,
-      "rating": 53.08,
+      "rating": 52.7,
       "standouts": [
         "revivesPerHour"
       ],
@@ -1469,7 +1510,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 35
+      "rank": 36
     },
     {
       "matches": 598,
@@ -1493,7 +1534,7 @@
       "objPts": 8430.9,
       "objPtsPerHour": 34.88,
       "revivesPerHour": 5.2,
-      "rating": 52.59,
+      "rating": 52.22,
       "standouts": [],
       "sniperPct": 32.25,
       "autoPct": 65.28,
@@ -1509,7 +1550,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 36
+      "rank": 37
     },
     {
       "matches": 98,
@@ -1533,7 +1574,7 @@
       "objPts": 1179.6,
       "objPtsPerHour": 30.65,
       "revivesPerHour": 4.03,
-      "rating": 52.48,
+      "rating": 52.16,
       "standouts": [],
       "sniperPct": 48.27,
       "autoPct": 40.83,
@@ -1549,7 +1590,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 37
+      "rank": 38
     },
     {
       "matches": 276,
@@ -1573,7 +1614,7 @@
       "objPts": 2274.6,
       "objPtsPerHour": 20.26,
       "revivesPerHour": 3.36,
-      "rating": 51.78,
+      "rating": 51.72,
       "standouts": [
         "autoPerMatch",
         "killsPerMatch"
@@ -1592,7 +1633,7 @@
       "platform": "steam",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 38
+      "rank": 39
     },
     {
       "matches": 167,
@@ -1616,7 +1657,7 @@
       "objPts": 3909.9,
       "objPtsPerHour": 58.36,
       "revivesPerHour": 3.28,
-      "rating": 51.71,
+      "rating": 51.69,
       "standouts": [],
       "sniperPct": 0.03,
       "autoPct": 99.66,
@@ -1632,7 +1673,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 39
+      "rank": 40
     },
     {
       "matches": 259,
@@ -1656,7 +1697,7 @@
       "objPts": 2889.5,
       "objPtsPerHour": 28.54,
       "revivesPerHour": 5.8,
-      "rating": 51.25,
+      "rating": 51.36,
       "standouts": [],
       "sniperPct": 0.1,
       "autoPct": 96.59,
@@ -1672,7 +1713,7 @@
       "platform": "ps",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 40
+      "rank": 41
     },
     {
       "matches": 734,
@@ -1696,7 +1737,7 @@
       "objPts": 15797.7,
       "objPtsPerHour": 55.09,
       "revivesPerHour": 3.91,
-      "rating": 49.81,
+      "rating": 49.64,
       "standouts": [],
       "sniperPct": 5.51,
       "autoPct": 91.96,
@@ -1712,7 +1753,7 @@
       "platform": "steam / pc",
       "region": "NA East",
       "mainMode": "gauntlet",
-      "rank": 41
+      "rank": 42
     },
     {
       "matches": 70,
@@ -1736,7 +1777,7 @@
       "objPts": 1221.9,
       "objPtsPerHour": 43.89,
       "revivesPerHour": 6.43,
-      "rating": 48.97,
+      "rating": 49.11,
       "standouts": [],
       "sniperPct": 0.63,
       "autoPct": 90.39,
@@ -1752,7 +1793,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 42
+      "rank": 43
     },
     {
       "matches": 89,
@@ -1776,7 +1817,7 @@
       "objPts": 2034.2,
       "objPtsPerHour": 53.68,
       "revivesPerHour": 5.33,
-      "rating": 47.88,
+      "rating": 47.57,
       "standouts": [],
       "sniperPct": 5.83,
       "autoPct": 90.29,
@@ -1792,7 +1833,7 @@
       "platform": "ps",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 43
+      "rank": 44
     },
     {
       "matches": 290,
@@ -1816,7 +1857,7 @@
       "objPts": 3068.7,
       "objPtsPerHour": 26.7,
       "revivesPerHour": 5.02,
-      "rating": 46.62,
+      "rating": 46.8,
       "standouts": [],
       "sniperPct": 4.79,
       "autoPct": 94.17,
@@ -1832,7 +1873,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 44
+      "rank": 45
     },
     {
       "matches": 285,
@@ -1856,7 +1897,7 @@
       "objPts": 4854.5,
       "objPtsPerHour": 42.88,
       "revivesPerHour": 5.11,
-      "rating": 45.26,
+      "rating": 44.99,
       "standouts": [],
       "sniperPct": 1.35,
       "autoPct": 97.37,
@@ -1872,7 +1913,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 45
+      "rank": 46
     },
     {
       "matches": 64,
@@ -1896,7 +1937,7 @@
       "objPts": 1177.9,
       "objPtsPerHour": 45.83,
       "revivesPerHour": 6.61,
-      "rating": 45.11,
+      "rating": 44.84,
       "standouts": [],
       "sniperPct": 15,
       "autoPct": 81.06,
@@ -1912,7 +1953,7 @@
       "platform": "pc",
       "region": "NA West",
       "mainMode": "both",
-      "rank": 46
+      "rank": 47
     },
     {
       "matches": 95,
@@ -1936,7 +1977,7 @@
       "objPts": 849.6,
       "objPtsPerHour": 22.74,
       "revivesPerHour": 5.54,
-      "rating": 42.52,
+      "rating": 42.14,
       "standouts": [
         "sniperPerMatch"
       ],
@@ -1954,7 +1995,7 @@
       "platform": "ea",
       "region": "CA",
       "mainMode": "unknown",
-      "rank": 47
+      "rank": 48
     },
     {
       "matches": 553,
@@ -1978,7 +2019,7 @@
       "objPts": 6168.9,
       "objPtsPerHour": 28.19,
       "revivesPerHour": 3.46,
-      "rating": 41.87,
+      "rating": 41.56,
       "standouts": [],
       "sniperPct": 0.16,
       "autoPct": 98.79,
@@ -1994,7 +2035,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 48
+      "rank": 49
     },
     {
       "matches": 236,
@@ -2018,7 +2059,7 @@
       "objPts": 4287.9,
       "objPtsPerHour": 46.69,
       "revivesPerHour": 2.91,
-      "rating": 39.7,
+      "rating": 39.42,
       "standouts": [],
       "sniperPct": 19.91,
       "autoPct": 78.05,
@@ -2034,48 +2075,6 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 49
-    },
-    {
-      "matches": 664,
-      "wins": 427,
-      "losses": 237,
-      "kills": 12386,
-      "headshots": 1628,
-      "deaths": 6176,
-      "damage": 2781028,
-      "assists": 4731,
-      "revives": 3526,
-      "score": 11384462,
-      "timeSec": 931206,
-      "winPct": 64.31,
-      "kd": 2.01,
-      "killsPerMatch": 18.65,
-      "kpm": 0.8,
-      "dpm": 179.19,
-      "spm": 733.53,
-      "objPerMatch": 1.31,
-      "objPts": 12385.2,
-      "objPtsPerHour": 47.88,
-      "revivesPerHour": 13.63,
-      "rating": 38.42,
-      "standouts": [
-        "revivesPerHour"
-      ],
-      "sniperPct": 0.43,
-      "autoPct": 98.75,
-      "sniperKills": 50,
-      "autoKills": 11419,
-      "sniperPerMatch": 0.07530120481927711,
-      "autoPerMatch": 17.197289156626507,
-      "jetPct": 0,
-      "eaId": "Nickybzbz",
-      "displayName": "Nickybzbz",
-      "inGameName": "Nickybzbz",
-      "inGamePlatform": "xboxone",
-      "platform": "xbox",
-      "region": "Canada East",
-      "mainMode": "gauntlet",
       "rank": 50
     },
     {
@@ -2100,7 +2099,7 @@
       "objPts": 840.5,
       "objPtsPerHour": 21.67,
       "revivesPerHour": 3.87,
-      "rating": 38.3,
+      "rating": 38.39,
       "standouts": [],
       "sniperPct": 42.73,
       "autoPct": 52.68,
@@ -2117,6 +2116,48 @@
       "region": "US",
       "mainMode": "unknown",
       "rank": 51
+    },
+    {
+      "matches": 664,
+      "wins": 427,
+      "losses": 237,
+      "kills": 12386,
+      "headshots": 1628,
+      "deaths": 6176,
+      "damage": 2781028,
+      "assists": 4731,
+      "revives": 3526,
+      "score": 11384462,
+      "timeSec": 931206,
+      "winPct": 64.31,
+      "kd": 2.01,
+      "killsPerMatch": 18.65,
+      "kpm": 0.8,
+      "dpm": 179.19,
+      "spm": 733.53,
+      "objPerMatch": 1.31,
+      "objPts": 12385.2,
+      "objPtsPerHour": 47.88,
+      "revivesPerHour": 13.63,
+      "rating": 38.24,
+      "standouts": [
+        "revivesPerHour"
+      ],
+      "sniperPct": 0.43,
+      "autoPct": 98.75,
+      "sniperKills": 50,
+      "autoKills": 11419,
+      "sniperPerMatch": 0.07530120481927711,
+      "autoPerMatch": 17.197289156626507,
+      "jetPct": 0,
+      "eaId": "Nickybzbz",
+      "displayName": "Nickybzbz",
+      "inGameName": "Nickybzbz",
+      "inGamePlatform": "xboxone",
+      "platform": "xbox",
+      "region": "Canada East",
+      "mainMode": "gauntlet",
+      "rank": 52
     },
     {
       "matches": 581,
@@ -2140,7 +2181,7 @@
       "objPts": 11899.4,
       "objPtsPerHour": 50.61,
       "revivesPerHour": 13.47,
-      "rating": 38.1,
+      "rating": 37.92,
       "standouts": [
         "revivesPerHour"
       ],
@@ -2158,7 +2199,7 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 52
+      "rank": 53
     },
     {
       "matches": 149,
@@ -2182,7 +2223,7 @@
       "objPts": 2357.6,
       "objPtsPerHour": 41.57,
       "revivesPerHour": 4.62,
-      "rating": 36.52,
+      "rating": 36.36,
       "standouts": [],
       "sniperPct": 2.18,
       "autoPct": 97.09,
@@ -2198,7 +2239,7 @@
       "platform": "steam",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 53
+      "rank": 54
     },
     {
       "matches": 222,
@@ -2222,7 +2263,7 @@
       "objPts": 3266,
       "objPtsPerHour": 37.49,
       "revivesPerHour": 1.78,
-      "rating": 35.71,
+      "rating": 35.49,
       "standouts": [],
       "sniperPct": 39.52,
       "autoPct": 58.76,
@@ -2238,7 +2279,7 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 54
+      "rank": 55
     },
     {
       "matches": 154,
@@ -2262,7 +2303,7 @@
       "objPts": 2609.8,
       "objPtsPerHour": 46.55,
       "revivesPerHour": 5.07,
-      "rating": 34.58,
+      "rating": 34.45,
       "standouts": [],
       "sniperPct": 9.44,
       "autoPct": 88.36,
@@ -2278,7 +2319,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 55
+      "rank": 56
     },
     {
       "matches": 143,
@@ -2302,7 +2343,7 @@
       "objPts": 2655,
       "objPtsPerHour": 46.8,
       "revivesPerHour": 8.04,
-      "rating": 34.4,
+      "rating": 34.27,
       "standouts": [],
       "sniperPct": 11.03,
       "autoPct": 85.19,
@@ -2318,46 +2359,6 @@
       "platform": "xbox",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 56
-    },
-    {
-      "matches": 491,
-      "wins": 285,
-      "losses": 206,
-      "kills": 12308,
-      "headshots": 2054,
-      "deaths": 4396,
-      "damage": 2630706,
-      "assists": 4507,
-      "revives": 1380,
-      "score": 8332660,
-      "timeSec": 692069,
-      "winPct": 58.04,
-      "kd": 2.8,
-      "killsPerMatch": 25.07,
-      "kpm": 1.07,
-      "dpm": 228.07,
-      "spm": 722.41,
-      "objPerMatch": 0.87,
-      "objPts": 5996.8,
-      "objPtsPerHour": 31.19,
-      "revivesPerHour": 7.18,
-      "rating": 33.03,
-      "standouts": [],
-      "sniperPct": 6.43,
-      "autoPct": 92.21,
-      "sniperKills": 728,
-      "autoKills": 10447,
-      "sniperPerMatch": 1.4826883910386965,
-      "autoPerMatch": 21.276985743380855,
-      "jetPct": 0,
-      "eaId": "xOdersydx",
-      "displayName": "xOdersydx",
-      "inGameName": "xOdersydx",
-      "inGamePlatform": "ea",
-      "platform": "pc",
-      "region": "unknown",
-      "mainMode": "gauntlet",
       "rank": 57
     },
     {
@@ -2382,7 +2383,7 @@
       "objPts": 1148.4,
       "objPtsPerHour": 27.23,
       "revivesPerHour": 6.09,
-      "rating": 33.03,
+      "rating": 32.97,
       "standouts": [],
       "sniperPct": 34.55,
       "autoPct": 55.29,
@@ -2401,43 +2402,43 @@
       "rank": 58
     },
     {
-      "matches": 186,
-      "wins": 131,
-      "losses": 55,
-      "kills": 4574,
-      "headshots": 1712,
-      "deaths": 1542,
-      "damage": 801862,
-      "assists": 1242,
-      "revives": 320,
-      "score": 3143480,
-      "timeSec": 267298,
-      "winPct": 70.43,
-      "kd": 2.97,
-      "killsPerMatch": 24.59,
-      "kpm": 1.03,
-      "dpm": 179.99,
-      "spm": 705.61,
-      "objPerMatch": 0.53,
-      "objPts": 1348,
-      "objPtsPerHour": 18.16,
-      "revivesPerHour": 4.31,
-      "rating": 32.38,
+      "matches": 491,
+      "wins": 285,
+      "losses": 206,
+      "kills": 12308,
+      "headshots": 2054,
+      "deaths": 4396,
+      "damage": 2630706,
+      "assists": 4507,
+      "revives": 1380,
+      "score": 8332660,
+      "timeSec": 692069,
+      "winPct": 58.04,
+      "kd": 2.8,
+      "killsPerMatch": 25.07,
+      "kpm": 1.07,
+      "dpm": 228.07,
+      "spm": 722.41,
+      "objPerMatch": 0.87,
+      "objPts": 5996.8,
+      "objPtsPerHour": 31.19,
+      "revivesPerHour": 7.18,
+      "rating": 32.92,
       "standouts": [],
-      "sniperPct": 37.33,
-      "autoPct": 51.4,
-      "sniperKills": 1586,
-      "autoKills": 2184,
-      "sniperPerMatch": 8.526881720430108,
-      "autoPerMatch": 11.741935483870968,
+      "sniperPct": 6.43,
+      "autoPct": 92.21,
+      "sniperKills": 728,
+      "autoKills": 10447,
+      "sniperPerMatch": 1.4826883910386965,
+      "autoPerMatch": 21.276985743380855,
       "jetPct": 0,
-      "eaId": "SkimMilk19",
-      "displayName": "SkimMilk19",
-      "inGameName": "SkimMilk19",
+      "eaId": "xOdersydx",
+      "displayName": "xOdersydx",
+      "inGameName": "xOdersydx",
       "inGamePlatform": "ea",
-      "platform": "xbox",
-      "region": "US",
-      "mainMode": "unknown",
+      "platform": "pc",
+      "region": "unknown",
+      "mainMode": "gauntlet",
       "rank": 59
     },
     {
@@ -2462,7 +2463,7 @@
       "objPts": 4279.3,
       "objPtsPerHour": 39.12,
       "revivesPerHour": 4.24,
-      "rating": 32.3,
+      "rating": 32.2,
       "standouts": [],
       "sniperPct": 0.59,
       "autoPct": 97.46,
@@ -2479,6 +2480,46 @@
       "region": "CA",
       "mainMode": "unknown",
       "rank": 60
+    },
+    {
+      "matches": 186,
+      "wins": 131,
+      "losses": 55,
+      "kills": 4574,
+      "headshots": 1712,
+      "deaths": 1542,
+      "damage": 801862,
+      "assists": 1242,
+      "revives": 320,
+      "score": 3143480,
+      "timeSec": 267298,
+      "winPct": 70.43,
+      "kd": 2.97,
+      "killsPerMatch": 24.59,
+      "kpm": 1.03,
+      "dpm": 179.99,
+      "spm": 705.61,
+      "objPerMatch": 0.53,
+      "objPts": 1348,
+      "objPtsPerHour": 18.16,
+      "revivesPerHour": 4.31,
+      "rating": 32.08,
+      "standouts": [],
+      "sniperPct": 37.33,
+      "autoPct": 51.4,
+      "sniperKills": 1586,
+      "autoKills": 2184,
+      "sniperPerMatch": 8.526881720430108,
+      "autoPerMatch": 11.741935483870968,
+      "jetPct": 0,
+      "eaId": "SkimMilk19",
+      "displayName": "SkimMilk19",
+      "inGameName": "SkimMilk19",
+      "inGamePlatform": "ea",
+      "platform": "xbox",
+      "region": "US",
+      "mainMode": "unknown",
+      "rank": 61
     },
     {
       "matches": 479,
@@ -2502,7 +2543,7 @@
       "objPts": 12214.7,
       "objPtsPerHour": 64.54,
       "revivesPerHour": 4.13,
-      "rating": 29.73,
+      "rating": 29.66,
       "standouts": [
         "objPtsPerHour"
       ],
@@ -2520,7 +2561,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 61
+      "rank": 62
     },
     {
       "matches": 39,
@@ -2544,7 +2585,7 @@
       "objPts": 536.4,
       "objPtsPerHour": 36.73,
       "revivesPerHour": 10.48,
-      "rating": 29.63,
+      "rating": 29.57,
       "standouts": [],
       "sniperPct": 2.23,
       "autoPct": 92.77,
@@ -2560,7 +2601,7 @@
       "platform": "steam",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 62
+      "rank": 63
     },
     {
       "matches": 471,
@@ -2584,7 +2625,7 @@
       "objPts": 7724.7,
       "objPtsPerHour": 43.4,
       "revivesPerHour": 7.9,
-      "rating": 27,
+      "rating": 26.97,
       "standouts": [],
       "sniperPct": 0.15,
       "autoPct": 96.47,
@@ -2600,7 +2641,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 63
+      "rank": 64
     },
     {
       "matches": 240,
@@ -2624,7 +2665,7 @@
       "objPts": 3522.2,
       "objPtsPerHour": 37.25,
       "revivesPerHour": 13.6,
-      "rating": 25.77,
+      "rating": 25.76,
       "standouts": [
         "revivesPerHour"
       ],
@@ -2642,7 +2683,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 64
+      "rank": 65
     },
     {
       "matches": 53,
@@ -2666,7 +2707,7 @@
       "objPts": 841.6,
       "objPtsPerHour": 41.08,
       "revivesPerHour": 4.3,
-      "rating": 24.23,
+      "rating": 24.24,
       "standouts": [],
       "sniperPct": 0,
       "autoPct": 98.5,
@@ -2682,7 +2723,7 @@
       "platform": "ps",
       "region": "NA Weat",
       "mainMode": "both",
-      "rank": 65
+      "rank": 66
     },
     {
       "matches": 278,
@@ -2706,7 +2747,7 @@
       "objPts": 5567.5,
       "objPtsPerHour": 54.27,
       "revivesPerHour": 4.9,
-      "rating": 22.51,
+      "rating": 22.54,
       "standouts": [],
       "sniperPct": 15.7,
       "autoPct": 81.89,
@@ -2722,7 +2763,7 @@
       "platform": "pc",
       "region": "Central",
       "mainMode": "gauntlet",
-      "rank": 66
+      "rank": 67
     },
     {
       "matches": 73,
@@ -2746,7 +2787,7 @@
       "objPts": 1792.7,
       "objPtsPerHour": 63.54,
       "revivesPerHour": 2.34,
-      "rating": 22.16,
+      "rating": 22.12,
       "standouts": [
         "objPtsPerHour"
       ],
@@ -2764,7 +2805,7 @@
       "platform": "steam",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 67
+      "rank": 68
     },
     {
       "matches": 536,
@@ -2788,7 +2829,7 @@
       "objPts": 4712,
       "objPtsPerHour": 24.31,
       "revivesPerHour": 9.72,
-      "rating": 20.12,
+      "rating": 19.99,
       "standouts": [],
       "sniperPct": 71.97,
       "autoPct": 19.75,
@@ -2804,7 +2845,7 @@
       "platform": "ea",
       "region": "CA",
       "mainMode": "unknown",
-      "rank": 68
+      "rank": 69
     },
     {
       "matches": 79,
@@ -2828,7 +2869,7 @@
       "objPts": 974.2,
       "objPtsPerHour": 32.57,
       "revivesPerHour": 3.34,
-      "rating": 19.23,
+      "rating": 19.18,
       "standouts": [],
       "sniperPct": 17.37,
       "autoPct": 80.31,
@@ -2844,7 +2885,7 @@
       "platform": "ps",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 69
+      "rank": 70
     },
     {
       "matches": 33,
@@ -2868,7 +2909,7 @@
       "objPts": 306.9,
       "objPtsPerHour": 23.33,
       "revivesPerHour": 5.4,
-      "rating": 17.74,
+      "rating": 17.64,
       "standouts": [],
       "sniperPct": 10.1,
       "autoPct": 75.32,
@@ -2884,7 +2925,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 70
+      "rank": 71
     },
     {
       "matches": 140,
@@ -2908,7 +2949,7 @@
       "objPts": 2518.4,
       "objPtsPerHour": 47.84,
       "revivesPerHour": 4.96,
-      "rating": 16.08,
+      "rating": 16.2,
       "standouts": [],
       "sniperPct": 12.33,
       "autoPct": 84.32,
@@ -2924,7 +2965,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 71
+      "rank": 72
     },
     {
       "matches": 668,
@@ -2948,7 +2989,7 @@
       "objPts": 6012.8,
       "objPtsPerHour": 25.04,
       "revivesPerHour": 2.07,
-      "rating": 16,
+      "rating": 15.78,
       "standouts": [
         "sniperPerMatch"
       ],
@@ -2966,7 +3007,7 @@
       "platform": "pc",
       "region": "unknown",
       "mainMode": "gauntlet",
-      "rank": 72
+      "rank": 73
     },
     {
       "matches": 52,
@@ -2990,7 +3031,7 @@
       "objPts": 517.1,
       "objPtsPerHour": 29.09,
       "revivesPerHour": 3.43,
-      "rating": 13.23,
+      "rating": 13.26,
       "standouts": [],
       "sniperPct": 31.46,
       "autoPct": 42.7,
@@ -3006,7 +3047,7 @@
       "platform": "ea",
       "region": "US",
       "mainMode": "unknown",
-      "rank": 73
+      "rank": 74
     }
   ],
   "provisional": [
