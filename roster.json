@@ -1526,5 +1526,17 @@
     "source": "selfserve",
     "inGameName": "Pwnja",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "ADabWillDo1998",
+    "displayName": "ADabWillDo1998",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1005863667826",
+    "nucleusId": "1012611267826",
+    "source": "selfserve",
+    "inGameName": "ADabWillDo1998",
+    "inGamePlatform": "ea"
   }
 ]
