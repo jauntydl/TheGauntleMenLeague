@@ -1538,5 +1538,17 @@
     "source": "selfserve",
     "inGameName": "ADabWillDo1998",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "ADabWillDo27",
+    "displayName": "ADabWillDo27",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1008968329905",
+    "nucleusId": "1019655729905",
+    "source": "selfserve",
+    "inGameName": "ADabWillDo27",
+    "inGamePlatform": "ea"
   }
 ]
