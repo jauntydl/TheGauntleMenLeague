@@ -1550,5 +1550,17 @@
     "source": "selfserve",
     "inGameName": "ADabWillDo27",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "itsichor",
+    "displayName": "itsichor",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009689274208",
+    "nucleusId": "1020717074208",
+    "source": "selfserve",
+    "inGameName": "itsichor",
+    "inGamePlatform": "ea"
   }
 ]
