@@ -1562,5 +1562,17 @@
     "source": "selfserve",
     "inGameName": "itsichor",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Viandinea",
+    "displayName": "Viandinea",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "248133727",
+    "nucleusId": "2310210542",
+    "source": "selfserve",
+    "inGameName": "Viandinea",
+    "inGamePlatform": "steam"
   }
 ]
