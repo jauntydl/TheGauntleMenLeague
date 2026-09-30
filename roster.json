@@ -1574,5 +1574,17 @@
     "source": "selfserve",
     "inGameName": "Viandinea",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "sonofthebearded",
+    "displayName": "sonofthebearded",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1832131933",
+    "nucleusId": "1004549013671",
+    "source": "selfserve",
+    "inGameName": "sonofthebearded",
+    "inGamePlatform": "xboxone"
   }
 ]
