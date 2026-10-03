@@ -97,7 +97,7 @@
     "nucleusId": "2266847011",
     "source": "community",
     "inGameName": "kricked",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Nickybzbz",
@@ -133,7 +133,7 @@
     "nucleusId": "2832289777",
     "source": "community",
     "inGameName": "SidewalkEnf0rcer",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Chance-luck",
@@ -217,7 +217,7 @@
     "nucleusId": "1005724991407",
     "source": "imported",
     "inGameName": "Unreal413",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "wyldd00d",
@@ -241,7 +241,7 @@
     "nucleusId": "2300975878",
     "source": "imported",
     "inGameName": "Monkey76083",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "pizzawolf238",
@@ -253,7 +253,7 @@
     "nucleusId": "1011490553237",
     "source": "imported",
     "inGameName": "pizzawolf238",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "L4gent_Secret",
@@ -613,7 +613,7 @@
     "nucleusId": "2381580389",
     "source": "imported",
     "inGameName": "pscreen86",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Horrorphex",
@@ -649,7 +649,7 @@
     "nucleusId": "1000099782978",
     "source": "imported",
     "inGameName": "DaddyDemocracy",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "WhalersAPA",
@@ -1033,7 +1033,7 @@
     "nucleusId": "1000784997099",
     "source": "imported",
     "inGameName": "hrsaputra",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "RedDevil51",
@@ -1585,6 +1585,6 @@
     "nucleusId": "1004549013671",
     "source": "selfserve",
     "inGameName": "sonofthebearded",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   }
 ]
