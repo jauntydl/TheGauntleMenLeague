@@ -1,9 +1,10 @@
 {
-  "currentSeason": "Season4",
+  "currentSeason": "Season5",
   "seasons": [
     "Season2",
     "Season3",
-    "Season4"
+    "Season4",
+    "Season5"
   ],
-  "builtAt": "2026-10-12T19:11:04.587Z"
+  "builtAt": "2026-10-13T17:03:34.379Z"
 }
