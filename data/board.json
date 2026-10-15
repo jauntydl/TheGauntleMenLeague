@@ -7,7 +7,7 @@
       "Season4",
       "Season5"
     ],
-    "builtAt": "2026-10-13T17:03:34.379Z"
+    "builtAt": "2026-10-15T14:16:13.433Z"
   },
   "seasons": {
     "Season2": [],
@@ -5839,7 +5839,7 @@
         "eaId": "SidewalkEnf0rcer",
         "displayName": "SidewalkEnf0rcer",
         "inGameName": "SidewalkEnf0rcer",
-        "inGamePlatform": "ea",
+        "inGamePlatform": "steam",
         "platform": "pc",
         "region": "NA East",
         "mainMode": "gauntlet",
