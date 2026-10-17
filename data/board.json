@@ -7,7 +7,7 @@
       "Season4",
       "Season5"
     ],
-    "builtAt": "2026-10-15T14:16:13.433Z"
+    "builtAt": "2026-10-17T13:04:31.203Z"
   },
   "seasons": {
     "Season2": [],
@@ -3063,7 +3063,7 @@
         "eaId": "Meecheel",
         "displayName": "Meecheel",
         "inGameName": "Meecheel",
-        "inGamePlatform": "ea",
+        "inGamePlatform": "xboxone",
         "platform": "ea",
         "region": "US",
         "mainMode": "unknown",
@@ -6406,7 +6406,7 @@
         "eaId": "Meecheel",
         "displayName": "Meecheel",
         "inGameName": "Meecheel",
-        "inGamePlatform": "ea",
+        "inGamePlatform": "xboxone",
         "platform": "ea",
         "region": "US",
         "mainMode": "unknown",
