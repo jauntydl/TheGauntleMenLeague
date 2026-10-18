@@ -217,7 +217,7 @@
     "nucleusId": "1005724991407",
     "source": "imported",
     "inGameName": "Unreal413",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "wyldd00d",
@@ -517,7 +517,7 @@
     "nucleusId": "1011671824777",
     "source": "imported",
     "inGameName": "AtomicBoggy",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "MeowMix",
@@ -529,7 +529,7 @@
     "nucleusId": "1000492366086",
     "source": "imported",
     "inGameName": "MeowMix",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "EnriqueTheKid",
@@ -565,7 +565,7 @@
     "nucleusId": "1000333768762",
     "source": "imported",
     "inGameName": "Medrilan",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "TheOnlineSniper",
@@ -625,7 +625,7 @@
     "nucleusId": "1007537071582",
     "source": "imported",
     "inGameName": "Horrorphex",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Hyperioz",
@@ -757,7 +757,7 @@
     "nucleusId": "1004493298456",
     "source": "imported",
     "inGameName": "ShinyGengarr",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "Alizayuh",
@@ -901,7 +901,7 @@
     "nucleusId": "1003410165640",
     "source": "imported",
     "inGameName": "BananaBoat581",
-    "inGamePlatform": "xboxone"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "BashK1ng",
@@ -937,7 +937,7 @@
     "nucleusId": "1014532602658",
     "source": "imported",
     "inGameName": "MorsOrtu",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "lmafo7",
@@ -1033,7 +1033,7 @@
     "nucleusId": "1000784997099",
     "source": "imported",
     "inGameName": "hrsaputra",
-    "inGamePlatform": "steam"
+    "inGamePlatform": "ea"
   },
   {
     "eaId": "RedDevil51",
@@ -1081,7 +1081,7 @@
     "nucleusId": "2293739454",
     "source": "imported",
     "inGameName": "jomoorigotto",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   },
   {
     "eaId": "kdnOps",
@@ -1093,7 +1093,7 @@
     "nucleusId": "1007774717413",
     "source": "imported",
     "inGameName": "kdnOps",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "DarkQc",
@@ -1129,7 +1129,7 @@
     "nucleusId": "2250573644",
     "source": "imported",
     "inGameName": "RECON-RAT",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "pterodactyl",
@@ -1573,7 +1573,7 @@
     "nucleusId": "2310210542",
     "source": "selfserve",
     "inGameName": "Viandinea",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "steam"
   },
   {
     "eaId": "sonofthebearded",
@@ -1585,6 +1585,6 @@
     "nucleusId": "1004549013671",
     "source": "selfserve",
     "inGameName": "sonofthebearded",
-    "inGamePlatform": "ea"
+    "inGamePlatform": "xboxone"
   }
 ]
