@@ -7,7 +7,7 @@
       "Season4",
       "Season5"
     ],
-    "builtAt": "2026-10-18T13:25:39.394Z"
+    "builtAt": "2026-10-21T14:35:24.994Z"
   },
   "seasons": {
     "Season2": [],
@@ -2297,7 +2297,7 @@
         "eaId": "RECON-RAT",
         "displayName": "RECON-RAT",
         "inGameName": "RECON-RAT",
-        "inGamePlatform": "steam",
+        "inGamePlatform": "ea",
         "platform": "steam",
         "region": "US",
         "mainMode": "unknown",
@@ -3145,7 +3145,7 @@
         "eaId": "DIA6711",
         "displayName": "DIA6711",
         "inGameName": "DIA6711",
-        "inGamePlatform": "xboxone",
+        "inGamePlatform": "ea",
         "platform": "pc",
         "region": "unknown",
         "mainMode": "gauntlet",
@@ -5675,7 +5675,7 @@
         "eaId": "RECON-RAT",
         "displayName": "RECON-RAT",
         "inGameName": "RECON-RAT",
-        "inGamePlatform": "steam",
+        "inGamePlatform": "ea",
         "platform": "steam",
         "region": "US",
         "mainMode": "unknown",
@@ -6326,7 +6326,7 @@
         "eaId": "DIA6711",
         "displayName": "DIA6711",
         "inGameName": "DIA6711",
-        "inGamePlatform": "xboxone",
+        "inGamePlatform": "ea",
         "platform": "pc",
         "region": "unknown",
         "mainMode": "gauntlet",
@@ -6771,7 +6771,7 @@
         "eaId": "DIA6711",
         "displayName": "DIA6711",
         "inGameName": "DIA6711",
-        "inGamePlatform": "xboxone",
+        "inGamePlatform": "ea",
         "platform": "pc",
         "region": "unknown",
         "mainMode": "gauntlet",
