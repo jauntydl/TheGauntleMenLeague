@@ -10,6 +10,7 @@ import { alpha } from '@mui/material/styles';
 import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
 import { MODES, type ModeKey } from '@/lib/modes';
+import { shownName } from '@/lib/naming';
 import { RATING_WEIGHTS, ratedMetrics, type RatedMetric, type StandoutTrait } from '@/lib/rating';
 
 const DASH = '—';
@@ -21,15 +22,16 @@ const DASH = '—';
  * column without widening WIDE_TIER_MIN_PX puts the board back to scrolling
  * sideways, which has now happened twice — once when SPM landed and again
  * with OBJ/h. A test sums the rendered columns against this. Per mode because
- * the rated columns are: Rapid Royale rates two more metrics than Gauntlet.
+ * the rated columns are: Rapid Royale's set is one column wider than
+ * Gauntlet's, because it keeps K/D beside the KDA it rates.
  */
-export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1314, rapidRoyale: 1454 };
+export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1314, rapidRoyale: 1382 };
 
 /** Container padding (24px a side), the grid border, and its scrollbar. */
 export const CONTAINER_CHROME_PX = 65;
 
 /** Narrowest viewport allowed to show every column. */
-export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1400, rapidRoyale: 1520 };
+export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1400, rapidRoyale: 1450 };
 
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
@@ -146,11 +148,6 @@ const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: B
     icon: '🏋️',
     detail: (r) => `carrying the objective — ${r.objPtsPerHour?.toFixed(0)} points per hour`,
   },
-  // Rapid Royale's version of the same badge; the two never share a season.
-  objSpm: {
-    icon: '🏋️',
-    detail: (r) => `carrying the objective — ${r.objSpm?.toFixed(0)} objective score per minute`,
-  },
   revivesPerHour: {
     icon: <MedicCross />,
     detail: (r) => `revives — ${r.revivesPerHour?.toFixed(1)} per hour`,
@@ -215,14 +212,6 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     renderCell: (p) => fmtPct(p.row.top3Pct),
     getSortComparator: nullsLastComparator,
   },
-  apm: {
-    field: 'apm',
-    headerName: 'APM',
-    width: 68,
-    description: 'Assists per minute',
-    renderCell: (p) => fmtNum(p.row.apm),
-    getSortComparator: nullsLastComparator,
-  },
   objPtsPerHour: {
     field: 'objPtsPerHour',
     headerName: 'OBJ/h',
@@ -232,20 +221,20 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
     getSortComparator: nullsLastComparator,
   },
-  objSpm: {
-    field: 'objSpm',
-    headerName: 'OBJ/m',
-    width: 72,
-    description: 'Objective score per minute — the part of your score the game awards for objective play',
-    renderCell: (p) => fmtNum(p.row.objSpm, 0),
-    getSortComparator: nullsLastComparator,
-  },
   kd: {
     field: 'kd',
     headerName: 'K/D',
     width: 68,
     description: 'Kills per death',
     renderCell: (p) => fmtNum(p.row.kd),
+    getSortComparator: nullsLastComparator,
+  },
+  kda: {
+    field: 'kda',
+    headerName: 'KDA',
+    width: 68,
+    description: '(Kills + half of assists) per death',
+    renderCell: (p) => fmtNum(p.row.kda),
     getSortComparator: nullsLastComparator,
   },
   kpm: {
@@ -289,10 +278,9 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
 const RATED_LABEL: Record<RatedMetric, string> = {
   winPct: 'win rate',
   top3Pct: 'top-three rate',
-  apm: 'assists per minute',
   objPtsPerHour: 'objectives',
-  objSpm: 'objective score per minute',
   kd: 'K/D',
+  kda: 'KDA',
   kpm: 'kills per minute',
   spm: 'score per minute',
   revivesPerHour: 'revives per hour',
@@ -388,9 +376,9 @@ export function LeaderboardTable({
         description:
           'The name on the scoreboard in game. Hover a player for their EA ID and the name they go by in Discord.',
         // Sort on what is read, not on the EA ID behind it.
-        valueGetter: (_v, r) => r.inGameName ?? r.eaId,
+        valueGetter: (_v, r) => shownName(r),
         renderCell: (p) => {
-          const shown = p.row.inGameName ?? p.row.eaId;
+          const shown = shownName(p.row);
           // An EA ID is often a suffixed variant of the in-game name, and a
           // Discord handle can be a third name again. Both belong somewhere
           // findable, neither belongs in a column you scan down.
@@ -488,6 +476,10 @@ export function LeaderboardTable({
 
       // Everything below here is context, not rating input: volume, record and
       // the two counts the rating deliberately does not read.
+      //
+      // Plain K/D leads it where the mode rates KDA instead, kept for
+      // reference because it is the figure everyone already knows.
+      ...(RATING_WEIGHTS[mode].kd === undefined ? [RATED_COLUMNS.kd] : []),
       {
         field: 'record',
         headerName: 'W–L',
@@ -546,14 +538,13 @@ export function LeaderboardTable({
       // From a tablet up: how they play and their headline combat rates.
       sniperPct: !isNarrow,
       kd: !isNarrow,
+      kda: !isNarrow,
       killsPerMatch: !isNarrow,
       // Objective work is the second-heaviest part of the rating, so it earns
       // a place alongside them rather than with the supporting rates.
       objPtsPerHour: !isNarrow,
       // Rapid Royale's heaviest rates after the win, for the same reason.
       top3Pct: !isNarrow,
-      apm: !isNarrow,
-      objSpm: !isNarrow,
       // Only on a wide screen: the supporting detail.
       kills: !isMedium,
       headshots: !isMedium,

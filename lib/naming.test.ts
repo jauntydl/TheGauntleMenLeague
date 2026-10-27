@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickInGameName, pickInGameNameFor, type Persona } from './naming';
+import { pickInGameName, pickInGameNameFor, type Persona, shownName } from './naming';
 
 const p = (displayName: string, platform: string): Persona => ({ displayName, platform });
 
@@ -97,5 +97,16 @@ describe('pickInGameNameFor', () => {
     expect(
       pickInGameNameFor('TTVLezWin', [p('TTVLezWin', 'ea'), p('LezWin', 'steam')], 'ps5'),
     ).toBe('LezWin');
+  });
+});
+
+describe('shownName', () => {
+  it('prefers a hand-set name over the resolved one and the EA ID', () => {
+    expect(shownName({ eaId: 'Antimere99', inGameName: 'Antimere99' })).toBe('OO');
+  });
+
+  it('falls back to the in-game name, then the EA ID', () => {
+    expect(shownName({ eaId: 'TTVLezWin', inGameName: 'LezWin' })).toBe('LezWin');
+    expect(shownName({ eaId: 'TTVLezWin' })).toBe('TTVLezWin');
   });
 });

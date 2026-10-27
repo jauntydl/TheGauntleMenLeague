@@ -62,6 +62,9 @@ export type Metrics = {
   /** null when the denominator is zero; the UI renders these as an em dash. */
   winPct: number | null;
   kd: number | null;
+  /** (kills + half of assists) per death. Rapid Royale only — it is what that
+   *  mode rates in place of K/D. */
+  kda: number | null;
   /** Kills per match. Distinct from kpm, which is per minute. */
   killsPerMatch: number | null;
   kpm: number | null;
@@ -84,14 +87,9 @@ export type Metrics = {
    *  own rate of objective work. */
   objPtsPerHour: number | null;
   revivesPerHour: number | null;
-  /** Objective score per minute, Rapid Royale only — the mode has no
-   *  objective counters for Kricked's formula. Null under a rollup guard. */
-  objSpm: number | null;
   /** Share of matches finished in the top three, Rapid Royale only. Null
    *  when the placement counter is inconsistent with wins and matches. */
   top3Pct: number | null;
-  /** Assists per minute, Rapid Royale only. */
-  apm: number | null;
   /** Overall rating, 0-100, percentile-weighted against the ranked field. */
   rating: number | null;
   /** The trait this player is most exceptional at, if any names them. */

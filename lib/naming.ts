@@ -119,3 +119,21 @@ export function pickInGameNameFor(
   const fromPreferred = preferred.length > 0 ? pickInGameName(eaId, preferred) : eaId;
   return fromPreferred !== eaId ? fromPreferred : pickInGameName(eaId, personas);
 }
+
+/**
+ * Names set by hand, keyed by EA ID, that win over anything the build
+ * resolved. For a member whose in-game name EA does not expose at all, so no
+ * persona lookup can ever find it.
+ *
+ * Applied where the name is shown, not written into roster.json or the board:
+ * the build treats inGameName as a cache it may refresh, and archived seasons
+ * are frozen, so either place would lose it or miss rows.
+ */
+export const NAME_OVERRIDES: Record<string, string> = {
+  Antimere99: 'OO',
+};
+
+/** The name the board shows for a row: an override, the in-game name, or the EA ID. */
+export function shownName(row: { eaId: string; inGameName?: string }): string {
+  return NAME_OVERRIDES[row.eaId] ?? row.inGameName ?? row.eaId;
+}

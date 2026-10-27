@@ -8,7 +8,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 50, wins: 25, losses: 25, kills: 100, headshots: 25, deaths: 50, damage: 1000,
   assists: 0, revives: 0, score: 42000, timeSec: 3600,
-  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null,
+  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, kda: null,
   revivesPerHour: 3, rating: null, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: null,
   ...over,
 });
@@ -53,12 +53,14 @@ describe('rateAll', () => {
       'winPct', 'objPtsPerHour', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
     expect(Object.keys(RATING_WEIGHTS.rapidRoyale)).toEqual([
-      'winPct', 'top3Pct', 'apm', 'objSpm', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
+      'winPct', 'top3Pct', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
   });
 
   it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five out of both', () => {
     expect(RATING_WEIGHTS.rapidRoyale.objPtsPerHour).toBeUndefined();
+    // Rapid Royale rates KDA in K/D's place; rating both would count kills twice.
+    expect(RATING_WEIGHTS.rapidRoyale.kd).toBeUndefined();
     expect(Object.keys(RATING_WEIGHTS.gauntlet)).not.toContain('top3Pct');
   });
 
@@ -72,13 +74,13 @@ describe('rateAll', () => {
   it('rates a Rapid Royale field on its own metrics', () => {
     // Identical on every Gauntlet metric, apart only on Rapid Royale ones.
     const [low, high] = rateFor([
-      row({ eaId: 'low', top3Pct: 40, apm: 0.2, objSpm: 100 }),
-      row({ eaId: 'high', top3Pct: 80, apm: 0.6, objSpm: 300 }),
+      row({ eaId: 'low', top3Pct: 40, kda: 2 }),
+      row({ eaId: 'high', top3Pct: 80, kda: 6 }),
     ], 'rapidRoyale');
     expect(high.rating!).toBeGreaterThan(low.rating!);
     const [a, b] = rateAll([
-      row({ eaId: 'low', top3Pct: 40, apm: 0.2, objSpm: 100 }),
-      row({ eaId: 'high', top3Pct: 80, apm: 0.6, objSpm: 300 }),
+      row({ eaId: 'low', top3Pct: 40, kda: 2 }),
+      row({ eaId: 'high', top3Pct: 80, kda: 6 }),
     ]);
     expect(a.rating).toBe(b.rating);
   });

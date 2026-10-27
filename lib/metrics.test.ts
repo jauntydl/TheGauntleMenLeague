@@ -298,7 +298,6 @@ const rrSlice: StatSlice = {
   scorein_gm_rr_trio: 823300,
   topthree_gm_rr_trio: 68,
   intel_pickup_gm_rr_trio: 535,
-  score_objective_total: 335250,
   // The battle-royale rollup, which must never be read in its place.
   kills_gm_granitebr: 1254,
 };
@@ -314,11 +313,19 @@ describe('computeMetrics on Rapid Royale', () => {
     expect(m.spm).toBeCloseTo(821.47, 2);
   });
 
-  it('computes top-3 rate, assists per minute and objective score per minute', () => {
+  it('computes the top-3 rate', () => {
+    expect(rr(rrSlice).top3Pct).toBeCloseTo(80, 1);
+  });
+
+  it('counts an assist as half a kill in KDA, and keeps plain K/D beside it', () => {
     const m = rr(rrSlice);
-    expect(m.top3Pct).toBeCloseTo(80, 1);
-    expect(m.apm).toBeCloseTo(0.445, 3);
-    expect(m.objSpm).toBeCloseTo(334.5, 1);
+    expect(m.kda).toBeCloseTo((989 + 0.5 * 446) / 147, 6);
+    expect(m.kd).toBeCloseTo(989 / 147, 6);
+  });
+
+  it('gives KDA the same zero-death and no-match handling as K/D', () => {
+    expect(rr({ ...rrSlice, deaths_gm_rr_trio: 0 }).kda).toBe(989 + 223);
+    expect(rr({ ...rrSlice, matches_gm_rr_trio: 0 }).kda).toBeNull();
   });
 
   it('leaves Kricked\'s objective formula out — the mode has no objectives', () => {
@@ -333,14 +340,9 @@ describe('computeMetrics on Rapid Royale', () => {
     expect(rr({ ...rrSlice, topthree_gm_rr_trio: 51 }).top3Pct).toBeNull(); // fewer than wins
   });
 
-  it('rejects an objective score larger than the whole score — that is a rollup', () => {
-    expect(rr({ ...rrSlice, score_objective_total: 900000 }).objSpm).toBeNull();
-  });
-
   it('gives Gauntlet none of the Rapid Royale rates', () => {
     const m = computeFor({ ...rrSlice, matches_gm_gntgauntlet: 10, tp_gm_gntgauntlet: 600, topthree_gm_gntgauntlet: 5 }, MODES.gauntlet);
     expect(m.top3Pct).toBeNull();
-    expect(m.apm).toBeNull();
-    expect(m.objSpm).toBeNull();
+    expect(m.kda).toBeNull();
   });
 });

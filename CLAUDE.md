@@ -1,7 +1,8 @@
 # The GauntleMen League
 
-A Battlefield 6 **Gauntlet** leaderboard for a ~300 person community, ranked by
-season on skill-based rate stats.
+A Battlefield 6 leaderboard for a ~300 person community, ranked by season on
+skill-based rate stats. **Seasons 3–4 were Gauntlet** (now archived); Gauntlet
+was removed in Season 5, and **from Season 5 the board ranks Rapid Royale**.
 
 ```
 GitHub Action (daily cron, 09:00 UTC)
@@ -22,8 +23,48 @@ data is committed, so a page load can never hit the free community API.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-09-15): 115 roster members · Season 4 has 61 ranked, 16
-provisional, 3 unresolved · 240 tests passing · `tsc --noEmit` clean · deployed.
+Current state (2026-10-27): 133 roster members · Season 5 (Rapid Royale) has
+45 ranked, 24 provisional, 3 unresolved · Seasons 3–4 archived, Season 2
+dropped · 282 tests passing · `tsc --noEmit` clean · deployed.
+
+---
+
+## ⚠️ Past seasons are archived — the board is the only copy
+
+The API stops serving a season's stats some time after it ends. So
+`buildBoard` computes **only the current season** from the API and carries
+every other season over **verbatim** from the previously committed
+`data/board.json`. A season freezes the first build after a newer one goes
+current; signups (`mergePlayer`) never touch it either. Past seasons the API
+still reports are ignored — a season is only ever kept, never rediscovered.
+
+Consequences:
+- `data/board.json` in git **is the archive**. Don't regenerate it from an
+  empty file, and don't hand-edit archived seasons. Git history is the backup.
+- Dropping a season (Season 2 was, 2026-10-27) means deleting its keys from
+  `board.json` and its `data/seasonN.json` once; nothing re-adds it.
+- An outgoing season freezes as of the last build before rollover — up to a
+  day or two stale given the cron's lateness.
+- Archived rows predate later metrics (no `kda`/`top3Pct`), which is why
+  `fmtNum`/`fmtPct` guard `== null`.
+
+## Modes
+
+`lib/modes.ts` maps season → mode: below `FIRST_RAPID_ROYALE_SEASON` (5) is
+Gauntlet (`GraniteGauntlet0`, suffix `_gm_gntgauntlet`), from it on Rapid Royale
+(`GraniteRapidTrio0`, suffix `_gm_rr_trio`). Metrics read `<stat>_gm_<suffix>`,
+weights are per mode (`RATING_WEIGHTS[mode]`), and the board draws each mode in
+its own accent (`app/accents.ts`): Gauntlet amber, Rapid Royale magenta.
+
+Rapid Royale suffix notes (verified 2026-10-27): `rr_all` matches `rr_trio`
+field for field (likely a parent rollup); `granitebr` is a battle-royale rollup
+that differs between the squad BR and Rapid Royale slices — never read it. The
+mode has **no objective counters** (only `intel_pickup`), and has placement
+counters (`topthree`, `topfive`, `topten`; `topten` was 100% for everyone).
+
+`NAME_OVERRIDES` in `lib/naming.ts` hand-sets a displayed name (Antimere99 →
+OO), applied at render — not in `roster.json`, whose `inGameName` the build
+treats as a refreshable cache.
 
 ---
 
@@ -63,9 +104,10 @@ until `npm run data` runs.
 Worse, adding a *new* metric without rebuilding takes the page down.
 `lib/data.ts` casts the committed JSON with `as unknown as BoardFile`, so
 TypeScript cannot see the field is missing; at runtime the new column reads
-`undefined`, and `fmtNum` (`components/LeaderboardTable.tsx:20`) only guards
-`null`, so `undefined.toFixed()` throws. Ship code and regenerated data in the
-same push.
+`undefined`. `fmtNum`/`fmtPct` now guard `== null`, so the page shows dashes
+instead of crashing — but a rated metric missing from the current season still
+silently drops out of everyone's rating. Ship code and regenerated data in the
+same push. (Archived seasons are never regenerated, so they never gain it.)
 
 ## The daily refresh is best-effort, and has never been on time
 
@@ -113,9 +155,31 @@ Consider [sponsoring them](https://github.com/sponsors/community-network).
 
 ## The rating
 
-Weights live in `RATING_WEIGHTS` (`lib/rating.ts`). The `/rating` page reads
-them from there rather than repeating the numbers in prose, so the page cannot
-quietly disagree with the code. Set 2026-09-15.
+Weights live in `RATING_WEIGHTS[mode]` (`lib/rating.ts`). The `/rating` page
+reads them from there rather than repeating the numbers in prose, so the page
+cannot quietly disagree with the code.
+
+**Rapid Royale (Season 5 on), set 2026-10-27** — the user's direction, in order:
+
+| Weight | Metric | Why |
+|---|---|---|
+| 20% | Win rate | Still the heaviest single weight — it's the point of the mode |
+| 10% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
+| 18% | KDA | (kills + 0.5 × assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference |
+| 16% | Kills per minute | |
+| 15% | Score per minute | Also where objective play still counts |
+| 13% | Revives per hour | |
+| 8% | Damage per minute | |
+
+Placement is held to 30% deliberately: a win and a top three are shared with
+two teammates, so they say as much about who you queued with as about you.
+Tried and dropped, don't re-add without asking: **top-5 rate** (nests a third
+time), **objective score per minute** (`score_objective_total`), **assists per
+minute** (double-counts assists once KDA carries them). Kricked's objective
+formula is Gauntlet-only — Rapid Royale has nothing for it to count.
+
+**Gauntlet (Seasons 3–4, archived), set 2026-09-15.** Frozen with the seasons;
+changing these weights changes nothing on the board.
 
 | Weight | Metric | Why |
 |---|---|---|
@@ -265,8 +329,6 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 
 ## Known loose ends
 
-- `fmtNum` guards `null` but not `undefined` — see the rebuild warning above. A
-  one-character fix (`v == null`) would make the trap unreachable.
 - Phone width at 400px has never been checked on a real device.
 - `IHerkyI` has 303 Gauntlet matches (ranked #59, rating 13.02), which sits oddly
   against their "low xp but decent at BR" self-description. The EA ID resolves to

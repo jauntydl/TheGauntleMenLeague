@@ -22,7 +22,7 @@ const row = (over: Partial<BoardRow>): BoardRow => {
     eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
     matches: 20, wins: 10, losses: 10, kills: 100, headshots: 25, deaths: 50, damage: 1000,
     assists: 0, revives: 0, score: 42000, timeSec: 3600,
-    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
+    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, kda: null, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
     ...over,
   };
   // eaId is the roster key, is unique in production, and is what the Player
@@ -130,6 +130,14 @@ describe('LeaderboardTable', () => {
     expect(screen.queryByText('TTVLezWin')).not.toBeInTheDocument();
     // Both other names stay reachable rather than being dropped.
     expect(screen.getByLabelText('TTVLezWin on EA · Lez in Discord')).toBeInTheDocument();
+  });
+
+  it('shows a hand-set name in place of the EA ID, keeping the EA ID on hover', () => {
+    render(<LeaderboardTable mode="rapidRoyale" rows={[row({
+      eaId: 'Antimere99', displayName: 'Antimere99', inGameName: 'Antimere99',
+    })]} />);
+    expect(screen.getByText('OO')).toBeInTheDocument();
+    expect(screen.getByLabelText('Antimere99 on EA')).toBeInTheDocument();
   });
 
 
@@ -269,7 +277,11 @@ describe('LeaderboardTable', () => {
       g.unmount();
       const r = render(<LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'R' })]} />);
       const rFields = [...r.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
-      expect(rFields).toEqual(expect.arrayContaining(['top3Pct', 'apm', 'objSpm']));
+      expect(rFields).toEqual(expect.arrayContaining(['top3Pct', 'kda', 'kd']));
+      expect(rFields).not.toContain('objSpm');
+      expect(rFields).not.toContain('apm');
+      // KDA is rated; K/D stays, unmarked, for reference.
+      expect(markedFields(r.container)).not.toContain('kd');
       expect(rFields).not.toContain('objPtsPerHour');
     });
   });

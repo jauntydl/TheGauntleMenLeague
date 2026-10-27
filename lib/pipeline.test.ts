@@ -298,6 +298,8 @@ describe('buildBoard', () => {
             { name: 'topthree_gm_rr_trio', value: 68, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'tp_gm_rr_trio', value: 60134, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'assists_gm_rr_trio', value: 446, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'kills_gm_rr_trio', value: 989, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'deaths_gm_rr_trio', value: 147, fields: dim('GraniteRapidTrio0', 'Season5') },
           ],
         }],
       }],
@@ -305,7 +307,8 @@ describe('buildBoard', () => {
     const row = buildBoard([dark], [rr], 'Season5').seasons.Season5[0];
     expect(row.matches).toBe(85);
     expect(row.top3Pct).toBe(80);
-    expect(row.apm).toBe(0.45);
+    expect(row.kda).toBe(8.24); // (989 + 446 / 2) / 147, rounded
+    expect(row.kd).toBe(6.73);
     expect(row.rating).not.toBeNull();
   });
 

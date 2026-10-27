@@ -35,27 +35,36 @@ const GAUNTLET_WEIGHTS = {
 /**
  * Rapid Royale (Season 5 on). Set 2026-10-27.
  *
- * Placement takes the largest block, 38%, because it is what a battle royale
- * is decided on: the win at 26% and finishing top three at 12%. They nest —
- * every win is a top three — so the top-three rate is what separates someone
- * who goes deep every match from someone who wins some and drops early in the
- * rest. Top five was considered and left out; it nests a third time.
+ * Placement is 30%: the win at 20%, still the heaviest single weight because
+ * it is the point of the mode, and finishing top three at 10%. It is held
+ * there deliberately. A win and a top three are shared with two teammates, so
+ * both say as much about who you queued with as about you — the other 70%
+ * goes to what is yours alone. The two nest (every win is a top three), so
+ * the top-three rate is what separates someone who goes deep every match from
+ * someone who wins some and drops early in the rest. Top five was considered
+ * and left out; it nests a third time.
  *
- * Assists sit level with the heaviest combat stats at 12%: in trios, the
- * knock a teammate finishes is as much the fight as the finish. Objective
- * score per minute stands in for Kricked's formula, which this mode has no
- * counters for. Damage stays a token weight for the same reason as Gauntlet.
+ * Survival is rated as KDA rather than K/D, because in trios the knock a
+ * teammate finishes is as much the fight as the finish: an assist is worth
+ * half a kill (KDA_ASSIST_VALUE). Plain K/D stays on the board unrated, for
+ * reference. Assists per minute was rated alongside it at first and dropped
+ * once KDA carried the assists — rating both counted them twice.
+ *
+ * There is no objective metric. The mode has no counters for Kricked's
+ * formula, and objective score per minute was tried and dropped; objective
+ * play still counts through score per minute. Damage is lighter than the
+ * other individual rates because it is already counted once in the kills it
+ * sets up, but heavier than in Gauntlet now that placement no longer carries
+ * the rating.
  */
 const RAPID_ROYALE_WEIGHTS = {
-  winPct: 0.26,
-  top3Pct: 0.12,
-  apm: 0.12,
-  objSpm: 0.1,
-  kd: 0.1,
-  kpm: 0.1,
-  spm: 0.08,
-  revivesPerHour: 0.08,
-  dpm: 0.04,
+  winPct: 0.2,
+  top3Pct: 0.1,
+  kda: 0.18,
+  kpm: 0.16,
+  spm: 0.15,
+  revivesPerHour: 0.13,
+  dpm: 0.08,
 } as const;
 
 export type RatedMetric = keyof typeof GAUNTLET_WEIGHTS | keyof typeof RAPID_ROYALE_WEIGHTS;
@@ -92,9 +101,6 @@ export const STANDOUT_TRAITS = [
   'killsPerMatch',
   'spm',
   'objPtsPerHour',
-  // Rapid Royale's objective figure keeps the carry badge alive in a mode
-  // with no objectives for objPtsPerHour to count.
-  'objSpm',
   'revivesPerHour',
   'sniperPerMatch',
   'autoPerMatch',

@@ -21,6 +21,30 @@ const AUTO_CLASSES = ['ar', 'crb', 'smg', 'mg'] as const;
 const PRECISION_CLASSES = ['snp', 'dmr'] as const;
 const OTHER_CLASSES = ['sg', 'pst'] as const;
 
+/** An assist is worth half a kill in KDA. Set 2026-10-27. */
+export const KDA_ASSIST_VALUE = 0.5;
+
+/**
+ * Kills per death, or (kills + half of assists) per death for KDA. Exported
+ * so a re-rank of committed rows computes it exactly as the build does.
+ *
+ * Kills-as-K/D covers "played matches, died zero times" — a real, if rare,
+ * outcome. It is not a substitute for missing match data: some season slices
+ * (see buildBoard) carry a lifetime/legacy Kills_Total with no
+ * matches/deaths/time at all, and treating that as a K/D would render an
+ * absurd rate stat (thousands of "kills per death"). Require matches > 0.
+ */
+export function perDeath(credit: number, deaths: number, matches: number): number | null {
+  if (matches === 0) return null;
+  if (deaths > 0) return credit / deaths;
+  if (credit > 0) return credit;
+  return null;
+}
+
+/** KDA for one player's counts. */
+export const kdaOf = (kills: number, assists: number, deaths: number, matches: number): number | null =>
+  perDeath(kills + KDA_ASSIST_VALUE * assists, deaths, matches);
+
 /**
  * Read the mode-suffixed counters, never the unsuffixed `*_Total` ones.
  *
@@ -81,7 +105,7 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
   //
   // Gauntlet only. Rapid Royale has no objective counters at all — only intel
   // pickups — so the formula would quietly become "3 x intel" under a name
-  // that says otherwise. Rapid Royale reads objective score instead (objSpm).
+  // that says otherwise. Rapid Royale has no objective metric at all.
   const objPts = rapidRoyale
     ? 0
     : 0.1 * own('obj_time') + 10 * own('obj_destroyed') + 5 * own('obj_disarmed') + 3 * own('intel_pickup');
@@ -89,15 +113,6 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
   // Superseded by the weighted objective points below, and read by nothing.
   // Kept only because it is already in the committed JSON.
   const objActions = own('obj_armed') + own('obj_defended') + own('obj_destroyed') + own('obj_disarmed');
-
-  // Rapid Royale's objective figure: the part of a player's score the game
-  // awards for objective play. There is no suffixed counter for it, so this
-  // is the one unsuffixed field the board reads — the same hazard as
-  // Kills_Total. In a Rapid Royale slice the unsuffixed totals agree with the
-  // mode's own (score_total === scorein_gm_rr_trio), but a share of score can
-  // never exceed the score, so anything larger is a rollup and reads as null.
-  const objScore = num(slice, 'score_objective_total');
-  const objScoreTrusted = rapidRoyale && objScore > 0 && score > 0 && objScore <= score;
 
   // Finishing in the top three, Rapid Royale only. Placement is the best input
   // a battle royale has, but Gauntlet's placement counters did not add up —
@@ -121,16 +136,7 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
   const weaponKills = autoKills + precisionKills + classKills(OTHER_CLASSES);
   const weaponMixTrusted = weaponKills > 0 && kills > 0 && weaponKills <= kills * 1.1;
 
-  // Kills-as-K/D covers "played matches, died zero times" — a real, if rare,
-  // outcome. It is not a substitute for missing match data: some season
-  // slices (see buildBoard) carry a lifetime/legacy Kills_Total with no
-  // matches/deaths/time at all, and treating that as a K/D would render an
-  // absurd rate stat (thousands of "kills per death"). Require matches > 0.
-  let kd: number | null;
-  if (matches === 0) kd = null;
-  else if (deaths > 0) kd = kills / deaths;
-  else if (kills > 0) kd = kills;
-  else kd = null;
+  const kd = perDeath(kills, deaths, matches);
 
   return {
     matches,
@@ -146,6 +152,9 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
     timeSec,
     winPct: matches > 0 ? (wins / matches) * 100 : null,
     kd,
+    // Rapid Royale ranks on KDA; K/D stays on the board as the plain figure.
+    // Gauntlet keeps null, like the other Rapid Royale rates.
+    kda: rapidRoyale ? kdaOf(kills, assists, deaths, matches) : null,
     killsPerMatch: matches > 0 ? kills / matches : null,
     kpm: minutes > 0 ? kills / minutes : null,
     dpm: minutes > 0 ? damage / minutes : null,
@@ -160,11 +169,7 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
     // is: the objective fields are mode counters and start at Season 3, and a
     // fabricated zero would sit that player at the bottom of a 25% percentile.
     objPtsPerHour: hours > 0 && objPts > 0 ? objPts / hours : null,
-    objSpm: objScoreTrusted && minutes > 0 ? objScore / minutes : null,
     top3Pct: top3Trusted ? (top3 / matches) * 100 : null,
-    // Rapid Royale only: assists are a rated stat there and nowhere else, and
-    // leaving Gauntlet's null keeps the archived seasons' rows as they were.
-    apm: rapidRoyale && minutes > 0 ? assists / minutes : null,
     revivesPerHour: hours > 0 ? revives / hours : null,
     // Both filled in by rateAll once the whole field is known.
     rating: null,

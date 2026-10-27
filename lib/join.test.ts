@@ -7,7 +7,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 100, wins: 50, losses: 50, kills: 1000, headshots: 200, deaths: 500, damage: 100000,
   assists: 100, revives: 50, score: 420000, timeSec: 36000,
-  winPct: 50, kd: 2, killsPerMatch: 10, kpm: 1, dpm: 100, spm: 700, objPerMatch: 1.5, objPts: 9000, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null, revivesPerHour: 5,
+  winPct: 50, kd: 2, killsPerMatch: 10, kpm: 1, dpm: 100, spm: 700, objPerMatch: 1.5, objPts: 9000, objPtsPerHour: 60, top3Pct: null, kda: null, revivesPerHour: 5,
   rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 200, autoKills: 750,
   sniperPerMatch: 2, autoPerMatch: 7.5, jetPct: 0, rank: null,
   ...over,

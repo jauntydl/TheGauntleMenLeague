@@ -30,8 +30,8 @@ describe('RatingExplainer', () => {
     expect(rowFor('Rapid Royale', 'Win rate')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.rapidRoyale.winPct! * 100)}%`,
     );
-    expect(rowFor('Rapid Royale', 'Assists per minute')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyale.apm! * 100)}%`,
+    expect(rowFor('Rapid Royale', 'KDA')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyale.kda! * 100)}%`,
     );
   });
 

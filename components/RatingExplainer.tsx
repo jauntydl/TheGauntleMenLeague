@@ -19,6 +19,10 @@ import { MODE_ACCENT } from '@/app/accents';
 const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   winPct: { label: 'Win rate', why: 'Last squad standing is the whole point of the mode.' },
   kd: { label: 'Kills / deaths', why: 'Staying alive matters when dying ends your squad’s round.' },
+  kda: {
+    label: 'KDA',
+    why: 'Kills plus half of your assists, per death: staying alive, crediting the knocks you set up.',
+  },
   kpm: {
     label: 'Kills per minute',
     why: 'What you contributed per minute you were in, so playing more cannot inflate it.',
@@ -34,14 +38,6 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   top3Pct: {
     label: 'Top-three rate',
     why: 'Going deep every match, not just winning some and dropping early in the rest.',
-  },
-  apm: {
-    label: 'Assists per minute',
-    why: 'In trios the knock a teammate finishes is as much the fight as the finish.',
-  },
-  objSpm: {
-    label: 'Objective score per minute',
-    why: 'The objective work the game scores you for, at a rate playing more cannot inflate.',
   },
   dpm: { label: 'Damage per minute', why: 'Counts the shots that set up a teammate’s kill — lightly, since the kill itself is already counted.' },
   revivesPerHour: {
@@ -122,6 +118,12 @@ export function RatingExplainer() {
         top three is already a top five.
       </Typography>
       <Typography sx={{ mb: 2 }}>
+        Both are held to under a third of the rating on purpose. A win is shared
+        with two teammates, so it says as much about who you queued with as
+        about you. The rest — KDA, kills, score, revives and damage, all per
+        minute or hour — is yours alone, and it carries the rating.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
         The figure is checked before it counts: a top-three count must sit
         between your wins and your matches, as it has to if it is real.
         Gauntlet&rsquo;s placement figures failed exactly that — one player
@@ -130,12 +132,13 @@ export function RatingExplainer() {
       </Typography>
 
       <Typography variant="h6" component="h2" gutterBottom>
-        Objective score, in Rapid Royale
+        No objective stat, in Rapid Royale
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Rapid Royale has no objectives to hold, destroy or disarm, so the
-        Gauntlet formula below has nothing to count. It reads the part of your
-        score the game awards for objective play instead, per minute played.
+        Gauntlet formula below has nothing to count, and the mode is rated
+        without an objective stat. What objective play the game does score
+        still counts, inside score per minute.
       </Typography>
 
       <Typography variant="h6" component="h2" gutterBottom>
@@ -196,9 +199,9 @@ export function RatingExplainer() {
       <Typography sx={{ mb: 2 }}>
         The icons beside a name are not part of the rating. Each one marks the
         top {100 - STANDOUT_FLOOR}% of the ranked field on one stat — win rate,
-        K/D, kills per match, score per minute, objective points per hour (or
-        objective score per minute in Rapid Royale), revives per hour, scoped
-        kills per match or automatic kills per match —
+        K/D, kills per match, score per minute, objective points per hour
+        (Gauntlet only), revives per hour, scoped kills per match or automatic
+        kills per match —
         plus one for flying jets. Hover a badge to see which stat it is and what your figure
         was. Most players hold none, which is what makes the rest worth
         something.
