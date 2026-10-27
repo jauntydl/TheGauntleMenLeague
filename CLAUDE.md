@@ -23,9 +23,9 @@ data is committed, so a page load can never hit the free community API.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-10-27): 133 roster members · Season 5 (Rapid Royale) has
-45 ranked, 24 provisional, 3 unresolved · Seasons 3–4 archived, Season 2
-dropped · 282 tests passing · `tsc --noEmit` clean · deployed.
+Current state (2026-10-27): 133 roster members · Season 5 (Rapid Royale Trio) has
+46 ranked, 24 provisional, 3 unresolved; the Solo board awaits its first build · Seasons 3–4 archived, Season 2
+dropped · 296 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
@@ -50,9 +50,18 @@ Consequences:
 
 ## Modes
 
-`lib/modes.ts` maps season → mode: below `FIRST_RAPID_ROYALE_SEASON` (5) is
+`lib/modes.ts` maps season → modes: below `FIRST_RAPID_ROYALE_SEASON` (5) is
 Gauntlet (`GraniteGauntlet0`, suffix `_gm_gntgauntlet`), from it on Rapid Royale
-(`GraniteRapidTrio0`, suffix `_gm_rr_trio`). Metrics read `<stat>_gm_<suffix>`,
+**Trio** (`GraniteRapidTrio0`, suffix `_gm_rr_trio`) and **Solo**
+(`GraniteRapidSolo0`, suffix `_gm_rr_solo` — added 2026-10-27, written while the
+API was down; confirm against a live response), each ranked on its own board.
+
+**A season can hold several boards.** `board.seasons` / `board.provisional` are
+keyed by *board key*: a season's first mode keeps the bare key (`Season5` =
+Trio, so every archived key is unchanged) and later modes append a suffix
+(`Season5-solo`). `meta.seasons` lists seasons only — one tab each — and the
+board shows a Trio / Solo sub-tab for each board the file holds. Use
+`boardKey` / `parseBoardKey` / `modeForBoard`, never string-slice keys. Metrics read `<stat>_gm_<suffix>`,
 weights are per mode (`RATING_WEIGHTS[mode]`), and the board draws each mode in
 its own accent (`app/accents.ts`): Gauntlet amber, Rapid Royale magenta.
 
@@ -145,7 +154,7 @@ Consider [sponsoring them](https://github.com/sponsors/community-network).
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run locally |
-| `npm test` | 240 tests |
+| `npm test` | 296 tests |
 | `npm run build` | Production build |
 | `npm run data` | Refresh `data/` from the API — **makes live network calls** |
 | `npm run data:dry` | Same, writes nothing |
@@ -159,7 +168,7 @@ Weights live in `RATING_WEIGHTS[mode]` (`lib/rating.ts`). The `/rating` page
 reads them from there rather than repeating the numbers in prose, so the page
 cannot quietly disagree with the code.
 
-**Rapid Royale (Season 5 on), set 2026-10-27** — the user's direction, in order:
+**Rapid Royale Trio (Season 5 on), set 2026-10-27** — the user's direction, in order:
 
 | Weight | Metric | Why |
 |---|---|---|
@@ -173,6 +182,19 @@ cannot quietly disagree with the code.
 
 Placement is held to 30% deliberately: a win and a top three are shared with
 two teammates, so they say as much about who you queued with as about you.
+
+**Rapid Royale Solo (Season 5 on), set 2026-10-27:**
+
+| Weight | Metric | Why |
+|---|---|---|
+| 15% | Win rate | Even split with top 3, as in Trio |
+| 15% | Top-3 rate | |
+| 25% | Kills per minute | The user asked for kills emphasised |
+| 20% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows |
+| 15% | Score per minute | |
+| 10% | Damage per minute | |
+
+No revives in Solo — nobody to pick up.
 Tried and dropped, don't re-add without asking: **top-5 rate** (nests a third
 time), **objective score per minute** (`score_objective_total`), **assists per
 minute** (double-counts assists once KDA carries them). Kricked's objective

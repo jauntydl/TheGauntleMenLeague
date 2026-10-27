@@ -282,8 +282,51 @@ describe('buildBoard', () => {
     const at = new Date('2026-09-12T00:00:00.000Z');
     const archive = buildBoard([dark], [rawSample], 'Season2', at);
     const board = buildBoard([dark], [rawSample], 'Season10', at, archive);
-    expect(Object.keys(board.seasons)).toEqual(['Season2', 'Season10']);
+    // Season10 is a Rapid Royale season, so it holds a Solo board too.
+    expect(Object.keys(board.seasons)).toEqual(['Season2', 'Season10', 'Season10-solo']);
     expect(board.meta.seasons).toEqual(['Season2', 'Season10']);
+  });
+
+  const soloResponse = (season: string): RawResponse => ({
+    playerStats: [{
+      player: { nucleusId: dark.nucleusId!, personaId: dark.personaId!, platformId: 1 },
+      categories: [{
+        catName: 'glacier_mp',
+        catFields: [
+          { name: 'matches_gm_rr_trio', value: 85, fields: dim('GraniteRapidTrio0', season) },
+          { name: 'tp_gm_rr_trio', value: 60134, fields: dim('GraniteRapidTrio0', season) },
+          { name: 'matches_gm_rr_solo', value: 40, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'wins_gm_rr_solo', value: 4, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'topthree_gm_rr_solo', value: 10, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'tp_gm_rr_solo', value: 24000, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'kills_gm_rr_solo', value: 120, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'deaths_gm_rr_solo', value: 36, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'assists_gm_rr_solo', value: 30, fields: dim('GraniteRapidSolo0', season) },
+        ],
+      }],
+    }],
+  });
+
+  it('ranks Rapid Royale Solo on a board of its own, on Solo counters', () => {
+    const board = buildBoard([dark], [soloResponse('Season5')], 'Season5');
+    expect(board.meta.seasons).toEqual(['Season5']);
+    expect(board.seasons.Season5[0].matches).toBe(85);
+    const solo = board.seasons['Season5-solo'][0];
+    expect(solo.matches).toBe(40);
+    expect(solo.top3Pct).toBe(25);
+    expect(solo.kd).toBe(3.33);
+    // Solo rates plain K/D; KDA is Trio's.
+    expect(solo.kda).toBeNull();
+    expect(solo.rating).not.toBeNull();
+  });
+
+  it('archives a Solo board with its season', () => {
+    const at = new Date('2026-09-12T00:00:00.000Z');
+    const archive = buildBoard([dark], [soloResponse('Season5')], 'Season5', at);
+    // Season 6 is current, and the API still reports Season 5 — it is ignored.
+    const board = buildBoard([dark], [soloResponse('Season5'), soloResponse('Season6')], 'Season6', at, archive);
+    expect(board.seasons['Season5-solo']).toEqual(archive.seasons['Season5-solo']);
+    expect(Object.keys(board.seasons)).toEqual(['Season5', 'Season5-solo', 'Season6', 'Season6-solo']);
   });
 
   it('ranks a Rapid Royale season on Rapid Royale counters', () => {

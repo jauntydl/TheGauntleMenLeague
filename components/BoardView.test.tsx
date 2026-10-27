@@ -132,4 +132,24 @@ describe('BoardView', () => {
     expect(screen.getByRole('link', { name: /not listed/i })).toHaveAttribute('href', '/not-listed');
   });
 
+
+  it('splits a Rapid Royale season into Trio and Solo tabs', async () => {
+    const rr: BoardFile = {
+      ...board,
+      meta: { ...board.meta, currentSeason: 'Season5', seasons: ['Season4', 'Season5'] },
+      seasons: { Season4: [], Season5: [row({ eaId: 'TrioPlayer' })], 'Season5-solo': [row({ eaId: 'SoloPlayer' })] },
+      provisional: { Season4: [], Season5: [], 'Season5-solo': [] },
+    };
+    render(<BoardView board={rr} />);
+    expect(screen.getByText('TrioPlayer')).toBeInTheDocument();
+    expect(screen.queryByText('SoloPlayer')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Solo' }));
+    expect(screen.getByText('SoloPlayer')).toBeInTheDocument();
+    expect(screen.queryByText('TrioPlayer')).not.toBeInTheDocument();
+  });
+
+  it('offers no mode tabs on a season with one board', () => {
+    render(<BoardView board={board} />);
+    expect(screen.queryByRole('tab', { name: 'Trio' })).not.toBeInTheDocument();
+  });
 });

@@ -22,16 +22,17 @@ const DASH = '—';
  * column without widening WIDE_TIER_MIN_PX puts the board back to scrolling
  * sideways, which has now happened twice — once when SPM landed and again
  * with OBJ/h. A test sums the rendered columns against this. Per mode because
- * the rated columns are: Rapid Royale's set is one column wider than
- * Gauntlet's, because it keeps K/D beside the KDA it rates.
+ * the rated columns are: Rapid Royale Trio's set is one column wider than
+ * Gauntlet's, because it keeps K/D beside the KDA it rates; Solo rates K/D
+ * itself and has no revives, so it is narrower than either.
  */
-export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1394, rapidRoyale: 1462 };
+export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1394, rapidRoyale: 1462, rapidRoyaleSolo: 1318 };
 
 /** Container padding (24px a side), the grid border, and its scrollbar. */
 export const CONTAINER_CHROME_PX = 65;
 
 /** Narrowest viewport allowed to show every column. */
-export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1460, rapidRoyale: 1530 };
+export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1460, rapidRoyale: 1530, rapidRoyaleSolo: 1390 };
 
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;

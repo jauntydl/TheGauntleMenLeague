@@ -3,7 +3,7 @@ import { buildBoard, toBulkPlayer } from './pipeline';
 import { rankPlayers } from './ranking';
 import { hasStatData } from './extract';
 import { pickInGameNameFor } from './naming';
-import { modeForSeason } from './modes';
+import { boardKey, compareSeasons, modeForBoard, modesForSeason } from './modes';
 
 /**
  * Self-serve signup: a player adds their own EA ID and appears on the board.
@@ -95,7 +95,7 @@ export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
       ...(addition.seasons[season] ?? []),
       ...(addition.provisional[season] ?? []),
     ];
-    const ranked = rankPlayers(all, modeForSeason(season).key);
+    const ranked = rankPlayers(all, modeForBoard(season).key);
     seasons[season] = ranked.ranked;
     provisional[season] = ranked.provisional;
   }
@@ -125,15 +125,13 @@ export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
   };
 }
 
-/** Season2 before Season10; anything unparseable falls back to a string compare. */
-function compareSeasons(a: string, b: string): number {
-  const an = /^(.*?)(\d+)$/.exec(a);
-  const bn = /^(.*?)(\d+)$/.exec(b);
-  if (an && bn && an[1] === bn[1]) return Number(an[2]) - Number(bn[2]);
-  return a.localeCompare(b);
-}
-
-/** Where a player ended up, for the message the form shows them. */
+/**
+ * Where a player ended up, for the message the form shows them.
+ *
+ * The current season may hold several boards (Trio and Solo). A ranked place
+ * on any of them beats a provisional one; between equals, the season's main
+ * board wins. `season` names the board as the form reads it: "Season5 Solo".
+ */
 export function placementOf(board: BoardFile, eaId: string): {
   season: string;
   rank: number | null;
@@ -142,19 +140,25 @@ export function placementOf(board: BoardFile, eaId: string): {
   provisional: boolean;
 } | null {
   const season = board.meta.currentSeason;
-  const ranked = (board.seasons[season] ?? []).find((r) => r.eaId === eaId);
-  if (ranked) {
-    return {
-      season,
-      rank: ranked.rank,
-      rating: ranked.rating,
-      matches: ranked.matches,
-      provisional: false,
-    };
+  const boards = modesForSeason(season).map((mode) => ({
+    key: boardKey(season, mode),
+    label: mode.variant ? `${season} ${mode.variant}` : season,
+  }));
+  for (const { key, label } of boards) {
+    const ranked = (board.seasons[key] ?? []).find((r) => r.eaId === eaId);
+    if (ranked) {
+      return {
+        season: label,
+        rank: ranked.rank,
+        rating: ranked.rating,
+        matches: ranked.matches,
+        provisional: false,
+      };
+    }
   }
-  const prov = (board.provisional[season] ?? []).find((r) => r.eaId === eaId);
-  if (prov) {
-    return { season, rank: null, rating: null, matches: prov.matches, provisional: true };
+  for (const { key, label } of boards) {
+    const prov = (board.provisional[key] ?? []).find((r) => r.eaId === eaId);
+    if (prov) return { season: label, rank: null, rating: null, matches: prov.matches, provisional: true };
   }
   return null;
 }

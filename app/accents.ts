@@ -11,4 +11,6 @@ import type { ModeKey } from '@/lib/modes';
 export const MODE_ACCENT: Record<ModeKey, string> = {
   gauntlet: '#FFB020',
   rapidRoyale: '#FF5FD2',
+  // One mode played two ways: Solo shares Trio's accent.
+  rapidRoyaleSolo: '#FF5FD2',
 };

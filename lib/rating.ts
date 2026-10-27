@@ -33,7 +33,7 @@ const GAUNTLET_WEIGHTS = {
 } as const;
 
 /**
- * Rapid Royale (Season 5 on). Set 2026-10-27.
+ * Rapid Royale Trio (Season 5 on). Set 2026-10-27.
  *
  * Placement is 30%, split evenly: the win at 15% and finishing top three at
  * 15%. Every win is also a top three, so a heavy win weight counts the same
@@ -67,11 +67,33 @@ const RAPID_ROYALE_WEIGHTS = {
   dpm: 0.08,
 } as const;
 
-export type RatedMetric = keyof typeof GAUNTLET_WEIGHTS | keyof typeof RAPID_ROYALE_WEIGHTS;
+/**
+ * Rapid Royale Solo (Season 5 on). Set 2026-10-27.
+ *
+ * Placement splits evenly at 15% each, as in Trio. The rest leans on kills:
+ * kills per minute is the heaviest weight at 25%, then K/D at 20%. Plain K/D
+ * rather than KDA, because with no teammates an assist is only damage on a
+ * kill somebody else took. There is nobody to revive, so revives are not
+ * rated; their share went to the kills.
+ */
+const RAPID_ROYALE_SOLO_WEIGHTS = {
+  winPct: 0.15,
+  top3Pct: 0.15,
+  kpm: 0.25,
+  kd: 0.2,
+  spm: 0.15,
+  dpm: 0.1,
+} as const;
+
+export type RatedMetric =
+  | keyof typeof GAUNTLET_WEIGHTS
+  | keyof typeof RAPID_ROYALE_WEIGHTS
+  | keyof typeof RAPID_ROYALE_SOLO_WEIGHTS;
 
 export const RATING_WEIGHTS: Record<ModeKey, Partial<Record<RatedMetric, number>>> = {
   gauntlet: GAUNTLET_WEIGHTS,
   rapidRoyale: RAPID_ROYALE_WEIGHTS,
+  rapidRoyaleSolo: RAPID_ROYALE_SOLO_WEIGHTS,
 };
 
 /** A mode's rated metrics, heaviest first — the order the board shows them in. */

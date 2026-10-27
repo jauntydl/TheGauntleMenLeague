@@ -241,7 +241,7 @@ describe('LeaderboardTable', () => {
     }
   };
 
-  const MODE_KEYS = ['gauntlet', 'rapidRoyale'] as const;
+  const MODE_KEYS = ['gauntlet', 'rapidRoyale', 'rapidRoyaleSolo'] as const;
   const markedFields = (container: HTMLElement) =>
     [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')].map(
       (el) => el.getAttribute('data-field') as RatedMetric,

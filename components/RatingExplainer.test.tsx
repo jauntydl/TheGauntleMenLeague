@@ -5,9 +5,13 @@ import { RATING_WEIGHTS } from '@/lib/rating';
 import { MIN_MATCHES } from '@/lib/ranking';
 
 describe('RatingExplainer', () => {
-  it('lists every weighted metric of both modes, so none can be silently unexplained', () => {
+  it('lists every weighted metric of every mode, so none can be silently unexplained', () => {
     render(<RatingExplainer />);
-    for (const [mode, label] of [['gauntlet', 'Gauntlet'], ['rapidRoyale', 'Rapid Royale']] as const) {
+    for (const [mode, label] of [
+      ['gauntlet', 'Gauntlet'],
+      ['rapidRoyale', 'Rapid Royale Trio'],
+      ['rapidRoyaleSolo', 'Rapid Royale Solo'],
+    ] as const) {
       const table = screen.getByRole('table', { name: `${label} weights` });
       expect(table.querySelectorAll('tbody tr')).toHaveLength(Object.keys(RATING_WEIGHTS[mode]).length);
     }
@@ -27,11 +31,14 @@ describe('RatingExplainer', () => {
     expect(rowFor('Gauntlet', 'Objective points per hour')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.gauntlet.objPtsPerHour! * 100)}%`,
     );
-    expect(rowFor('Rapid Royale', 'Win rate')).toHaveTextContent(
+    expect(rowFor('Rapid Royale Trio', 'Win rate')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.rapidRoyale.winPct! * 100)}%`,
     );
-    expect(rowFor('Rapid Royale', 'KDA')).toHaveTextContent(
+    expect(rowFor('Rapid Royale Trio', 'KDA')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.rapidRoyale.kda! * 100)}%`,
+    );
+    expect(rowFor('Rapid Royale Solo', 'Kills per minute')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.kpm! * 100)}%`,
     );
   });
 

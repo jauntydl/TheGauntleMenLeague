@@ -62,7 +62,7 @@ export type Metrics = {
   /** null when the denominator is zero; the UI renders these as an em dash. */
   winPct: number | null;
   kd: number | null;
-  /** (kills + assists) per death. Rapid Royale only — it is what that
+  /** (kills + assists) per death. Rapid Royale Trio only — it is what that
    *  mode rates in place of K/D. */
   kda: number | null;
   /** Kills per match. Distinct from kpm, which is per minute. */
@@ -136,7 +136,10 @@ export type UnresolvedEntry = {
 };
 
 export type BoardFile = {
+  /** seasons lists seasons, one tab each; a season may hold several boards. */
   meta: { currentSeason: string; seasons: string[]; builtAt: string };
+  /** Keyed by board key — the season, or season-variant (Season5-solo). See
+   *  lib/modes.ts boardKey. provisional is keyed the same way. */
   seasons: Record<string, BoardRow[]>;
   provisional: Record<string, BoardRow[]>;
   unresolved: UnresolvedEntry[];

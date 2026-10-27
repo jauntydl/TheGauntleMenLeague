@@ -2,7 +2,7 @@ import type { BoardFile, BoardRow, RawResponse, RosterEntry, UnresolvedEntry } f
 import { extractSlices, readPlayerIds, hasStatData } from './extract';
 import { computeMetrics } from './metrics';
 import { rankPlayers } from './ranking';
-import { modeForSeason } from './modes';
+import { boardKey, compareBoardKeys, modeForBoard, modesForSeason, parseBoardKey } from './modes';
 import type { BulkPlayer } from './gametools';
 
 /**
@@ -25,18 +25,6 @@ const RATE_PRECISION = 2;
 /** Round a nullable rate stat for the committed board; nulls pass through untouched. */
 const roundRate = (v: number | null): number | null =>
   v === null ? null : Math.round(v * 10 ** RATE_PRECISION) / 10 ** RATE_PRECISION;
-
-/**
- * Sort season keys the way a human expects: numerically by the trailing
- * number (Season2 before Season10), falling back to a plain string compare
- * for anything that doesn't end in digits.
- */
-function compareSeasonKeys(a: string, b: string): number {
-  const an = /^(.*?)(\d+)$/.exec(a);
-  const bn = /^(.*?)(\d+)$/.exec(b);
-  if (an && bn && an[1] === bn[1]) return Number(an[2]) - Number(bn[2]);
-  return a.localeCompare(b);
-}
 
 /**
  * Assemble the board from a roster and the raw responses fetched for it.
@@ -62,7 +50,7 @@ export function buildBoard(
 ): BoardFile {
   const byPersona = new Map(roster.filter((r) => r.personaId).map((r) => [r.personaId!, r]));
 
-  const rowsBySeason = new Map<string, BoardRow[]>();
+  const rowsByBoard = new Map<string, BoardRow[]>();
 
   // A raw response may contain several players when it came from a bulk batch.
   const singles: RawResponse[] = [];
@@ -94,9 +82,10 @@ export function buildBoard(
     const member = byPersona.get(ids.personaId);
     if (!member) continue;
 
-    for (const [season, slice] of extractSlices(single)) {
+    for (const [key, slice] of extractSlices(single)) {
+      const { season, mode } = parseBoardKey(key);
       if (season !== currentSeason) continue;
-      const metrics = computeMetrics(slice, modeForSeason(season));
+      const metrics = computeMetrics(slice, mode);
 
       // Seasons before DICE added the per-mode counters carry kills but no
       // matches/deaths/time, so no rate stat is computable. A member with no
@@ -129,39 +118,41 @@ export function buildBoard(
         mainMode: member.mainMode,
         rank: null,
       };
-      const list = rowsBySeason.get(season) ?? [];
+      const list = rowsByBoard.get(key) ?? [];
       list.push(row);
-      rowsBySeason.set(season, list);
+      rowsByBoard.set(key, list);
     }
   }
 
-  // Build season keys in one natural-sorted order up front — the current
-  // season must always be present, even with no data, so the board renders
+  // Build board keys in one natural-sorted order up front — every board of the
+  // current season must always be present, even with no data, so the board renders
   // an empty state rather than 404ing on the day a new season starts. Object
   // key insertion order then follows this sort, not Map iteration order
   // (bulk-API response order, which is documented-unstable), so JSON.stringify
   // output — which build.ts's change-detection depends on — is identical
   // regardless of the order responses came back in.
-  const archived = Object.keys(archive?.seasons ?? {}).filter((s) => s !== currentSeason);
-  const seasonNames = [...new Set([...archived, currentSeason])].sort(compareSeasonKeys);
+  const archived = Object.keys(archive?.seasons ?? {}).filter((k) => parseBoardKey(k).season !== currentSeason);
+  const current = modesForSeason(currentSeason).map((m) => boardKey(currentSeason, m));
+  const boardKeys = [...new Set([...archived, ...current])].sort(compareBoardKeys);
+  const seasonNames = [...new Set(boardKeys.map((k) => parseBoardKey(k).season))];
 
   const seasons: Record<string, BoardRow[]> = {};
   const provisional: Record<string, BoardRow[]> = {};
-  for (const season of seasonNames) {
-    if (season !== currentSeason) {
-      seasons[season] = archive!.seasons[season];
-      provisional[season] = archive!.provisional[season] ?? [];
+  for (const key of boardKeys) {
+    if (parseBoardKey(key).season !== currentSeason) {
+      seasons[key] = archive!.seasons[key];
+      provisional[key] = archive!.provisional[key] ?? [];
       continue;
     }
-    const rows = rowsBySeason.get(season) ?? [];
+    const rows = rowsByBoard.get(key) ?? [];
     // rankPlayers' sort is stable but not fully ordered (ties fall through to
     // insertion order), and insertion order here is bulk-API response order,
     // which is documented-unstable. Sort by eaId first so tied rows land in
     // the same place on every run, keeping the daily build idempotent.
     const sorted = [...rows].sort((a, b) => a.eaId.localeCompare(b.eaId));
-    const split = rankPlayers(sorted, modeForSeason(season).key);
-    seasons[season] = split.ranked;
-    provisional[season] = split.provisional;
+    const split = rankPlayers(sorted, modeForBoard(key).key);
+    seasons[key] = split.ranked;
+    provisional[key] = split.provisional;
   }
 
   const unresolved: UnresolvedEntry[] = roster.flatMap((r): UnresolvedEntry[] => {

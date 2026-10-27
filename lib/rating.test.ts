@@ -35,7 +35,7 @@ describe('percentile', () => {
 describe('rateAll', () => {
   it('totals one in every mode, and weights each mode as set', () => {
     // The weights total one so the explainer's percentages add up on the page.
-    for (const mode of ['gauntlet', 'rapidRoyale'] as const) {
+    for (const mode of ['gauntlet', 'rapidRoyale', 'rapidRoyaleSolo'] as const) {
       const weights = Object.values(RATING_WEIGHTS[mode]);
       expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
     }
@@ -45,7 +45,12 @@ describe('rateAll', () => {
     expect(g.objPtsPerHour).toBe(Math.max(...Object.values(g).filter((w) => w !== g.winPct)));
     // Rapid Royale: every win is a top three, so placement splits evenly
     // rather than counting the win twice.
-    expect(RATING_WEIGHTS.rapidRoyale.winPct).toBe(RATING_WEIGHTS.rapidRoyale.top3Pct);
+    for (const mode of ['rapidRoyale', 'rapidRoyaleSolo'] as const) {
+      expect(RATING_WEIGHTS[mode].winPct).toBe(RATING_WEIGHTS[mode].top3Pct);
+    }
+    // Solo leans on kills.
+    const s = RATING_WEIGHTS.rapidRoyaleSolo;
+    expect(s.kpm).toBe(Math.max(...Object.values(s)));
   });
 
   it('rates the metrics the explainer promises, and nothing else', () => {
@@ -57,6 +62,15 @@ describe('rateAll', () => {
     expect(Object.keys(RATING_WEIGHTS.rapidRoyale)).toEqual([
       'winPct', 'top3Pct', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
+    expect(Object.keys(RATING_WEIGHTS.rapidRoyaleSolo)).toEqual([
+      'winPct', 'top3Pct', 'kpm', 'kd', 'spm', 'dpm',
+    ]);
+  });
+
+  it('rates Solo on plain K/D and leaves revives out — there is nobody to revive', () => {
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.kda).toBeUndefined();
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.revivesPerHour).toBeUndefined();
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.objPtsPerHour).toBeUndefined();
   });
 
   it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five out of both', () => {
@@ -71,6 +85,7 @@ describe('rateAll', () => {
     const w = RATING_WEIGHTS.rapidRoyale;
     for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
     expect(order[0]).toBe('kda');
+    expect(ratedMetrics('rapidRoyaleSolo')[0]).toBe('kpm');
   });
 
   it('rates a Rapid Royale field on its own metrics', () => {

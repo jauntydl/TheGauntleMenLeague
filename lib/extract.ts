@@ -1,9 +1,10 @@
 import type { RawResponse, RawPlayerIds, StatSlice } from './types';
-import { modeForSeason } from './modes';
+import { boardKey, modesForSeason } from './modes';
 
 /**
- * Flatten a raw payload into one StatSlice per season, each from the mode that
- * season is ranked on — Gauntlet through Season 4, Rapid Royale after.
+ * Flatten a raw payload into one StatSlice per board — per season and mode the
+ * season is ranked on: Gauntlet through Season 4, Rapid Royale Trio and Solo
+ * after. Keyed by board key (Season5, Season5-solo); see boardKey.
  *
  * The API returns a fact table: each entry carries its dimensions in `fields`,
  * either {GameMode, Season} or {global: 'global'} for lifetime totals. We keep
@@ -32,12 +33,14 @@ export function extractSlices(raw: RawResponse): Map<string, StatSlice> {
       // PLACEHOLDER is an API sentinel, not a season anyone played — it
       // would otherwise surface as a season tab on the board.
       if (!season || season === 'PLACEHOLDER') continue;
-      if (gameMode !== modeForSeason(season).gameMode) continue;
+      const mode = modesForSeason(season).find((m) => m.gameMode === gameMode);
+      if (!mode) continue;
 
-      let slice = out.get(season);
+      const key = boardKey(season, mode);
+      let slice = out.get(key);
       if (!slice) {
         slice = {};
-        out.set(season, slice);
+        out.set(key, slice);
       }
       slice[field.name] = field.value;
     }

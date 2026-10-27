@@ -17,8 +17,8 @@ import { MODE_ACCENT } from '@/app/accents';
  * page cannot quietly disagree with the code after someone retunes a weight.
  */
 const REASONS: Record<RatedMetric, { label: string; why: string }> = {
-  winPct: { label: 'Win rate', why: 'Last squad standing is the whole point of the mode.' },
-  kd: { label: 'Kills / deaths', why: 'Staying alive matters when dying ends your squad’s round.' },
+  winPct: { label: 'Win rate', why: 'Last one standing is the whole point of the mode.' },
+  kd: { label: 'Kills / deaths', why: 'Staying alive matters when dying ends your round.' },
   kda: {
     label: 'KDA',
     why: 'Kills plus assists, per death: staying alive, crediting the knocks you set up.',
@@ -49,13 +49,18 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
 /** Newest mode first: the one being played is the one people came to read. */
 const MODE_ORDER: { mode: ModeKey; seasons: string }[] = [
   { mode: 'rapidRoyale', seasons: `Season ${FIRST_RAPID_ROYALE_SEASON} on` },
+  { mode: 'rapidRoyaleSolo', seasons: `Season ${FIRST_RAPID_ROYALE_SEASON} on` },
   { mode: 'gauntlet', seasons: `Seasons 3–${FIRST_RAPID_ROYALE_SEASON - 1}, archived` },
 ];
+
+/** "Rapid Royale Solo": the mode, and which of its boards. */
+const modeName = (mode: ModeKey): string =>
+  [MODES[mode].label, MODES[mode].variant].filter(Boolean).join(' ');
 
 function WeightTable({ mode }: { mode: ModeKey }) {
   const weights = RATING_WEIGHTS[mode];
   return (
-    <Table size="small" sx={{ mb: 3 }} aria-label={`${MODES[mode].label} weights`}>
+    <Table size="small" sx={{ mb: 3 }} aria-label={`${modeName(mode)} weights`}>
       <TableHead>
         <TableRow>
           <TableCell>Counts for</TableCell>
@@ -90,14 +95,15 @@ export function RatingExplainer() {
         because winning alone does not say whether you carried your squad or
         were carried by it. Gauntlet ended with Season 4; from Season{' '}
         {FIRST_RAPID_ROYALE_SEASON} the board ranks Rapid Royale, which is
-        weighted for how that mode is played. Each season&rsquo;s tab is drawn
-        in its mode&rsquo;s colour.
+        weighted for how that mode is played. Trio and Solo are ranked
+        separately, each on its own tab and its own weights. Each
+        season&rsquo;s tab is drawn in its mode&rsquo;s colour.
       </Typography>
 
       {MODE_ORDER.map(({ mode, seasons }) => (
         <Box key={mode}>
           <Typography variant="h6" component="h2" gutterBottom sx={{ color: MODE_ACCENT[mode] }}>
-            {MODES[mode].label}{' '}
+            {modeName(mode)}{' '}
             <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.85em' }}>
               · {seasons}
             </Box>
@@ -120,10 +126,12 @@ export function RatingExplainer() {
         five.
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        Together they are held to under a third of the rating on purpose. A win is shared
-        with two teammates, so it says as much about who you queued with as
-        about you. The rest — KDA, kills, score, revives and damage, all per
-        minute or hour — is yours alone, and it carries the rating.
+        Together they are held to under a third of the rating on purpose. In
+        Trio a win is shared with two teammates, so it says as much about who
+        you queued with as about you. The rest — your fighting, score and
+        damage, all per minute or hour — is yours alone, and it carries the
+        rating. Solo has nobody to share a win with and nobody to revive, so it
+        leans hardest on kills, and rates plain K/D where Trio rates KDA.
       </Typography>
       <Typography sx={{ mb: 2 }}>
         The figure is checked before it counts: a top-three count must sit

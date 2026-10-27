@@ -14,7 +14,7 @@ import Typography from '@mui/material/Typography';
 import { ThemeProvider, alpha } from '@mui/material/styles';
 import { LeaderboardTable } from './LeaderboardTable';
 import { formatEastern, nextRefreshAfter } from '@/lib/schedule';
-import { modeForSeason } from '@/lib/modes';
+import { boardKey, modeForSeason, modesForSeason, type ModeKey } from '@/lib/modes';
 import type { BoardFile } from '@/lib/types';
 import { MODE_ACCENT, MODE_THEMES } from '@/app/theme';
 
@@ -27,12 +27,22 @@ export function BoardView({ board }: { board: BoardFile }) {
   // turns in one table rather than stacking. Stacking is what forced the page
   // to scroll, which cost the pinned header its point.
   const [view, setView] = React.useState<'ranked' | 'provisional'>('ranked');
+  // Which of the season's boards — Trio or Solo — is showing. Kept across a
+  // season change, and falls back to the season's main board where the
+  // season has no such board.
+  const [modeKey, setModeKey] = React.useState<ModeKey>(modeForSeason(board.meta.currentSeason).key);
 
-  const ranked = board.seasons[season] ?? [];
-  const provisional = board.provisional[season] ?? [];
+  // Only the boards the file actually holds: a season archived before it had
+  // a Solo board must not offer an empty one.
+  const present = modesForSeason(season).filter((m) => boardKey(season, m) in board.seasons);
+  const modes = present.length > 0 ? present : [modeForSeason(season)];
+  const mode = modes.find((m) => m.key === modeKey) ?? modes[0];
+  const key = boardKey(season, mode);
+
+  const ranked = board.seasons[key] ?? [];
+  const provisional = board.provisional[key] ?? [];
   const showingProvisional = view === 'provisional';
   const rows = showingProvisional ? provisional : ranked;
-  const mode = modeForSeason(season);
 
   // The whole board takes the selected season's accent, not just the table:
   // the title glow, the button and the scrollbars all say which mode this is.
@@ -182,19 +192,38 @@ export function BoardView({ board }: { board: BoardFile }) {
           })}
         </Tabs>
 
-        {/* Counts on the labels because an empty side is a dead end otherwise:
-            a new season has no ranked players at first, and without the number the
-            reader would click into a blank table to find that out. */}
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={view}
-          onChange={(_e, v: 'ranked' | 'provisional' | null) => v && setView(v)}
-          aria-label="Which players to show"
-        >
-          <ToggleButton value="ranked">Ranked ({ranked.length})</ToggleButton>
-          <ToggleButton value="provisional">Provisional ({provisional.length})</ToggleButton>
-        </ToggleButtonGroup>
+        {/* The mode and the Ranked / Provisional switch sit together on the
+            right: both choose which table shows, the season strip which season. */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          {/* The season's own boards, where it has more than one: Rapid Royale
+              is ranked separately for Trio and for Solo. */}
+          {modes.length > 1 && (
+            <Tabs
+              value={mode.key}
+              onChange={(_e, v: ModeKey) => setModeKey(v)}
+              aria-label="Which mode to show"
+              sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
+            >
+              {modes.map((m) => (
+                <Tab key={m.key} value={m.key} label={m.variant ?? m.label} />
+              ))}
+            </Tabs>
+          )}
+
+          {/* Counts on the labels because an empty side is a dead end otherwise:
+              a new season has no ranked players at first, and without the number the
+              reader would click into a blank table to find that out. */}
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={view}
+            onChange={(_e, v: 'ranked' | 'provisional' | null) => v && setView(v)}
+            aria-label="Which players to show"
+          >
+            <ToggleButton value="ranked">Ranked ({ranked.length})</ToggleButton>
+            <ToggleButton value="provisional">Provisional ({provisional.length})</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
 
       {/* min-height: 0 is load-bearing. A flex child defaults to min-height

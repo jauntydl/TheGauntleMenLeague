@@ -103,4 +103,5 @@ export const theme = makeTheme(palette.amber);
 export const MODE_THEMES: Record<ModeKey, ReturnType<typeof makeTheme>> = {
   gauntlet: theme,
   rapidRoyale: makeTheme(palette.magenta),
+  rapidRoyaleSolo: makeTheme(palette.magenta),
 };

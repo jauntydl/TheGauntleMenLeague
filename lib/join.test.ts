@@ -133,6 +133,16 @@ describe('placementOf', () => {
     expect(placementOf(b, 'p')).toMatchObject({ rank: null, provisional: true, matches: 3 });
     expect(placementOf(b, 'nobody')).toBeNull();
   });
+
+  it('finds a Solo-only player on the Solo board, and prefers a ranked place', () => {
+    const b: BoardFile = {
+      meta: { currentSeason: 'Season5', seasons: ['Season5'], builtAt: '2026-10-27T00:00:00.000Z' },
+      seasons: { Season5: [], 'Season5-solo': [row({ eaId: 's', rank: 2, rating: 60 })] },
+      provisional: { Season5: [row({ eaId: 's', matches: 4 })], 'Season5-solo': [] },
+      unresolved: [],
+    };
+    expect(placementOf(b, 's')).toMatchObject({ season: 'Season5 Solo', rank: 2, provisional: false });
+  });
 });
 
 // A slice shaped like the real thing: mode-suffixed counters inside a

@@ -58,7 +58,8 @@ export const kdaOf = (kills: number, assists: number, deaths: number, matches: n
 export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
   // The mode's own counter: kills_gm_gntgauntlet, kills_gm_rr_trio.
   const own = (stat: string): number => num(slice, `${stat}_gm_${mode.suffix}`);
-  const rapidRoyale = mode.key === 'rapidRoyale';
+  // Trio or Solo: everything Rapid Royale has and Gauntlet lacks.
+  const rapidRoyale = mode.key !== 'gauntlet';
 
   const matches = own('matches');
   const wins = own('wins');
@@ -152,9 +153,10 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
     timeSec,
     winPct: matches > 0 ? (wins / matches) * 100 : null,
     kd,
-    // Rapid Royale ranks on KDA; K/D stays on the board as the plain figure.
-    // Gauntlet keeps null, like the other Rapid Royale rates.
-    kda: rapidRoyale ? kdaOf(kills, assists, deaths, matches) : null,
+    // Trio ranks on KDA; K/D stays on the board as the plain figure. Solo
+    // ranks on plain K/D — with no teammates, an assist is only damage on a
+    // kill someone else took — so it keeps null, as Gauntlet does.
+    kda: mode.key === 'rapidRoyale' ? kdaOf(kills, assists, deaths, matches) : null,
     killsPerMatch: matches > 0 ? kills / matches : null,
     kpm: minutes > 0 ? kills / minutes : null,
     dpm: minutes > 0 ? damage / minutes : null,
