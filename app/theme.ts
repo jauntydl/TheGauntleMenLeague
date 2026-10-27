@@ -1,5 +1,9 @@
 'use client';
 import { createTheme } from '@mui/material/styles';
+import type { ModeKey } from '@/lib/modes';
+import { MODE_ACCENT } from './accents';
+
+export { MODE_ACCENT };
 
 /**
  * Avionics MFD, not cyberpunk.
@@ -10,12 +14,18 @@ import { createTheme } from '@mui/material/styles';
  *
  * Two accents, one job each: amber carries rank and data, ice carries anything
  * interactive plus the ✈ badge (sky reads as aviation). Nothing else glows.
+ *
+ * The data accent is per mode. Gauntlet seasons keep the amber; Rapid Royale
+ * seasons carry magenta, the other colour a cockpit display draws in, so a
+ * glance at the board says which mode a season was ranked on. Ice stays the
+ * one interactive colour in both.
  */
 export const palette = {
   void: '#06080D',
   panel: '#0C1118',
   line: '#1B2634',
-  amber: '#FFB020',
+  amber: MODE_ACCENT.gauntlet,
+  magenta: MODE_ACCENT.rapidRoyale,
   ice: '#7DE2FF',
   text: '#C9D6E4',
   dim: '#6B7C90',
@@ -24,11 +34,11 @@ export const palette = {
 const display = 'var(--font-display), "Trebuchet MS", sans-serif';
 const body = 'var(--font-body), system-ui, sans-serif';
 
-export const theme = createTheme({
+const makeTheme = (accent: string) => createTheme({
   palette: {
     mode: 'dark',
     background: { default: palette.void, paper: palette.panel },
-    primary: { main: palette.amber },
+    primary: { main: accent },
     secondary: { main: palette.ice },
     text: { primary: palette.text, secondary: palette.dim },
     divider: palette.line,
@@ -61,7 +71,7 @@ export const theme = createTheme({
           letterSpacing: '0.04em',
           fontSize: '0.95rem',
           color: palette.dim,
-          '&.Mui-selected': { color: palette.amber },
+          '&.Mui-selected': { color: accent },
         },
       },
     },
@@ -69,8 +79,8 @@ export const theme = createTheme({
       styleOverrides: {
         indicator: {
           height: 2,
-          backgroundColor: palette.amber,
-          boxShadow: `0 0 12px ${palette.amber}`,
+          backgroundColor: accent,
+          boxShadow: `0 0 12px ${accent}`,
         },
       },
     },
@@ -86,3 +96,11 @@ export const theme = createTheme({
     },
   },
 });
+
+export const theme = makeTheme(palette.amber);
+
+/** One theme per mode, differing only in the data accent. */
+export const MODE_THEMES: Record<ModeKey, ReturnType<typeof makeTheme>> = {
+  gauntlet: theme,
+  rapidRoyale: makeTheme(palette.magenta),
+};

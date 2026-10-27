@@ -54,7 +54,7 @@ export function JoinForm() {
 
       <Typography sx={{ mb: 1 }}>
         Type the EA ID you play Battlefield 6 on. We check it against EA, pull your
-        Gauntlet stats and put you on the board — no account, no password.
+        Rapid Royale stats and put you on the board — no account, no password.
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
         Your in-game privacy has to be set to Everyone, or EA shares nothing for

@@ -1,4 +1,5 @@
 import type { Metrics, StatSlice } from './types';
+import type { Mode } from './modes';
 
 /** Jet share at or above this percent earns the ✈ badge. */
 export const JET_BADGE_THRESHOLD = 10;
@@ -9,7 +10,8 @@ const num = (slice: StatSlice, key: string): number => {
 };
 
 /**
- * Turn one Gauntlet season slice into display metrics.
+ * Turn one season slice into display metrics, reading the counters of the
+ * mode that season is ranked on.
  *
  * Every rate stat returns null rather than NaN/Infinity when its denominator
  * is zero, so the UI can render an em dash instead of nonsense.
@@ -29,17 +31,21 @@ const OTHER_CLASSES = ['sg', 'pst'] as const;
  * unsuffixed fields put a K/D of 319 on the board for a player with 3 matches.
  * Only the suffixed field names the mode, so only the suffixed field is safe.
  */
-export function computeMetrics(slice: StatSlice): Metrics {
-  const matches = num(slice, 'matches_gm_gntgauntlet');
-  const wins = num(slice, 'wins_gm_gntgauntlet');
-  const losses = num(slice, 'losses_gm_gntgauntlet');
-  const kills = num(slice, 'kills_gm_gntgauntlet');
-  const headshots = num(slice, 'hsw_gm_gntgauntlet');
-  const deaths = num(slice, 'deaths_gm_gntgauntlet');
-  const damage = num(slice, 'dmg_gm_gntgauntlet');
-  const assists = num(slice, 'assists_gm_gntgauntlet');
-  const revives = num(slice, 'revives_gm_gntgauntlet');
-  const timeSec = num(slice, 'tp_gm_gntgauntlet');
+export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
+  // The mode's own counter: kills_gm_gntgauntlet, kills_gm_rr_trio.
+  const own = (stat: string): number => num(slice, `${stat}_gm_${mode.suffix}`);
+  const rapidRoyale = mode.key === 'rapidRoyale';
+
+  const matches = own('matches');
+  const wins = own('wins');
+  const losses = own('losses');
+  const kills = own('kills');
+  const headshots = own('hsw');
+  const deaths = own('deaths');
+  const damage = own('dmg');
+  const assists = own('assists');
+  const revives = own('revives');
+  const timeSec = own('tp');
 
   // Score carries the same rollup hazard as Kills_Total, and the same fix:
   // only the mode-suffixed field is safe. Verified against the lifetime
@@ -47,7 +53,7 @@ export function computeMetrics(slice: StatSlice): Metrics {
   // scorein_gm_gntgauntlet of 11,371,030. The alternatives do not survive
   // the same check: one GraniteSquad slice reads scorein_gm_all = 913,285
   // against a true score_total of 135,440 for that mode.
-  const score = num(slice, 'scorein_gm_gntgauntlet');
+  const score = own('scorein');
 
   // Parent category only — it already contains fa18f / f14tomcat / su57.
   const jetSec = num(slice, 'tp_veh_air_jets');
@@ -72,19 +78,33 @@ export function computeMetrics(slice: StatSlice): Metrics {
   // Every input is read from its mode-suffixed field, and this matters as much
   // here as anywhere: Obj_Time_Total reads 2018 against a true
   // obj_time_gm_gntgauntlet of 4405 in the same Season 4 slice.
-  const objPts =
-    0.1 * num(slice, 'obj_time_gm_gntgauntlet') +
-    10 * num(slice, 'obj_destroyed_gm_gntgauntlet') +
-    5 * num(slice, 'obj_disarmed_gm_gntgauntlet') +
-    3 * num(slice, 'intel_pickup_gm_gntgauntlet');
+  //
+  // Gauntlet only. Rapid Royale has no objective counters at all — only intel
+  // pickups — so the formula would quietly become "3 x intel" under a name
+  // that says otherwise. Rapid Royale reads objective score instead (objSpm).
+  const objPts = rapidRoyale
+    ? 0
+    : 0.1 * own('obj_time') + 10 * own('obj_destroyed') + 5 * own('obj_disarmed') + 3 * own('intel_pickup');
 
   // Superseded by the weighted objective points below, and read by nothing.
   // Kept only because it is already in the committed JSON.
-  const objActions =
-    num(slice, 'obj_armed_gm_gntgauntlet') +
-    num(slice, 'obj_defended_gm_gntgauntlet') +
-    num(slice, 'obj_destroyed_gm_gntgauntlet') +
-    num(slice, 'obj_disarmed_gm_gntgauntlet');
+  const objActions = own('obj_armed') + own('obj_defended') + own('obj_destroyed') + own('obj_disarmed');
+
+  // Rapid Royale's objective figure: the part of a player's score the game
+  // awards for objective play. There is no suffixed counter for it, so this
+  // is the one unsuffixed field the board reads — the same hazard as
+  // Kills_Total. In a Rapid Royale slice the unsuffixed totals agree with the
+  // mode's own (score_total === scorein_gm_rr_trio), but a share of score can
+  // never exceed the score, so anything larger is a rollup and reads as null.
+  const objScore = num(slice, 'score_objective_total');
+  const objScoreTrusted = rapidRoyale && objScore > 0 && score > 0 && objScore <= score;
+
+  // Finishing in the top three, Rapid Royale only. Placement is the best input
+  // a battle royale has, but Gauntlet's placement counters did not add up —
+  // one player showed more top-ten finishes than matches. So the figure must
+  // sit between the wins and the matches, which it has to if it is real.
+  const top3 = own('topthree');
+  const top3Trusted = rapidRoyale && matches > 0 && top3 >= wins && top3 <= matches;
 
   // Playstyle, as a share of weapon kills rather than of all kills: melee,
   // grenades, gadgets and vehicles account for the rest, so weapon classes
@@ -140,6 +160,11 @@ export function computeMetrics(slice: StatSlice): Metrics {
     // is: the objective fields are mode counters and start at Season 3, and a
     // fabricated zero would sit that player at the bottom of a 25% percentile.
     objPtsPerHour: hours > 0 && objPts > 0 ? objPts / hours : null,
+    objSpm: objScoreTrusted && minutes > 0 ? objScore / minutes : null,
+    top3Pct: top3Trusted ? (top3 / matches) * 100 : null,
+    // Rapid Royale only: assists are a rated stat there and nowhere else, and
+    // leaving Gauntlet's null keeps the archived seasons' rows as they were.
+    apm: rapidRoyale && minutes > 0 ? assists / minutes : null,
     revivesPerHour: hours > 0 ? revives / hours : null,
     // Both filled in by rateAll once the whole field is known.
     rating: null,

@@ -48,14 +48,14 @@ export type Metrics = {
   wins: number;
   losses: number;
   kills: number;
-  /** Headshot kills. From hsw_gm_gntgauntlet — kills_Headshots_Total is a
+  /** Headshot kills. From hsw_gm_<suffix> — kills_Headshots_Total is a
    *  rollup that reads 1512 against 9 in a Season 2 slice. */
   headshots: number;
   deaths: number;
   damage: number;
   assists: number;
   revives: number;
-  /** Season score in Gauntlet. From scorein_gm_gntgauntlet — see computeMetrics
+  /** Season score in the mode. From scorein_gm_<suffix> — see computeMetrics
    *  for why score_total and scorein_gm_all cannot be used. */
   score: number;
   timeSec: number;
@@ -84,6 +84,14 @@ export type Metrics = {
    *  own rate of objective work. */
   objPtsPerHour: number | null;
   revivesPerHour: number | null;
+  /** Objective score per minute, Rapid Royale only — the mode has no
+   *  objective counters for Kricked's formula. Null under a rollup guard. */
+  objSpm: number | null;
+  /** Share of matches finished in the top three, Rapid Royale only. Null
+   *  when the placement counter is inconsistent with wins and matches. */
+  top3Pct: number | null;
+  /** Assists per minute, Rapid Royale only. */
+  apm: number | null;
   /** Overall rating, 0-100, percentile-weighted against the ranked field. */
   rating: number | null;
   /** The trait this player is most exceptional at, if any names them. */

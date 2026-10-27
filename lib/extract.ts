@@ -1,13 +1,13 @@
 import type { RawResponse, RawPlayerIds, StatSlice } from './types';
-
-export const GAUNTLET_MODE = 'GraniteGauntlet0';
+import { modeForSeason } from './modes';
 
 /**
- * Flatten a raw payload into one StatSlice per season, for Gauntlet only.
+ * Flatten a raw payload into one StatSlice per season, each from the mode that
+ * season is ranked on — Gauntlet through Season 4, Rapid Royale after.
  *
  * The API returns a fact table: each entry carries its dimensions in `fields`,
  * either {GameMode, Season} or {global: 'global'} for lifetime totals. We keep
- * only rows dimensioned by both GameMode === GraniteGauntlet0 and a Season.
+ * only rows dimensioned by a Season and by that season's GameMode.
  *
  * Values are copied verbatim. Vehicle fields nest (tp_veh_air_jets already
  * contains tp_veh_air_fa18f and friends), so summing anything here would
@@ -31,7 +31,8 @@ export function extractSlices(raw: RawResponse): Map<string, StatSlice> {
 
       // PLACEHOLDER is an API sentinel, not a season anyone played — it
       // would otherwise surface as a season tab on the board.
-      if (gameMode !== GAUNTLET_MODE || !season || season === 'PLACEHOLDER') continue;
+      if (!season || season === 'PLACEHOLDER') continue;
+      if (gameMode !== modeForSeason(season).gameMode) continue;
 
       let slice = out.get(season);
       if (!slice) {

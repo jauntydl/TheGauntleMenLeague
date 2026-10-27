@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { percentile, rateAll, RATING_WEIGHTS } from './rating';
+import { percentile, rateAll as rateFor, RATING_WEIGHTS, ratedMetrics } from './rating';
+
+const rateAll = (rows: BoardRow[]) => rateFor(rows, 'gauntlet');
 import type { BoardRow } from './types';
 
 const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 50, wins: 25, losses: 25, kills: 100, headshots: 25, deaths: 50, damage: 1000,
   assists: 0, revives: 0, score: 42000, timeSec: 3600,
-  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60,
+  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null,
   revivesPerHour: 3, rating: null, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: null,
   ...over,
 });
@@ -31,26 +33,54 @@ describe('percentile', () => {
 });
 
 describe('rateAll', () => {
-  it('weights winning highest', () => {
+  it('weights winning highest in both modes, and each mode totals one', () => {
     // The invariant, not the figure: winning outweighs anything else, and the
     // weights total one so the explainer's percentages add up on the page.
-    const weights = Object.values(RATING_WEIGHTS);
-    // Winning leads outright; objective work is second and nothing else comes
-    // near either of them.
-    expect(RATING_WEIGHTS.winPct).toBe(Math.max(...weights));
-    expect(RATING_WEIGHTS.objPtsPerHour).toBeLessThan(RATING_WEIGHTS.winPct);
-    expect(RATING_WEIGHTS.objPtsPerHour).toBe(
-      Math.max(...weights.filter((w) => w !== RATING_WEIGHTS.winPct)),
-    );
-    expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
+    for (const mode of ['gauntlet', 'rapidRoyale'] as const) {
+      const weights = Object.values(RATING_WEIGHTS[mode]);
+      expect(RATING_WEIGHTS[mode].winPct).toBe(Math.max(...weights));
+      expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
+    }
+    // Gauntlet: objective work is second and nothing else comes near either.
+    const g = RATING_WEIGHTS.gauntlet;
+    expect(g.objPtsPerHour).toBe(Math.max(...Object.values(g).filter((w) => w !== g.winPct)));
   });
 
-  it('rates the seven metrics the explainer promises, and nothing else', () => {
+  it('rates the metrics the explainer promises, and nothing else', () => {
     // Pinned as a list, not just as a sum: dropping a metric or slipping an
     // unrated one in would otherwise still total 1 and pass silently.
-    expect(Object.keys(RATING_WEIGHTS)).toEqual([
+    expect(Object.keys(RATING_WEIGHTS.gauntlet)).toEqual([
       'winPct', 'objPtsPerHour', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
+    expect(Object.keys(RATING_WEIGHTS.rapidRoyale)).toEqual([
+      'winPct', 'top3Pct', 'apm', 'objSpm', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
+    ]);
+  });
+
+  it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five out of both', () => {
+    expect(RATING_WEIGHTS.rapidRoyale.objPtsPerHour).toBeUndefined();
+    expect(Object.keys(RATING_WEIGHTS.gauntlet)).not.toContain('top3Pct');
+  });
+
+  it('lists a mode\'s rated metrics heaviest first', () => {
+    const order = ratedMetrics('rapidRoyale');
+    const w = RATING_WEIGHTS.rapidRoyale;
+    for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
+    expect(order[0]).toBe('winPct');
+  });
+
+  it('rates a Rapid Royale field on its own metrics', () => {
+    // Identical on every Gauntlet metric, apart only on Rapid Royale ones.
+    const [low, high] = rateFor([
+      row({ eaId: 'low', top3Pct: 40, apm: 0.2, objSpm: 100 }),
+      row({ eaId: 'high', top3Pct: 80, apm: 0.6, objSpm: 300 }),
+    ], 'rapidRoyale');
+    expect(high.rating!).toBeGreaterThan(low.rating!);
+    const [a, b] = rateAll([
+      row({ eaId: 'low', top3Pct: 40, apm: 0.2, objSpm: 100 }),
+      row({ eaId: 'high', top3Pct: 80, apm: 0.6, objSpm: 300 }),
+    ]);
+    expect(a.rating).toBe(b.rating);
   });
 
   it('scores a stronger player above a weaker one', () => {

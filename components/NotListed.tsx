@@ -25,7 +25,7 @@ export function NotListed({ entries }: { entries: UnresolvedEntry[] }) {
 
       <Typography sx={{ mb: 2 }}>
         Battlefield 6 only shares your stats if you allow it. If your in-game privacy
-        is not set to <strong>Everyone</strong>, nothing can read your Gauntlet stats —
+        is not set to <strong>Everyone</strong>, nothing can read your stats —
         not this board, not any tracker.
       </Typography>
 

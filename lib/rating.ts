@@ -1,9 +1,10 @@
 import type { BoardRow } from './types';
+import type { ModeKey } from './modes';
 
 /**
- * How much each metric contributes to the overall rating.
+ * How much each metric contributes to the overall rating, per mode.
  *
- * Winning leads at 35% because it is the actual goal, with objective work
+ * Gauntlet (Seasons 3-4, archived). Winning leads at 35% because it is the actual goal, with objective work
  * behind it at 15%. Gauntlet eliminates squads on objective points, so the
  * rate at which someone does that work is the nearest thing to the win that is
  * attributable to one player — a win is shared with three teammates, an
@@ -21,7 +22,7 @@ import type { BoardRow } from './types';
  * per-match rewards whoever survives into long rounds — which win rate
  * already measures. Kills per match keeps its badge; see STANDOUT_TRAITS.
  */
-export const RATING_WEIGHTS = {
+const GAUNTLET_WEIGHTS = {
   winPct: 0.35,
   objPtsPerHour: 0.15,
   kd: 0.12,
@@ -31,7 +32,44 @@ export const RATING_WEIGHTS = {
   dpm: 0.04,
 } as const;
 
-export type RatedMetric = keyof typeof RATING_WEIGHTS;
+/**
+ * Rapid Royale (Season 5 on). Set 2026-10-27.
+ *
+ * Placement takes the largest block, 38%, because it is what a battle royale
+ * is decided on: the win at 26% and finishing top three at 12%. They nest —
+ * every win is a top three — so the top-three rate is what separates someone
+ * who goes deep every match from someone who wins some and drops early in the
+ * rest. Top five was considered and left out; it nests a third time.
+ *
+ * Assists sit level with the heaviest combat stats at 12%: in trios, the
+ * knock a teammate finishes is as much the fight as the finish. Objective
+ * score per minute stands in for Kricked's formula, which this mode has no
+ * counters for. Damage stays a token weight for the same reason as Gauntlet.
+ */
+const RAPID_ROYALE_WEIGHTS = {
+  winPct: 0.26,
+  top3Pct: 0.12,
+  apm: 0.12,
+  objSpm: 0.1,
+  kd: 0.1,
+  kpm: 0.1,
+  spm: 0.08,
+  revivesPerHour: 0.08,
+  dpm: 0.04,
+} as const;
+
+export type RatedMetric = keyof typeof GAUNTLET_WEIGHTS | keyof typeof RAPID_ROYALE_WEIGHTS;
+
+export const RATING_WEIGHTS: Record<ModeKey, Partial<Record<RatedMetric, number>>> = {
+  gauntlet: GAUNTLET_WEIGHTS,
+  rapidRoyale: RAPID_ROYALE_WEIGHTS,
+};
+
+/** A mode's rated metrics, heaviest first — the order the board shows them in. */
+export function ratedMetrics(mode: ModeKey): RatedMetric[] {
+  const weights = RATING_WEIGHTS[mode];
+  return (Object.keys(weights) as RatedMetric[]).sort((a, b) => weights[b]! - weights[a]!);
+}
 
 /**
  * Traits that can earn a badge.
@@ -54,6 +92,9 @@ export const STANDOUT_TRAITS = [
   'killsPerMatch',
   'spm',
   'objPtsPerHour',
+  // Rapid Royale's objective figure keeps the carry badge alive in a mode
+  // with no objectives for objPtsPerHour to count.
+  'objSpm',
   'revivesPerHour',
   'sniperPerMatch',
   'autoPerMatch',
@@ -108,8 +149,9 @@ export function percentile(population: number[], value: number): number {
  * A metric that is null for a player is dropped and the remaining weights are
  * renormalised, so missing data never reads as a bad score.
  */
-export function rateAll(rows: BoardRow[]): BoardRow[] {
-  const metrics = Object.keys(RATING_WEIGHTS) as RatedMetric[];
+export function rateAll(rows: BoardRow[], mode: ModeKey): BoardRow[] {
+  const weights = RATING_WEIGHTS[mode];
+  const metrics = Object.keys(weights) as RatedMetric[];
 
   // One population per metric, holding only the players who have that value.
   // Badge traits are included alongside the rated ones: the weapon shares earn
@@ -128,7 +170,7 @@ export function rateAll(rows: BoardRow[]): BoardRow[] {
     for (const m of metrics) {
       const value = row[m];
       if (value === null || !Number.isFinite(value)) continue;
-      const weight = RATING_WEIGHTS[m];
+      const weight = weights[m]!;
       weighted += percentile(populations.get(m) ?? [], value) * weight;
       weightUsed += weight;
     }

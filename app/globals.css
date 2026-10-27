@@ -14,6 +14,8 @@
   --panel: #0c1118;
   --line: #1b2634;
   --amber: #ffb020;
+  /* The data accent, reset per mode by the board (see MODE_ACCENT). */
+  --accent: var(--amber);
   --ice: #7de2ff;
   --text: #c9d6e4;
   --dim: #6b7c90;
@@ -93,7 +95,7 @@ body::after {
  */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 176, 32, 0.34) rgba(6, 8, 13, 0.9);
+  scrollbar-color: color-mix(in srgb, var(--accent) 34%, transparent) rgba(6, 8, 13, 0.9);
 }
 
 *::-webkit-scrollbar {
@@ -107,17 +109,17 @@ body::after {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 176, 32, 0.34);
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
   /* A border in the track colour insets the thumb without needing padding. */
   border: 2px solid rgba(6, 8, 13, 0.9);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 176, 32, 0.62);
+  background: color-mix(in srgb, var(--accent) 62%, transparent);
 }
 
 *::-webkit-scrollbar-thumb:active {
-  background: var(--amber);
+  background: var(--accent);
 }
 
 /* Where the two bars meet, so the elbow is not a light square. */

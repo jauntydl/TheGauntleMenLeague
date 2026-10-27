@@ -6,27 +6,30 @@ import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { alpha } from '@mui/material/styles';
 import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
-import { RATING_WEIGHTS, type RatedMetric, type StandoutTrait } from '@/lib/rating';
+import { MODES, type ModeKey } from '@/lib/modes';
+import { RATING_WEIGHTS, ratedMetrics, type RatedMetric, type StandoutTrait } from '@/lib/rating';
 
 const DASH = '—';
 
 /**
- * What the wide tier costs, and the width it therefore needs.
+ * What the wide tier costs per mode, and the width it therefore needs.
  *
  * Every fixed column width below, plus the Player column's minimum. Adding a
  * column without widening WIDE_TIER_MIN_PX puts the board back to scrolling
  * sideways, which has now happened twice — once when SPM landed and again
- * with OBJ/h. A test sums the rendered columns against this.
+ * with OBJ/h. A test sums the rendered columns against this. Per mode because
+ * the rated columns are: Rapid Royale rates two more metrics than Gauntlet.
  */
-export const COLUMN_BUDGET_PX = 1314;
+export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1314, rapidRoyale: 1454 };
 
 /** Container padding (24px a side), the grid border, and its scrollbar. */
 export const CONTAINER_CHROME_PX = 65;
 
 /** Narrowest viewport allowed to show every column. */
-export const WIDE_TIER_MIN_PX = 1400;
+export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1400, rapidRoyale: 1520 };
 
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
@@ -34,7 +37,7 @@ export const PLAYER_MIN_WIDTH_PX = 150;
 /**
  * The tooltip a column carries in its header.
  *
- * The amber marks the rated columns as special; this is what says why, and
+ * The accent marks the rated columns as special; this is what says why, and
  * how much. The figure is read from RATING_WEIGHTS rather than written out,
  * so a retuned weight cannot leave a tooltip quoting the old one. Unrated
  * columns keep whatever description they already had, or none.
@@ -43,8 +46,9 @@ export function columnDescription(
   field: string,
   base: string | undefined,
   headerName: string | undefined,
+  mode: ModeKey,
 ): string | undefined {
-  const weight = RATING_WEIGHTS[field as RatedMetric] as number | undefined;
+  const weight = RATING_WEIGHTS[mode][field as RatedMetric];
   if (weight === undefined) return base;
   return `${base ?? headerName} · ${Math.round(weight * 100)}% of the Rating`;
 }
@@ -54,8 +58,11 @@ export function columnDescription(
 // (page size / page controls) has nothing useful to control — hide it.
 const FOOTER_ROW_THRESHOLD = 100;
 
-export const fmtPct = (v: number | null): string => (v === null ? DASH : `${v.toFixed(1)}%`);
-export const fmtNum = (v: number | null, digits = 2): string => (v === null ? DASH : v.toFixed(digits));
+// `== null`, not `=== null`: archived rows were frozen before a later metric
+// existed, so a field can be absent from committed JSON as well as null.
+export const fmtPct = (v: number | null | undefined): string => (v == null ? DASH : `${v.toFixed(1)}%`);
+export const fmtNum = (v: number | null | undefined, digits = 2): string =>
+  v == null ? DASH : v.toFixed(digits);
 export const fmtHours = (sec: number): string => `${(sec / 3600).toFixed(1)}h`;
 
 /**
@@ -139,6 +146,11 @@ const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: B
     icon: '🏋️',
     detail: (r) => `carrying the objective — ${r.objPtsPerHour?.toFixed(0)} points per hour`,
   },
+  // Rapid Royale's version of the same badge; the two never share a season.
+  objSpm: {
+    icon: '🏋️',
+    detail: (r) => `carrying the objective — ${r.objSpm?.toFixed(0)} objective score per minute`,
+  },
   revivesPerHour: {
     icon: <MedicCross />,
     detail: (r) => `revives — ${r.revivesPerHour?.toFixed(1)} per hour`,
@@ -175,19 +187,134 @@ export function badges(row: BoardRow): Badge[] {
     earned.push({
       id: 'jet',
       icon: '✈️',
-      detail: `Pilot — ${row.jetPct.toFixed(1)}% of Gauntlet time flown in jets`,
+      detail: `Pilot — ${row.jetPct.toFixed(1)}% of their time flown in jets`,
     });
   }
 
   return earned;
 }
 
+/**
+ * The rated columns, keyed by the metric they show. Which of them a board
+ * carries, and in what order, is the mode's weights — see the column list.
+ */
+const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
+  winPct: {
+    field: 'winPct',
+    headerName: 'Win %',
+    width: 76,
+    description: 'Share of matches won',
+    renderCell: (p) => fmtPct(p.row.winPct),
+    getSortComparator: nullsLastComparator,
+  },
+  top3Pct: {
+    field: 'top3Pct',
+    headerName: 'Top 3',
+    width: 72,
+    description: 'Share of matches finished in the top three',
+    renderCell: (p) => fmtPct(p.row.top3Pct),
+    getSortComparator: nullsLastComparator,
+  },
+  apm: {
+    field: 'apm',
+    headerName: 'APM',
+    width: 68,
+    description: 'Assists per minute',
+    renderCell: (p) => fmtNum(p.row.apm),
+    getSortComparator: nullsLastComparator,
+  },
+  objPtsPerHour: {
+    field: 'objPtsPerHour',
+    headerName: 'OBJ/h',
+    width: 72,
+    description:
+      'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
+    renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
+    getSortComparator: nullsLastComparator,
+  },
+  objSpm: {
+    field: 'objSpm',
+    headerName: 'OBJ/m',
+    width: 72,
+    description: 'Objective score per minute — the part of your score the game awards for objective play',
+    renderCell: (p) => fmtNum(p.row.objSpm, 0),
+    getSortComparator: nullsLastComparator,
+  },
+  kd: {
+    field: 'kd',
+    headerName: 'K/D',
+    width: 68,
+    description: 'Kills per death',
+    renderCell: (p) => fmtNum(p.row.kd),
+    getSortComparator: nullsLastComparator,
+  },
+  kpm: {
+    field: 'kpm',
+    headerName: 'KPM',
+    width: 68,
+    // Spelled out because K/match is also on the board and both start
+    // with K — they no longer sit side by side, which makes the tooltip
+    // more load-bearing rather than less.
+    description: 'Kills per minute',
+    renderCell: (p) => fmtNum(p.row.kpm),
+    getSortComparator: nullsLastComparator,
+  },
+  spm: {
+    field: 'spm',
+    headerName: 'SPM',
+    width: 72,
+    description: 'Score per minute',
+    renderCell: (p) => fmtNum(p.row.spm, 0),
+    getSortComparator: nullsLastComparator,
+  },
+  revivesPerHour: {
+    field: 'revivesPerHour',
+    headerName: 'Rev/h',
+    width: 76,
+    description: 'Revives per hour played',
+    renderCell: (p) => fmtNum(p.row.revivesPerHour, 1),
+    getSortComparator: nullsLastComparator,
+  },
+  dpm: {
+    field: 'dpm',
+    headerName: 'DPM',
+    width: 76,
+    description: 'Damage per minute',
+    renderCell: (p) => fmtNum(p.row.dpm, 0),
+    getSortComparator: nullsLastComparator,
+  },
+};
+
+/** The Rating header's tooltip, written from the mode's weights. */
+const RATED_LABEL: Record<RatedMetric, string> = {
+  winPct: 'win rate',
+  top3Pct: 'top-three rate',
+  apm: 'assists per minute',
+  objPtsPerHour: 'objectives',
+  objSpm: 'objective score per minute',
+  kd: 'K/D',
+  kpm: 'kills per minute',
+  spm: 'score per minute',
+  revivesPerHour: 'revives per hour',
+  dpm: 'damage per minute',
+};
+
+function ratingDescription(mode: ModeKey): string {
+  const parts = ratedMetrics(mode).map(
+    (m) => `${RATED_LABEL[m]} ${Math.round(RATING_WEIGHTS[mode][m]! * 100)}%`,
+  );
+  return `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field.`;
+}
+
 export function LeaderboardTable({
   rows,
+  mode,
   provisional = false,
   fill = false,
 }: {
   rows: BoardRow[];
+  /** The mode the season is ranked on, which decides the rated columns. */
+  mode: ModeKey;
   provisional?: boolean;
   /**
    * Fill the parent's height and scroll inside, instead of growing to fit
@@ -210,7 +337,7 @@ export function LeaderboardTable({
   // full board scrolled sideways on anything narrower than a large desktop —
   // keep this threshold above COLUMN_BUDGET_PX + CONTAINER_CHROME_PX.
   const isNarrow = useMediaQuery('(max-width:600px)', { noSsr: true });
-  const isMedium = useMediaQuery(`(max-width:${WIDE_TIER_MIN_PX - 1}px)`, { noSsr: true });
+  const isMedium = useMediaQuery(`(max-width:${WIDE_TIER_MIN_PX[mode] - 1}px)`, { noSsr: true });
 
   // Depends on isNarrow: a phone has roughly 368px of usable width, so the
   // handful of columns it does show have to be narrower too, not just fewer.
@@ -240,11 +367,11 @@ export function LeaderboardTable({
                 fontSize: p.row.rank === 1 ? '1.5rem' : p.row.rank <= 3 ? '1.2rem' : '1rem',
                 lineHeight: 1,
                 color: p.row.rank <= 3 ? 'primary.main' : 'text.primary',
-                textShadow:
+                textShadow: (t) =>
                   p.row.rank === 1
-                    ? '0 0 18px rgba(255,176,32,0.75)'
-                    : p.row.rank <= 3
-                      ? '0 0 10px rgba(255,176,32,0.35)'
+                    ? `0 0 18px ${alpha(t.palette.primary.main, 0.75)}`
+                    : p.row.rank! <= 3
+                      ? `0 0 10px ${alpha(t.palette.primary.main, 0.35)}`
                       : 'none',
               }}
             >
@@ -301,8 +428,7 @@ export function LeaderboardTable({
         field: 'rating',
         headerName: 'Rating',
         width: isNarrow ? 88 : 96,
-        description:
-          'Overall rating out of 100: win rate 40%, objectives 15%, K/D 15%, kills per match 12%, damage per minute 10%, revives per hour 8% — each scored against the rest of the ranked field.',
+        description: ratingDescription(mode),
         renderCell: (p) =>
           p.row.rating === null ? (
             <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
@@ -355,69 +481,10 @@ export function LeaderboardTable({
       },
       // The rated columns come first, in descending weight, so reading left to
       // right walks the rating from its largest component to its smallest —
-      // and the seven that produce the Rating sit together instead of being
-      // interleaved with the volume stats. Keep this order in step with
-      // RATING_WEIGHTS; if a weight is retuned, the columns move with it.
-      {
-        field: 'winPct',
-        headerName: 'Win %',
-        width: 76,
-        description: 'Share of Gauntlet matches won',
-        renderCell: (p) => fmtPct(p.row.winPct),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'objPtsPerHour',
-        headerName: 'OBJ/h',
-        width: 72,
-        description:
-          'Objective points per hour: 0.1 per second on the objective, 10 per objective destroyed, 5 per disarm, 3 per intel pickup',
-        renderCell: (p) => fmtNum(p.row.objPtsPerHour, 0),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'kd',
-        headerName: 'K/D',
-        width: 68,
-        description: 'Kills per death',
-        renderCell: (p) => fmtNum(p.row.kd),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'kpm',
-        headerName: 'KPM',
-        width: 68,
-        // Spelled out because K/match is also on the board and both start
-        // with K — they no longer sit side by side, which makes the tooltip
-        // more load-bearing rather than less.
-        description: 'Kills per minute',
-        renderCell: (p) => fmtNum(p.row.kpm),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'spm',
-        headerName: 'SPM',
-        width: 72,
-        description: 'Score per minute',
-        renderCell: (p) => fmtNum(p.row.spm, 0),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'revivesPerHour',
-        headerName: 'Rev/h',
-        width: 76,
-        description: 'Revives per hour played',
-        renderCell: (p) => fmtNum(p.row.revivesPerHour, 1),
-        getSortComparator: nullsLastComparator,
-      },
-      {
-        field: 'dpm',
-        headerName: 'DPM',
-        width: 76,
-        description: 'Damage per minute',
-        renderCell: (p) => fmtNum(p.row.dpm, 0),
-        getSortComparator: nullsLastComparator,
-      },
+      // and the ones that produce the Rating sit together instead of being
+      // interleaved with the volume stats. Read from the mode's weights, so a
+      // retuned weight moves its column, and a mode only shows what it rates.
+      ...ratedMetrics(mode).map((m) => RATED_COLUMNS[m]),
 
       // Everything below here is context, not rating input: volume, record and
       // the two counts the rating deliberately does not read.
@@ -455,16 +522,16 @@ export function LeaderboardTable({
     // headerClassName and description land after the spread so a column
     // cannot opt out of being marked as rated by setting its own.
     return base.map((c) => {
-      const rated = RATING_WEIGHTS[c.field as RatedMetric] !== undefined;
+      const rated = RATING_WEIGHTS[mode][c.field as RatedMetric] !== undefined;
       return {
         align: COLUMN_ALIGN[c.field] ?? 'center',
         headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
         ...c,
         headerClassName: rated ? 'rated-col' : undefined,
-        description: columnDescription(c.field, c.description, c.headerName),
+        description: columnDescription(c.field, c.description, c.headerName, mode),
       };
     });
-  }, [isNarrow]);
+  }, [isNarrow, mode]);
 
   // Actually remove secondary columns from DataGrid's own column set on
   // narrow viewports, rather than hiding their cells with CSS — DataGrid
@@ -483,6 +550,10 @@ export function LeaderboardTable({
       // Objective work is the second-heaviest part of the rating, so it earns
       // a place alongside them rather than with the supporting rates.
       objPtsPerHour: !isNarrow,
+      // Rapid Royale's heaviest rates after the win, for the same reason.
+      top3Pct: !isNarrow,
+      apm: !isNarrow,
+      objSpm: !isNarrow,
       // Only on a wide screen: the supporting detail.
       kills: !isMedium,
       headshots: !isMedium,
@@ -548,13 +619,13 @@ export function LeaderboardTable({
           letterSpacing: '0.06em',
           color: 'text.secondary',
         },
-        // Rated columns are lit in the panel amber and underscored, so the
-        // seven that produce the Rating read as a group at a glance and the
+        // Rated columns are lit in the mode's accent and underscored, so the
+        // ones that produce the Rating read as a group at a glance and the
         // context columns visibly are not. The legend above the table says
         // what the marking means — colour alone would only tell someone that
         // these columns are different, not why.
         '& .MuiDataGrid-columnHeader.rated-col': {
-          boxShadow: 'inset 0 -2px 0 rgba(255,176,32,0.85)',
+          boxShadow: (t) => `inset 0 -2px 0 ${alpha(t.palette.primary.main, 0.85)}`,
         },
         '& .MuiDataGrid-columnHeader.rated-col .MuiDataGrid-columnHeaderTitle': {
           color: 'primary.main',
@@ -563,8 +634,8 @@ export function LeaderboardTable({
         // A scanning highlight rather than a card hover: the row lights up
         // along its leading edge, like a selected line on an instrument panel.
         '& .MuiDataGrid-row:hover': {
-          bgcolor: 'rgba(255,176,32,0.06)',
-          boxShadow: 'inset 3px 0 0 rgba(255,176,32,0.9)',
+          bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
+          boxShadow: (t) => `inset 3px 0 0 ${alpha(t.palette.primary.main, 0.9)}`,
         },
         '& .MuiDataGrid-footerContainer': { borderColor: 'divider' },
         '& .MuiDataGrid-columnSeparator': { color: 'rgba(27,38,52,0.9)' },

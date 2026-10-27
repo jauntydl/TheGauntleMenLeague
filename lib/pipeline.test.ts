@@ -30,9 +30,45 @@ describe('toBulkPlayer', () => {
 });
 
 describe('buildBoard', () => {
-  it('produces a row per season the player has Gauntlet data for', () => {
+  it('computes only the current season — a past season the API still serves is not rediscovered', () => {
+    // The fixture carries Season 3 and Season 4. Past seasons come from the
+    // archive or not at all; see the archive tests below.
     const board = buildBoard([dark], [rawSample], 'Season4');
-    expect(Object.keys(board.seasons).sort()).toEqual(['Season3', 'Season4']);
+    expect(Object.keys(board.seasons)).toEqual(['Season4']);
+  });
+
+  it('carries an archived season over verbatim, whatever the API now says about it', () => {
+    const at = new Date('2026-10-27T00:00:00.000Z');
+    const live = buildBoard([dark], [rawSample], 'Season4', at);
+    // A frozen Season 3 that differs from anything the fixture would compute,
+    // so a recompute could not reproduce it by accident.
+    const frozen = { ...live.seasons.Season4[0], eaId: 'frozen', matches: 999, rank: 1 };
+    const archive = {
+      ...live,
+      meta: { ...live.meta, seasons: ['Season3', 'Season4'] },
+      seasons: { ...live.seasons, Season3: [frozen] },
+      provisional: { ...live.provisional, Season3: [] },
+    };
+    const board = buildBoard([dark], [rawSample], 'Season4', at, archive);
+    expect(board.seasons.Season3).toEqual([frozen]);
+    expect(board.provisional.Season3).toEqual([]);
+    expect(board.meta.seasons).toEqual(['Season3', 'Season4']);
+  });
+
+  it('archives the outgoing season the day a new one goes current', () => {
+    const at = new Date('2026-10-27T00:00:00.000Z');
+    const lastDayOfSeason4 = buildBoard([dark], [rawSample], 'Season4', at);
+    const firstDayOfSeason5 = buildBoard([dark], [rawSample], 'Season5', at, lastDayOfSeason4);
+    expect(firstDayOfSeason5.seasons.Season4).toEqual(lastDayOfSeason4.seasons.Season4);
+    expect(firstDayOfSeason5.meta.seasons).toEqual(['Season4', 'Season5']);
+    expect(firstDayOfSeason5.meta.currentSeason).toBe('Season5');
+  });
+
+  it('recomputes the current season rather than carrying it from the archive', () => {
+    const at = new Date('2026-10-27T00:00:00.000Z');
+    const live = buildBoard([dark], [rawSample], 'Season4', at);
+    const stale = { ...live, seasons: { Season4: [] }, provisional: { Season4: [] } };
+    expect(buildBoard([dark], [rawSample], 'Season4', at, stale).seasons.Season4).toEqual(live.seasons.Season4);
   });
 
   it('carries roster identity onto the row', () => {
@@ -207,15 +243,11 @@ describe('buildBoard', () => {
     expect(bravoRow?.matches).toBe(50);
   });
 
-  it('produces byte-identical JSON regardless of bulk response order, across multiple seasons', () => {
+  it('produces byte-identical JSON regardless of bulk response order', () => {
     // build.ts's change-detection (scripts/build.ts) compares JSON.stringify
-    // output directly, which is key-order sensitive. Season key insertion
-    // order used to follow rowsBySeason Map iteration order, which in turn
-    // follows the order players appear in the bulk response — documented as
-    // unstable. A single-season fixture can't exercise this: with only one
-    // season, the top-level key order can't differ no matter what. So: zed
-    // has Season4 data only, amy has Season2 data only — which player is
-    // processed first changes which season key gets inserted first.
+    // output directly, which is order sensitive, and the bulk response order
+    // is documented as unstable. Two players in the current season, fed in
+    // both orders, alongside an archived season.
     const zed: RosterEntry = {
       eaId: 'zed', displayName: 'Zed', platform: 'pc', region: 'X',
       mainMode: 'both', personaId: '901', nucleusId: '902',
@@ -224,58 +256,57 @@ describe('buildBoard', () => {
       eaId: 'amy', displayName: 'Amy', platform: 'pc', region: 'X',
       mainMode: 'both', personaId: '903', nucleusId: '904',
     };
-
-    const zedEntry = {
-      player: { nucleusId: '902', personaId: '901', platformId: 1 },
+    const entry = (nucleusId: string, personaId: string, matches: number) => ({
+      player: { nucleusId, personaId, platformId: 1 },
       categories: [{
         catName: 'glacier_mp',
         catFields: [
-          { name: 'matches_gm_gntgauntlet', value: 20, fields: dim('GraniteGauntlet0', 'Season4') },
+          { name: 'matches_gm_gntgauntlet', value: matches, fields: dim('GraniteGauntlet0', 'Season4') },
           { name: 'tp_gm_gntgauntlet', value: 6000, fields: dim('GraniteGauntlet0', 'Season4') },
         ],
       }],
-    };
-    const amyEntry = {
-      player: { nucleusId: '904', personaId: '903', platformId: 1 },
-      categories: [{
-        catName: 'glacier_mp',
-        catFields: [
-          { name: 'matches_gm_gntgauntlet', value: 20, fields: dim('GraniteGauntlet0', 'Season2') },
-          { name: 'tp_gm_gntgauntlet', value: 6000, fields: dim('GraniteGauntlet0', 'Season2') },
-        ],
-      }],
-    };
+    });
+    const zedEntry = entry('902', '901', 20);
+    const amyEntry = entry('904', '903', 20);
 
     const at = new Date('2026-09-12T00:00:00.000Z');
-    const boardZedFirst = buildBoard([zed, amy], [{ playerStats: [zedEntry, amyEntry] }], 'Season4', at);
-    const boardAmyFirst = buildBoard([zed, amy], [{ playerStats: [amyEntry, zedEntry] }], 'Season4', at);
+    const archive = buildBoard([dark], [rawSample], 'Season2', at);
+    const boardZedFirst = buildBoard([zed, amy], [{ playerStats: [zedEntry, amyEntry] }], 'Season4', at, archive);
+    const boardAmyFirst = buildBoard([zed, amy], [{ playerStats: [amyEntry, zedEntry] }], 'Season4', at, archive);
 
-    // The exact property build.ts's change-detection depends on.
     expect(JSON.stringify(boardZedFirst)).toBe(JSON.stringify(boardAmyFirst));
-    // Pin the actual order too, so a regression to plain (unsorted) insertion
-    // order — which happens to agree between these two runs only because
-    // both start from the same roster array — can't slip through unnoticed.
     expect(Object.keys(boardZedFirst.seasons)).toEqual(['Season2', 'Season4']);
   });
 
   it('orders season keys naturally, not lexicographically (Season2 before Season10)', () => {
-    const multiSeason: RawResponse = {
-      playerStats: [
-        {
-          player: { nucleusId: dark.nucleusId!, personaId: dark.personaId!, platformId: 1 },
-          categories: [{
-            catName: 'glacier_mp',
-            catFields: [
-              { name: 'matches_gm_gntgauntlet', value: 15, fields: dim('GraniteGauntlet0', 'Season10') },
-              { name: 'matches_gm_gntgauntlet', value: 15, fields: dim('GraniteGauntlet0', 'Season2') },
-            ],
-          }],
-        },
-      ],
-    };
-    const board = buildBoard([dark], [multiSeason], 'Season10');
+    const at = new Date('2026-09-12T00:00:00.000Z');
+    const archive = buildBoard([dark], [rawSample], 'Season2', at);
+    const board = buildBoard([dark], [rawSample], 'Season10', at, archive);
     expect(Object.keys(board.seasons)).toEqual(['Season2', 'Season10']);
     expect(board.meta.seasons).toEqual(['Season2', 'Season10']);
+  });
+
+  it('ranks a Rapid Royale season on Rapid Royale counters', () => {
+    const rr: RawResponse = {
+      playerStats: [{
+        player: { nucleusId: dark.nucleusId!, personaId: dark.personaId!, platformId: 1 },
+        categories: [{
+          catName: 'glacier_mp',
+          catFields: [
+            { name: 'matches_gm_rr_trio', value: 85, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'wins_gm_rr_trio', value: 52, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'topthree_gm_rr_trio', value: 68, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'tp_gm_rr_trio', value: 60134, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'assists_gm_rr_trio', value: 446, fields: dim('GraniteRapidTrio0', 'Season5') },
+          ],
+        }],
+      }],
+    };
+    const row = buildBoard([dark], [rr], 'Season5').seasons.Season5[0];
+    expect(row.matches).toBe(85);
+    expect(row.top3Pct).toBe(80);
+    expect(row.apm).toBe(0.45);
+    expect(row.rating).not.toBeNull();
   });
 
   it('excludes a season slice with kills but no measurable play (pre-per-mode-counter seasons)', () => {

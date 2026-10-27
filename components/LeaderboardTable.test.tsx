@@ -15,14 +15,14 @@ import {
   columnDescription,
 } from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
-import { RATING_WEIGHTS, STANDOUT_TRAITS } from '@/lib/rating';
+import { RATING_WEIGHTS, STANDOUT_TRAITS, type RatedMetric } from '@/lib/rating';
 
 const row = (over: Partial<BoardRow>): BoardRow => {
   const base: BoardRow = {
     eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
     matches: 20, wins: 10, losses: 10, kills: 100, headshots: 25, deaths: 50, damage: 1000,
     assists: 0, revives: 0, score: 42000, timeSec: 3600,
-    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
+    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
     ...over,
   };
   // eaId is the roster key, is unique in production, and is what the Player
@@ -93,7 +93,7 @@ describe('badges', () => {
     expect(badges(row({ standouts: ['autoPerMatch'], autoPerMatch: 21.4, autoKills: 8132 }))[0].detail)
       .toBe('Top 10% — automatic kills — 21.4 per match, 8,132 all season');
     expect(badges(row({ jetPct: 34.6 }))[0].detail)
-      .toBe('Pilot — 34.6% of Gauntlet time flown in jets');
+      .toBe('Pilot — 34.6% of their time flown in jets');
   });
 
   it('survives a row built before standouts existed', () => {
@@ -105,25 +105,25 @@ describe('badges', () => {
 
 describe('LeaderboardTable', () => {
   it('renders a row per player', () => {
-    render(<LeaderboardTable rows={[row({ displayName: 'Dark' }), row({ displayName: 'Noxious', rank: 2 })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Dark' }), row({ displayName: 'Noxious', rank: 2 })]} />);
     expect(screen.getByText('Dark')).toBeInTheDocument();
     expect(screen.getByText('Noxious')).toBeInTheDocument();
   });
 
   it('awards the jet badge at or above the threshold', () => {
-    render(<LeaderboardTable rows={[row({ displayName: 'Jetty', jetPct: 14.8 })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Jetty', jetPct: 14.8 })]} />);
     expect(screen.getByLabelText(/flown in jets/)).toBeInTheDocument();
   });
 
   it('withholds the jet badge below the threshold', () => {
-    render(<LeaderboardTable rows={[row({ displayName: 'Grunt', jetPct: 9.9 })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Grunt', jetPct: 9.9 })]} />);
     expect(screen.queryByLabelText(/flown in jets/)).not.toBeInTheDocument();
   });
 
   it('shows the name on the scoreboard in game, not the EA ID or the Discord handle', () => {
     // TTVLezWin on EA is LezWin on Steam and "Lez" in Discord. Only one of
     // those is the name you saw in the match you just played.
-    render(<LeaderboardTable rows={[row({
+    render(<LeaderboardTable mode="gauntlet" rows={[row({
       eaId: 'TTVLezWin', displayName: 'Lez', inGameName: 'LezWin', inGamePlatform: 'steam',
     })]} />);
     expect(screen.getByText('LezWin')).toBeInTheDocument();
@@ -134,12 +134,12 @@ describe('LeaderboardTable', () => {
 
 
   it('falls back to the EA ID when no persona was resolved', () => {
-    render(<LeaderboardTable rows={[row({ eaId: 'CyclonicNinja', displayName: 'CyclonicNinja' })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ eaId: 'CyclonicNinja', displayName: 'CyclonicNinja' })]} />);
     expect(screen.getByText('CyclonicNinja')).toBeInTheDocument();
   });
 
   it('renders an em dash for null rate stats', () => {
-    render(<LeaderboardTable rows={[row({ displayName: 'Empty', kd: null, kpm: null })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Empty', kd: null, kpm: null })]} />);
     // kd and kpm are null in this fixture, and the default row earns no
     // badge, so three dashes. Pinned so a partial regression (only one of
     // the two stats rendering a dash) is caught.
@@ -147,23 +147,23 @@ describe('LeaderboardTable', () => {
   });
 
   it('shows a rank in ranked mode', () => {
-    render(<LeaderboardTable rows={[row({ rank: 3 })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ rank: 3 })]} />);
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
   it('shows an em dash for rank in provisional mode', () => {
-    render(<LeaderboardTable rows={[row({ rank: null })]} provisional />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ rank: null })]} provisional />);
     // Rank is null, and the default row earns no badge — two dashes.
     expect(screen.getAllByText('—')).toHaveLength(2);
   });
 
   it('renders an empty-state message with no rows', () => {
-    render(<LeaderboardTable rows={[]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[]} />);
     expect(screen.getByText(/no players/i)).toBeInTheDocument();
   });
 
   it('shows badges as icons alone, with the figure only in the tooltip', () => {
-    render(<LeaderboardTable rows={[row({
+    render(<LeaderboardTable mode="gauntlet" rows={[row({
       displayName: 'Scoped', standouts: ['sniperPerMatch'], sniperPerMatch: 8.25, sniperKills: 1650,
     })]} />);
     expect(screen.getByLabelText('Top 10% — scoped kills — 8.3 per match, 1,650 all season'))
@@ -172,7 +172,7 @@ describe('LeaderboardTable', () => {
   });
 
   it('renders every badge a player earned', () => {
-    render(<LeaderboardTable rows={[row({
+    render(<LeaderboardTable mode="gauntlet" rows={[row({
       displayName: 'Stacked', standouts: ['winPct', 'kd', 'autoPerMatch'], jetPct: 40,
     })]} />);
     // Anchored on "Top 10%"/"Pilot" so a column menu's own aria-label
@@ -183,7 +183,7 @@ describe('LeaderboardTable', () => {
   });
 
   it('shows a dash when a player earned nothing', () => {
-    render(<LeaderboardTable rows={[row({ displayName: 'Plain', standouts: [], jetPct: 0 })]} />);
+    render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Plain', standouts: [], jetPct: 0 })]} />);
     expect(screen.getAllByText('—')).toHaveLength(1);
   });
 
@@ -193,6 +193,7 @@ describe('LeaderboardTable', () => {
     // rather than coincidentally producing the same order.
     render(
       <LeaderboardTable
+        mode="gauntlet"
         rows={[
           row({ eaId: 'Low', rating: 20, winPct: 90 }),
           row({ eaId: 'High', rating: 90, winPct: 20 }),
@@ -206,13 +207,13 @@ describe('LeaderboardTable', () => {
 
   it('shows the footer once rows exceed the page-size threshold', () => {
     const rows = Array.from({ length: 101 }, (_, i) => row({ eaId: `p${i}`, displayName: `P${i}` }));
-    const { container } = render(<LeaderboardTable rows={rows} />);
+    const { container } = render(<LeaderboardTable mode="gauntlet" rows={rows} />);
     expect(container.querySelector('.MuiDataGrid-footerContainer')).not.toBeNull();
   });
 
   it('hides the footer at or below the page-size threshold', () => {
     const rows = Array.from({ length: 100 }, (_, i) => row({ eaId: `p${i}`, displayName: `P${i}` }));
-    const { container } = render(<LeaderboardTable rows={rows} />);
+    const { container } = render(<LeaderboardTable mode="gauntlet" rows={rows} />);
     expect(container.querySelector('.MuiDataGrid-footerContainer')).toBeNull();
   });
 
@@ -232,88 +233,99 @@ describe('LeaderboardTable', () => {
     }
   };
 
-  it('marks exactly the rated columns in the header, and no others', () => {
+  const MODE_KEYS = ['gauntlet', 'rapidRoyale'] as const;
+  const markedFields = (container: HTMLElement) =>
+    [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')].map(
+      (el) => el.getAttribute('data-field') as RatedMetric,
+    );
+
+  it.each(MODE_KEYS)('marks exactly the rated columns in the header, and no others (%s)', (mode) => {
     // Derived from RATING_WEIGHTS on both sides, so this cannot be satisfied
     // by a hand-kept list drifting alongside the weights. It asserts the set
     // is exact: a context column picking up the marking would claim to feed
     // the rating when it does not.
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Marked' })]} />);
-      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
-        .map((el) => el.getAttribute('data-field'));
-      expect(new Set(marked)).toEqual(new Set(Object.keys(RATING_WEIGHTS)));
+      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Marked' })]} />);
+      expect(new Set(markedFields(container))).toEqual(new Set(Object.keys(RATING_WEIGHTS[mode])));
     });
   });
 
-  it('orders the rated columns by weight, heaviest first', () => {
+  it.each(MODE_KEYS)('orders the rated columns by weight, heaviest first (%s)', (mode) => {
     // The legend promises "heaviest first". This is what makes that true.
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Ordered' })]} />);
-      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
-        .map((el) => el.getAttribute('data-field') as keyof typeof RATING_WEIGHTS);
-      const byWeight = [...marked].sort((a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a]);
-      expect(marked).toEqual(byWeight);
+      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Ordered' })]} />);
+      const marked = markedFields(container);
+      const w = RATING_WEIGHTS[mode];
+      expect(marked).toEqual([...marked].sort((a, b) => w[b]! - w[a]!));
+    });
+  });
+
+  it('shows each mode only the columns it rates', () => {
+    withViewport([], () => {
+      const g = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'G' })]} />);
+      const gFields = [...g.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
+      expect(gFields).toContain('objPtsPerHour');
+      expect(gFields).not.toContain('top3Pct');
+      g.unmount();
+      const r = render(<LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'R' })]} />);
+      const rFields = [...r.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
+      expect(rFields).toEqual(expect.arrayContaining(['top3Pct', 'apm', 'objSpm']));
+      expect(rFields).not.toContain('objPtsPerHour');
     });
   });
 
   it('gives every rated column a tooltip naming its weight', () => {
-    // The amber marks these columns as special; the tooltip says why, and how
-    // much. Both sides read RATING_WEIGHTS, so a retuned weight cannot leave
-    // a tooltip quoting the old one.
+    // The accent marks these columns as special; the tooltip says why, and
+    // how much. Both sides read RATING_WEIGHTS, so a retuned weight cannot
+    // leave a tooltip quoting the old one.
     //
     // Asserted on the description rather than by hovering: MUI opens the
     // tooltip on a real pointer, and jsdom never opens it.
-    for (const m of Object.keys(RATING_WEIGHTS) as (keyof typeof RATING_WEIGHTS)[]) {
-      const text = columnDescription(m, undefined, 'Header');
-      expect(text).toContain(`${Math.round(RATING_WEIGHTS[m] * 100)}% of the Rating`);
+    for (const mode of MODE_KEYS) {
+      for (const [m, w] of Object.entries(RATING_WEIGHTS[mode])) {
+        expect(columnDescription(m, undefined, 'Header', mode)).toContain(`${Math.round(w * 100)}% of the Rating`);
+      }
     }
   });
 
   it('keeps an existing description and appends the weight to it', () => {
-    const text = columnDescription('spm', 'Score per minute', 'SPM');
-    expect(text).toBe(`Score per minute · ${Math.round(RATING_WEIGHTS.spm * 100)}% of the Rating`);
+    const text = columnDescription('spm', 'Score per minute', 'SPM', 'gauntlet');
+    expect(text).toBe(`Score per minute · ${Math.round(RATING_WEIGHTS.gauntlet.spm! * 100)}% of the Rating`);
   });
 
   it('leaves an unrated column\'s description alone', () => {
-    expect(columnDescription('headshots', 'Headshot kills', 'HS')).toBe('Headshot kills');
-    expect(columnDescription('timeSec', undefined, 'Time')).toBeUndefined();
+    expect(columnDescription('headshots', 'Headshot kills', 'HS', 'gauntlet')).toBe('Headshot kills');
+    expect(columnDescription('timeSec', undefined, 'Time', 'gauntlet')).toBeUndefined();
+    // Rated in one mode is not rated in the other.
+    expect(columnDescription('objPtsPerHour', 'Objective points', 'OBJ/h', 'rapidRoyale')).toBe('Objective points');
   });
 
-  it('marks every rated column and no unrated one', () => {
-    withViewport([], () => {
-      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Set' })]} />);
-      const marked = [...container.querySelectorAll('.MuiDataGrid-columnHeader.rated-col')]
-        .map((el) => el.getAttribute('data-field'));
-      expect(new Set(marked)).toEqual(new Set(Object.keys(RATING_WEIGHTS)));
-    });
-  });
-
-  it('keeps the wide tier inside its width budget', () => {
+  it.each(MODE_KEYS)('keeps the wide tier inside its width budget (%s)', (mode) => {
     // The board scrolled sideways twice — once when SPM landed, again with
     // OBJ/h — because columns were added without anyone re-adding up the
     // widths. This does the addition. The Player column is flex, so jsdom
     // reports it as 0 and its declared minimum stands in.
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'Budget' })]} />);
+      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Budget' })]} />);
       const headers = [...container.querySelectorAll('.MuiDataGrid-columnHeader')];
       const fixed = headers
         .filter((el) => el.getAttribute('data-field') !== 'eaId')
         .reduce((total, el) => total + parseInt((el as HTMLElement).style.width || '0', 10), 0);
-      expect(fixed + PLAYER_MIN_WIDTH_PX).toBe(COLUMN_BUDGET_PX);
+      expect(fixed + PLAYER_MIN_WIDTH_PX).toBe(COLUMN_BUDGET_PX[mode]);
     });
   });
 
-  it('only offers the wide tier on a viewport that can hold it', () => {
+  it.each(MODE_KEYS)('only offers the wide tier on a viewport that can hold it (%s)', (mode) => {
     // The breakpoint sat at 1280px while the columns needed ~1400px, which is
     // the whole reason the full board scrolled sideways on a laptop.
-    expect(COLUMN_BUDGET_PX + CONTAINER_CHROME_PX).toBeLessThanOrEqual(WIDE_TIER_MIN_PX);
+    expect(COLUMN_BUDGET_PX[mode] + CONTAINER_CHROME_PX).toBeLessThanOrEqual(WIDE_TIER_MIN_PX[mode]);
   });
 
   it('shows no match-count column — W-L already carries it', () => {
     // 492-75 is 567 matches and says more doing it, so the M column was pure
     // duplication taking width from a board that has none to spare.
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable rows={[row({ displayName: 'NoM' })]} />);
+      const { container } = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'NoM' })]} />);
       const fields = [...container.querySelectorAll('.MuiDataGrid-columnHeader')]
         .map((el) => el.getAttribute('data-field'));
       expect(fields).not.toContain('matches');
@@ -324,8 +336,8 @@ describe('LeaderboardTable', () => {
   it('shows only rank, player, rating and win rate on a phone', () => {
     // A 400px phone has roughly 368px usable. These four total 324px; adding
     // K/D would push it past that and bring back the horizontal scroll.
-    withViewport(['max-width:600px', `max-width:${WIDE_TIER_MIN_PX - 1}px`], () => {
-      render(<LeaderboardTable rows={[row({ displayName: 'Phone' })]} />);
+    withViewport(['max-width:600px', `max-width:${WIDE_TIER_MIN_PX.gauntlet - 1}px`], () => {
+      render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Phone' })]} />);
       expect(screen.getByText('Rating')).toBeInTheDocument();
       expect(screen.getByText('Win %')).toBeInTheDocument();
       for (const hidden of ['W–L', 'Badges', 'K/D', 'Kills', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
@@ -335,8 +347,8 @@ describe('LeaderboardTable', () => {
   });
 
   it('adds playstyle and combat rates on a tablet, but not the wide-screen detail', () => {
-    withViewport([`max-width:${WIDE_TIER_MIN_PX - 1}px`], () => {
-      render(<LeaderboardTable rows={[row({ displayName: 'Tablet' })]} />);
+    withViewport([`max-width:${WIDE_TIER_MIN_PX.gauntlet - 1}px`], () => {
+      render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Tablet' })]} />);
       for (const shown of ['Rating', 'Win %', 'W–L', 'Badges', 'K/D', 'K/match']) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }
@@ -348,7 +360,7 @@ describe('LeaderboardTable', () => {
 
   it('shows every column on a wide screen', () => {
     withViewport([], () => {
-      render(<LeaderboardTable rows={[row({ displayName: 'Desktop' })]} />);
+      render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Desktop' })]} />);
       for (const shown of ['Rating', 'Win %', 'Badges', 'Kills', 'HS', 'K/D', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }

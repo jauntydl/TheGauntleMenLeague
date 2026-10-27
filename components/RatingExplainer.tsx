@@ -7,8 +7,10 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { RATING_WEIGHTS, STANDOUT_FLOOR, type RatedMetric } from '@/lib/rating';
+import { RATING_WEIGHTS, STANDOUT_FLOOR, ratedMetrics, type RatedMetric } from '@/lib/rating';
 import { MIN_MATCHES } from '@/lib/ranking';
+import { FIRST_RAPID_ROYALE_SEASON, MODES, type ModeKey } from '@/lib/modes';
+import { MODE_ACCENT } from '@/app/accents';
 
 /**
  * Read from RATING_WEIGHTS rather than repeating the numbers in prose, so the
@@ -29,6 +31,18 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
     label: 'Objective points per hour',
     why: 'Gauntlet eliminates squads on objectives, and unlike the win this is yours alone.',
   },
+  top3Pct: {
+    label: 'Top-three rate',
+    why: 'Going deep every match, not just winning some and dropping early in the rest.',
+  },
+  apm: {
+    label: 'Assists per minute',
+    why: 'In trios the knock a teammate finishes is as much the fight as the finish.',
+  },
+  objSpm: {
+    label: 'Objective score per minute',
+    why: 'The objective work the game scores you for, at a rate playing more cannot inflate.',
+  },
   dpm: { label: 'Damage per minute', why: 'Counts the shots that set up a teammate’s kill — lightly, since the kill itself is already counted.' },
   revivesPerHour: {
     label: 'Revives per hour',
@@ -36,11 +50,39 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   },
 };
 
-export function RatingExplainer() {
-  const rows = (Object.keys(RATING_WEIGHTS) as RatedMetric[]).sort(
-    (a, b) => RATING_WEIGHTS[b] - RATING_WEIGHTS[a],
-  );
+/** Newest mode first: the one being played is the one people came to read. */
+const MODE_ORDER: { mode: ModeKey; seasons: string }[] = [
+  { mode: 'rapidRoyale', seasons: `Season ${FIRST_RAPID_ROYALE_SEASON} on` },
+  { mode: 'gauntlet', seasons: `Seasons 3–${FIRST_RAPID_ROYALE_SEASON - 1}, archived` },
+];
 
+function WeightTable({ mode }: { mode: ModeKey }) {
+  const weights = RATING_WEIGHTS[mode];
+  return (
+    <Table size="small" sx={{ mb: 3 }} aria-label={`${MODES[mode].label} weights`}>
+      <TableHead>
+        <TableRow>
+          <TableCell>Counts for</TableCell>
+          <TableCell>What</TableCell>
+          <TableCell>Why</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {ratedMetrics(mode).map((m) => (
+          <TableRow key={m}>
+            <TableCell className="tnum" sx={{ whiteSpace: 'nowrap', color: MODE_ACCENT[mode] }}>
+              {Math.round(weights[m]! * 100)}%
+            </TableCell>
+            <TableCell sx={{ whiteSpace: 'nowrap' }}>{REASONS[m].label}</TableCell>
+            <TableCell sx={{ color: 'text.secondary' }}>{REASONS[m].why}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+export function RatingExplainer() {
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 } }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -48,34 +90,56 @@ export function RatingExplainer() {
       </Typography>
 
       <Typography sx={{ mb: 2 }}>
-        Every ranked player gets a score out of 100. It blends seven things,
+        Every ranked player gets a score out of 100. It blends several stats,
         because winning alone does not say whether you carried your squad or
-        were carried by it.
+        were carried by it. Gauntlet ended with Season 4; from Season{' '}
+        {FIRST_RAPID_ROYALE_SEASON} the board ranks Rapid Royale, which is
+        weighted for how that mode is played. Each season&rsquo;s tab is drawn
+        in its mode&rsquo;s colour.
       </Typography>
 
-      <Table size="small" sx={{ mb: 3 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Counts for</TableCell>
-            <TableCell>What</TableCell>
-            <TableCell>Why</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((m) => (
-            <TableRow key={m}>
-              <TableCell className="tnum" sx={{ whiteSpace: 'nowrap', color: 'primary.main' }}>
-                {Math.round(RATING_WEIGHTS[m] * 100)}%
-              </TableCell>
-              <TableCell sx={{ whiteSpace: 'nowrap' }}>{REASONS[m].label}</TableCell>
-              <TableCell sx={{ color: 'text.secondary' }}>{REASONS[m].why}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {MODE_ORDER.map(({ mode, seasons }) => (
+        <Box key={mode}>
+          <Typography variant="h6" component="h2" gutterBottom sx={{ color: MODE_ACCENT[mode] }}>
+            {MODES[mode].label}{' '}
+            <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.85em' }}>
+              · {seasons}
+            </Box>
+          </Typography>
+          <WeightTable mode={mode} />
+        </Box>
+      ))}
 
       <Typography variant="h6" component="h2" gutterBottom>
-        Where the objective figure comes from
+        Placement, in Rapid Royale
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        <strong>Finishing position</strong> is the best input a battle royale
+        has — placing second every time beats alternating first and last. Rapid
+        Royale counts it twice over: the win, and finishing in the top three,
+        which is what separates someone who goes deep every match from someone
+        who wins a few and drops early in the rest. Top five was left out; every
+        top three is already a top five.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        The figure is checked before it counts: a top-three count must sit
+        between your wins and your matches, as it has to if it is real.
+        Gauntlet&rsquo;s placement figures failed exactly that — one player
+        showed more top-ten finishes than matches played — so Gauntlet seasons
+        were never ranked on placement.
+      </Typography>
+
+      <Typography variant="h6" component="h2" gutterBottom>
+        Objective score, in Rapid Royale
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        Rapid Royale has no objectives to hold, destroy or disarm, so the
+        Gauntlet formula below has nothing to count. It reads the part of your
+        score the game awards for objective play instead, per minute played.
+      </Typography>
+
+      <Typography variant="h6" component="h2" gutterBottom>
+        Where Gauntlet&rsquo;s objective figure comes from
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Objective points are{' '}
@@ -104,10 +168,9 @@ export function RatingExplainer() {
         You are scored against the field, not against a target
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        For each of the seven, we work out where you sit among everyone else
-        ranked this season. Top of the field on a stat is worth 100, bottom is
-        worth 0, middle is 50. Those seven positions are then blended using the
-        weights above.
+        For each stat, we work out where you sit among everyone else ranked
+        this season. Top of the field on a stat is worth 100, bottom is worth 0,
+        middle is 50. Those positions are then blended using the weights above.
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Two consequences worth knowing. A 3.0 K/D and 420 damage per minute cannot
@@ -133,8 +196,9 @@ export function RatingExplainer() {
       <Typography sx={{ mb: 2 }}>
         The icons beside a name are not part of the rating. Each one marks the
         top {100 - STANDOUT_FLOOR}% of the ranked field on one stat — win rate,
-        K/D, kills per match, score per minute, objective points per hour,
-        revives per hour, scoped kills per match or automatic kills per match —
+        K/D, kills per match, score per minute, objective points per hour (or
+        objective score per minute in Rapid Royale), revives per hour, scoped
+        kills per match or automatic kills per match —
         plus one for flying jets. Hover a badge to see which stat it is and what your figure
         was. Most players hold none, which is what makes the rest worth
         something.
@@ -153,14 +217,6 @@ export function RatingExplainer() {
         <strong>Total kills and total score</strong> reward whoever plays the most
         hours. Every part of the rating is a rate for that reason.
       </Typography>
-      <Typography sx={{ mb: 2 }}>
-        <strong>Finishing position</strong> would be the best input there is — in a
-        knockout mode, placing second every time beats alternating first and last.
-        The game does report placement figures, but they do not add up: one player
-        shows more top-ten finishes than matches played. Rather than rank everyone
-        on numbers that cannot be explained, they are left out until they can be.
-      </Typography>
-
       <Box sx={{ mt: 4 }}>
         <Link href="/">← Back to the board</Link>
       </Box>

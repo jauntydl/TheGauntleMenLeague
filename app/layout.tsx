@@ -25,7 +25,7 @@ const body = Archivo({
 
 export const metadata: Metadata = {
   title: 'The GauntleMen League',
-  description: 'Battlefield 6 Gauntlet standings',
+  description: 'Battlefield 6 Rapid Royale standings, with the Gauntlet seasons archived',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

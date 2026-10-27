@@ -7,7 +7,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 100, wins: 50, losses: 50, kills: 1000, headshots: 200, deaths: 500, damage: 100000,
   assists: 100, revives: 50, score: 420000, timeSec: 36000,
-  winPct: 50, kd: 2, killsPerMatch: 10, kpm: 1, dpm: 100, spm: 700, objPerMatch: 1.5, objPts: 9000, objPtsPerHour: 60, revivesPerHour: 5,
+  winPct: 50, kd: 2, killsPerMatch: 10, kpm: 1, dpm: 100, spm: 700, objPerMatch: 1.5, objPts: 9000, objPtsPerHour: 60, objSpm: null, top3Pct: null, apm: null, revivesPerHour: 5,
   rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 200, autoKills: 750,
   sniperPerMatch: 2, autoPerMatch: 7.5, jetPct: 0, rank: null,
   ...over,
@@ -48,6 +48,20 @@ describe('findByEaId', () => {
 });
 
 describe('mergePlayer', () => {
+  it('leaves an archived season exactly as it was', () => {
+    // Deliberately unranked and in no particular order: a re-rank would
+    // renumber and re-sort these, so leaving them alone is observable.
+    const frozen = [row({ eaId: 'old-b', winPct: 20, rank: 7 }), row({ eaId: 'old-a', winPct: 90, rank: 9 })];
+    const existing: BoardFile = {
+      ...board([row({ eaId: 'a', rank: 1 })]),
+      seasons: { Season3: frozen, Season4: [row({ eaId: 'a', rank: 1 })] },
+      provisional: { Season3: [], Season4: [] },
+    };
+    const merged = mergePlayer(existing, board([row({ eaId: 'new' })]));
+    expect(merged.seasons.Season3).toEqual(frozen);
+    expect(merged.seasons.Season4.map((r) => r.eaId).sort()).toEqual(['a', 'new']);
+  });
+
   it('re-ranks the whole field rather than appending to the end', () => {
     const existing = board([
       row({ eaId: 'a', winPct: 40, rank: 1 }),

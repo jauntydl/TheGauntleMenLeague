@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Daily build: resolve roster ids, fetch Gauntlet stats, write data/.
+ * Daily build: resolve roster ids, fetch the current season's stats, write data/.
  *
  *   npm run data          # write files
  *   npm run data:dry      # compute and report, write nothing
@@ -100,7 +100,13 @@ async function main() {
   console.log(`Fetching stats for ${bulk.length} resolved member(s)`);
   const responses = await fetchBulk(bulk);
 
-  const board = buildBoard(roster, responses, currentSeason);
+  // The committed board is the archive: every season but the current one is
+  // carried over from it untouched, because the API stops serving a season's
+  // stats some time after it ends. See buildBoard.
+  const previous: BoardFile | null = existsSync('data/board.json')
+    ? JSON.parse(readFileSync('data/board.json', 'utf8'))
+    : null;
+  const board = buildBoard(roster, responses, currentSeason, new Date(), previous);
 
   const ranked = board.seasons[currentSeason]?.length ?? 0;
   const prov = board.provisional[currentSeason]?.length ?? 0;
@@ -123,8 +129,7 @@ async function main() {
   // produce a commit every day even when no stat moved. Compare everything
   // except builtAt, and leave the files alone when nothing else changed.
   const stripClock = (b: BoardFile) => JSON.stringify({ ...b, meta: { ...b.meta, builtAt: '' } });
-  if (existsSync('data/board.json')) {
-    const previous: BoardFile = JSON.parse(readFileSync('data/board.json', 'utf8'));
+  if (previous) {
     if (stripClock(previous) === stripClock(board)) {
       console.log('No stat changes since the last run — leaving data/ untouched.');
       return;

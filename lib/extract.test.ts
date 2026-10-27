@@ -1,10 +1,39 @@
 import { describe, it, expect } from 'vitest';
-import { extractSlices, readPlayerIds, GAUNTLET_MODE } from './extract';
+import { extractSlices, readPlayerIds } from './extract';
 import { rawSample } from './fixtures/raw-sample';
 
+const field = (name: string, value: number, gameMode: string, season: string) => ({
+  name,
+  value,
+  fields: [{ name: 'GameMode', value: gameMode }, { name: 'Season', value: season }],
+});
+const payload = (catFields: ReturnType<typeof field>[]) => ({
+  playerStats: [{ player: { nucleusId: '1', personaId: '2', platformId: 1 }, categories: [{ catName: 'c', catFields }] }],
+});
+
 describe('extractSlices', () => {
-  it('uses the exact Gauntlet mode id', () => {
-    expect(GAUNTLET_MODE).toBe('GraniteGauntlet0');
+  it('reads Rapid Royale from Season 5 on, and Gauntlet before it', () => {
+    const slices = extractSlices(payload([
+      field('kills_gm_rr_trio', 7, 'GraniteRapidTrio0', 'Season5'),
+      field('kills_gm_gntgauntlet', 3, 'GraniteGauntlet0', 'Season4'),
+    ]));
+    expect(slices.get('Season5')).toEqual({ kills_gm_rr_trio: 7 });
+    expect(slices.get('Season4')).toEqual({ kills_gm_gntgauntlet: 3 });
+  });
+
+  it('ignores each mode in the other mode\'s seasons', () => {
+    // A Gauntlet row in Season 5 would be a second, conflicting slice for the
+    // season; a Rapid Royale row in Season 4 cannot exist but must not leak.
+    const slices = extractSlices(payload([
+      field('kills_gm_gntgauntlet', 9, 'GraniteGauntlet0', 'Season5'),
+      field('kills_gm_rr_trio', 9, 'GraniteRapidTrio0', 'Season4'),
+    ]));
+    expect(slices.size).toBe(0);
+  });
+
+  it('ignores the squad battle royale that shares Season 5', () => {
+    const slices = extractSlices(payload([field('kills_gm_brsquad', 5, 'GraniteSquad0', 'Season5')]));
+    expect(slices.size).toBe(0);
   });
 
   it('groups Gauntlet stats by season', () => {

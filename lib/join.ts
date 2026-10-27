@@ -3,6 +3,7 @@ import { buildBoard, toBulkPlayer } from './pipeline';
 import { rankPlayers } from './ranking';
 import { hasStatData } from './extract';
 import { pickInGameNameFor } from './naming';
+import { modeForSeason } from './modes';
 
 /**
  * Self-serve signup: a player adds their own EA ID and appears on the board.
@@ -62,6 +63,10 @@ export type JoinResult =
  * Splice one player's rows into an existing board and re-rank every season
  * they appear in.
  *
+ * The addition only ever carries the current season (buildBoard computes
+ * nothing else), and every season it does not carry is left exactly as it
+ * stands — archived seasons are frozen, so a signup never touches them.
+ *
  * Re-ranking is not optional: rating is a percentile against the field, so
  * adding a player moves everyone else's rating a little. rankPlayers is the
  * same function the daily build uses, so a board merged here and a board
@@ -79,13 +84,18 @@ export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
   ]);
 
   for (const season of keys) {
+    if (!(season in addition.seasons) && !(season in addition.provisional)) {
+      seasons[season] = board.seasons[season] ?? [];
+      provisional[season] = board.provisional[season] ?? [];
+      continue;
+    }
     const all = [
       ...(board.seasons[season] ?? []),
       ...(board.provisional[season] ?? []),
       ...(addition.seasons[season] ?? []),
       ...(addition.provisional[season] ?? []),
     ];
-    const ranked = rankPlayers(all);
+    const ranked = rankPlayers(all, modeForSeason(season).key);
     seasons[season] = ranked.ranked;
     provisional[season] = ranked.provisional;
   }

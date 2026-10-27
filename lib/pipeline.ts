@@ -2,6 +2,7 @@ import type { BoardFile, BoardRow, RawResponse, RosterEntry, UnresolvedEntry } f
 import { extractSlices, readPlayerIds, hasStatData } from './extract';
 import { computeMetrics } from './metrics';
 import { rankPlayers } from './ranking';
+import { modeForSeason } from './modes';
 import type { BulkPlayer } from './gametools';
 
 /**
@@ -40,6 +41,15 @@ function compareSeasonKeys(a: string, b: string): number {
 /**
  * Assemble the board from a roster and the raw responses fetched for it.
  *
+ * Only the current season is computed from the responses. Every other season
+ * is archived: carried over from `archive` (the previously committed board)
+ * exactly as it stands, never recomputed. The API stops serving a season's
+ * stats some time after it ends, and a recompute on that day would empty a
+ * finished season's standings. So a season freezes the first time the build
+ * sees a newer one current, and nothing — not a build, not a signup — writes
+ * to it again. Seasons the API reports that are neither current nor in the
+ * archive are ignored: a past season is only ever kept, never discovered.
+ *
  * Pure: no network, no filesystem. Each raw response is matched back to its
  * roster member by personaId.
  */
@@ -48,6 +58,7 @@ export function buildBoard(
   responses: RawResponse[],
   currentSeason: string,
   now: Date = new Date(),
+  archive: BoardFile | null = null,
 ): BoardFile {
   const byPersona = new Map(roster.filter((r) => r.personaId).map((r) => [r.personaId!, r]));
 
@@ -84,7 +95,8 @@ export function buildBoard(
     if (!member) continue;
 
     for (const [season, slice] of extractSlices(single)) {
-      const metrics = computeMetrics(slice);
+      if (season !== currentSeason) continue;
+      const metrics = computeMetrics(slice, modeForSeason(season));
 
       // Seasons before DICE added the per-mode counters carry kills but no
       // matches/deaths/time, so no rate stat is computable. A member with no
@@ -102,6 +114,9 @@ export function buildBoard(
         objPerMatch: roundRate(metrics.objPerMatch),
         objPts: roundRate(metrics.objPts) ?? 0,
         objPtsPerHour: roundRate(metrics.objPtsPerHour),
+        objSpm: roundRate(metrics.objSpm),
+        top3Pct: roundRate(metrics.top3Pct),
+        apm: roundRate(metrics.apm),
         revivesPerHour: roundRate(metrics.revivesPerHour),
         sniperPct: roundRate(metrics.sniperPct),
         autoPct: roundRate(metrics.autoPct),
@@ -128,18 +143,24 @@ export function buildBoard(
   // (bulk-API response order, which is documented-unstable), so JSON.stringify
   // output — which build.ts's change-detection depends on — is identical
   // regardless of the order responses came back in.
-  const seasonNames = [...new Set([...rowsBySeason.keys(), currentSeason])].sort(compareSeasonKeys);
+  const archived = Object.keys(archive?.seasons ?? {}).filter((s) => s !== currentSeason);
+  const seasonNames = [...new Set([...archived, currentSeason])].sort(compareSeasonKeys);
 
   const seasons: Record<string, BoardRow[]> = {};
   const provisional: Record<string, BoardRow[]> = {};
   for (const season of seasonNames) {
+    if (season !== currentSeason) {
+      seasons[season] = archive!.seasons[season];
+      provisional[season] = archive!.provisional[season] ?? [];
+      continue;
+    }
     const rows = rowsBySeason.get(season) ?? [];
     // rankPlayers' sort is stable but not fully ordered (ties fall through to
     // insertion order), and insertion order here is bulk-API response order,
     // which is documented-unstable. Sort by eaId first so tied rows land in
     // the same place on every run, keeping the daily build idempotent.
     const sorted = [...rows].sort((a, b) => a.eaId.localeCompare(b.eaId));
-    const split = rankPlayers(sorted);
+    const split = rankPlayers(sorted, modeForSeason(season).key);
     seasons[season] = split.ranked;
     provisional[season] = split.provisional;
   }

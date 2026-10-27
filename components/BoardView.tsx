@@ -11,9 +11,15 @@ import Tabs from '@mui/material/Tabs';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
+import { ThemeProvider, alpha } from '@mui/material/styles';
 import { LeaderboardTable } from './LeaderboardTable';
 import { formatEastern, nextRefreshAfter } from '@/lib/schedule';
+import { modeForSeason } from '@/lib/modes';
 import type { BoardFile } from '@/lib/types';
+import { MODE_ACCENT, MODE_THEMES } from '@/app/theme';
+
+/** "Season5" reads as "Season 5". */
+const seasonLabel = (key: string): string => key.replace(/^(\D+?)(\d+)$/, '$1 $2');
 
 export function BoardView({ board }: { board: BoardFile }) {
   const [season, setSeason] = React.useState(board.meta.currentSeason);
@@ -26,8 +32,12 @@ export function BoardView({ board }: { board: BoardFile }) {
   const provisional = board.provisional[season] ?? [];
   const showingProvisional = view === 'provisional';
   const rows = showingProvisional ? provisional : ranked;
+  const mode = modeForSeason(season);
 
+  // The whole board takes the selected season's accent, not just the table:
+  // the title glow, the button and the scrollbars all say which mode this is.
   return (
+    <ThemeProvider theme={MODE_THEMES[mode.key]}>
     <Container
       maxWidth="xl"
       sx={{
@@ -40,6 +50,8 @@ export function BoardView({ board }: { board: BoardFile }) {
         // screen the moment the bar is showing — which is exactly the body
         // scrollbar this is meant to remove.
         height: '100dvh',
+        // Read by the global scrollbar rules in globals.css.
+        '--accent': MODE_ACCENT[mode.key],
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -70,7 +82,7 @@ export function BoardView({ board }: { board: BoardFile }) {
               fontSize: { xs: '1.6rem', sm: '2.2rem' },
               lineHeight: 1.05,
               color: 'text.primary',
-              textShadow: '0 0 28px rgba(255,176,32,0.28)',
+              textShadow: (t) => `0 0 28px ${alpha(t.palette.primary.main, 0.28)}`,
             }}
           >
             The GauntleMen League
@@ -117,8 +129,8 @@ export function BoardView({ board }: { board: BoardFile }) {
               // Lit rather than outlined: this is the one thing a visitor who
               // is not on the board should do, and it competes with a table
               // full of amber numbers for attention.
-              boxShadow: '0 0 24px rgba(255,176,32,0.35)',
-              '&:hover': { boxShadow: '0 0 32px rgba(255,176,32,0.5)' },
+              boxShadow: (t) => `0 0 24px ${alpha(t.palette.primary.main, 0.35)}`,
+              '&:hover': { boxShadow: (t) => `0 0 32px ${alpha(t.palette.primary.main, 0.5)}` },
             }}
           >
             Add your EA ID
@@ -142,17 +154,36 @@ export function BoardView({ board }: { board: BoardFile }) {
           variant="scrollable"
           scrollButtons="auto"
         >
-          {board.meta.seasons.map((s) => (
-            <Tab
-              key={s}
-              value={s}
-              label={s === board.meta.currentSeason ? `${s} (current)` : s}
-            />
-          ))}
+          {/* Each tab names its mode and is drawn in its mode's accent, so the
+              strip itself is the key: amber Gauntlet seasons, magenta Rapid
+              Royale ones. Every season but the current one is archived — its
+              standings were frozen when it ended (see buildBoard). */}
+          {board.meta.seasons.map((s) => {
+            const m = modeForSeason(s);
+            const current = s === board.meta.currentSeason;
+            return (
+              <Tab
+                key={s}
+                value={s}
+                sx={{ '&.Mui-selected': { color: MODE_ACCENT[m.key] }, lineHeight: 1.15, py: 0.75 }}
+                label={
+                  <Box component="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span>{seasonLabel(s)}</span>
+                    <Box
+                      component="span"
+                      sx={{ fontSize: '0.68rem', letterSpacing: '0.06em', color: MODE_ACCENT[m.key], opacity: 0.85 }}
+                    >
+                      {m.label} · {current ? 'current' : 'archived'}
+                    </Box>
+                  </Box>
+                }
+              />
+            );
+          })}
         </Tabs>
 
         {/* Counts on the labels because an empty side is a dead end otherwise:
-            Season 2 has no ranked players at all, and without the number the
+            a new season has no ranked players at first, and without the number the
             reader would click into a blank table to find that out. */}
         <ToggleButtonGroup
           exclusive
@@ -171,8 +202,9 @@ export function BoardView({ board }: { board: BoardFile }) {
           table grows to fit every row and pushes the page taller than the
           viewport, which is the whole problem. */}
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <LeaderboardTable rows={rows} provisional={showingProvisional} fill />
+        <LeaderboardTable rows={rows} mode={mode.key} provisional={showingProvisional} fill />
       </Box>
     </Container>
+    </ThemeProvider>
   );
 }

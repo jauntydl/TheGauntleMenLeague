@@ -1,5 +1,6 @@
 import type { BoardRow } from './types';
 import { rateAll } from './rating';
+import type { ModeKey } from './modes';
 
 /**
  * Players below this many matches are shown as Provisional, not ranked.
@@ -30,7 +31,10 @@ const byStanding = (a: BoardRow, b: BoardRow): number =>
  * Split rows into the ranked board and the provisional section, sorting both
  * by Win % descending. Returns new objects; the input is never mutated.
  */
-export function rankPlayers(rows: BoardRow[]): { ranked: BoardRow[]; provisional: BoardRow[] } {
+export function rankPlayers(
+  rows: BoardRow[],
+  mode: ModeKey,
+): { ranked: BoardRow[]; provisional: BoardRow[] } {
   const eligible: BoardRow[] = [];
   const provisional: BoardRow[] = [];
 
@@ -48,7 +52,7 @@ export function rankPlayers(rows: BoardRow[]): { ranked: BoardRow[]; provisional
   // Rate against the ranked field only: a percentile is meaningless against a
   // population you were excluded from, so provisional players keep rating null
   // and are ordered on win rate alone.
-  const rated = rateAll(eligible);
+  const rated = rateAll(eligible, mode);
   rated.sort(byStanding);
   provisional.sort(byStanding);
 

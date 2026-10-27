@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { RatingExplainer } from './RatingExplainer';
 import { RATING_WEIGHTS } from '@/lib/rating';
 import { MIN_MATCHES } from '@/lib/ranking';
 
 describe('RatingExplainer', () => {
-  it('lists every weighted metric, so none can be silently unexplained', () => {
+  it('lists every weighted metric of both modes, so none can be silently unexplained', () => {
     render(<RatingExplainer />);
-    for (const weight of Object.values(RATING_WEIGHTS)) {
-      expect(screen.getAllByText(`${Math.round(weight * 100)}%`).length).toBeGreaterThan(0);
+    for (const [mode, label] of [['gauntlet', 'Gauntlet'], ['rapidRoyale', 'Rapid Royale']] as const) {
+      const table = screen.getByRole('table', { name: `${label} weights` });
+      expect(table.querySelectorAll('tbody tr')).toHaveLength(Object.keys(RATING_WEIGHTS[mode]).length);
     }
   });
 
@@ -18,12 +19,19 @@ describe('RatingExplainer', () => {
     // win rate and objective work are both 25%, so merely finding the text
     // somewhere on the page would no longer prove either row is right.
     render(<RatingExplainer />);
-    const rowFor = (label: string) => screen.getByText(label).closest('tr');
-    expect(rowFor('Win rate')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.winPct * 100)}%`,
+    const rowFor = (table: string, label: string) =>
+      within(screen.getByRole('table', { name: `${table} weights` })).getByText(label).closest('tr');
+    expect(rowFor('Gauntlet', 'Win rate')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.gauntlet.winPct! * 100)}%`,
     );
-    expect(rowFor('Objective points per hour')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.objPtsPerHour * 100)}%`,
+    expect(rowFor('Gauntlet', 'Objective points per hour')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.gauntlet.objPtsPerHour! * 100)}%`,
+    );
+    expect(rowFor('Rapid Royale', 'Win rate')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyale.winPct! * 100)}%`,
+    );
+    expect(rowFor('Rapid Royale', 'Assists per minute')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyale.apm! * 100)}%`,
     );
   });
 
