@@ -1598,5 +1598,15 @@
     "source": "selfserve",
     "inGameName": "Aus Eisen",
     "inGamePlatform": "xboxone"
+  },
+  {
+    "eaId": "huggies_ttv",
+    "displayName": "huggies_ttv",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1010654636077",
+    "nucleusId": "1023007636077",
+    "source": "selfserve"
   }
 ]
