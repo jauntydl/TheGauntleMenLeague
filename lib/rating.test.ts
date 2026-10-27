@@ -33,17 +33,19 @@ describe('percentile', () => {
 });
 
 describe('rateAll', () => {
-  it('weights winning highest in both modes, and each mode totals one', () => {
-    // The invariant, not the figure: winning outweighs anything else, and the
-    // weights total one so the explainer's percentages add up on the page.
+  it('totals one in every mode, and weights each mode as set', () => {
+    // The weights total one so the explainer's percentages add up on the page.
     for (const mode of ['gauntlet', 'rapidRoyale'] as const) {
       const weights = Object.values(RATING_WEIGHTS[mode]);
-      expect(RATING_WEIGHTS[mode].winPct).toBe(Math.max(...weights));
       expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
     }
-    // Gauntlet: objective work is second and nothing else comes near either.
+    // Gauntlet: winning leads, objective work is second.
     const g = RATING_WEIGHTS.gauntlet;
+    expect(g.winPct).toBe(Math.max(...Object.values(g)));
     expect(g.objPtsPerHour).toBe(Math.max(...Object.values(g).filter((w) => w !== g.winPct)));
+    // Rapid Royale: every win is a top three, so placement splits evenly
+    // rather than counting the win twice.
+    expect(RATING_WEIGHTS.rapidRoyale.winPct).toBe(RATING_WEIGHTS.rapidRoyale.top3Pct);
   });
 
   it('rates the metrics the explainer promises, and nothing else', () => {
@@ -68,7 +70,7 @@ describe('rateAll', () => {
     const order = ratedMetrics('rapidRoyale');
     const w = RATING_WEIGHTS.rapidRoyale;
     for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
-    expect(order[0]).toBe('winPct');
+    expect(order[0]).toBe('kda');
   });
 
   it('rates a Rapid Royale field on its own metrics', () => {

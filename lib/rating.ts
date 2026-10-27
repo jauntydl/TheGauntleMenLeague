@@ -35,14 +35,14 @@ const GAUNTLET_WEIGHTS = {
 /**
  * Rapid Royale (Season 5 on). Set 2026-10-27.
  *
- * Placement is 30%: the win at 20%, still the heaviest single weight because
- * it is the point of the mode, and finishing top three at 10%. It is held
- * there deliberately. A win and a top three are shared with two teammates, so
- * both say as much about who you queued with as about you — the other 70%
- * goes to what is yours alone. The two nest (every win is a top three), so
- * the top-three rate is what separates someone who goes deep every match from
- * someone who wins some and drops early in the rest. Top five was considered
- * and left out; it nests a third time.
+ * Placement is 30%, split evenly: the win at 15% and finishing top three at
+ * 15%. Every win is also a top three, so a heavy win weight counts the same
+ * win twice; the even split lets the top-three rate separate someone who goes
+ * deep every match from someone who wins some and drops early in the rest.
+ * Placement is held at 30% deliberately. A win and a top three are shared with
+ * two teammates, so both say as much about who you queued with as about you —
+ * the other 70% goes to what is yours alone. Top five was considered and left
+ * out; it nests a third time.
  *
  * Survival is rated as KDA rather than K/D, because in trios the knock a
  * teammate finishes is as much the fight as the finish: an assist counts
@@ -58,8 +58,8 @@ const GAUNTLET_WEIGHTS = {
  * the rating.
  */
 const RAPID_ROYALE_WEIGHTS = {
-  winPct: 0.2,
-  top3Pct: 0.1,
+  winPct: 0.15,
+  top3Pct: 0.15,
   kda: 0.18,
   kpm: 0.16,
   spm: 0.15,

@@ -163,8 +163,8 @@ cannot quietly disagree with the code.
 
 | Weight | Metric | Why |
 |---|---|---|
-| 20% | Win rate | Still the heaviest single weight — it's the point of the mode |
-| 10% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
+| 15% | Win rate | Even with top 3 — "all who win got into Top3 anyway", so a heavier win counts it twice |
+| 15% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
 | 18% | KDA | (kills + assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference |
 | 16% | Kills per minute | |
 | 15% | Score per minute | Also where objective play still counts |

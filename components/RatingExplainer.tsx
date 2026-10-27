@@ -112,13 +112,15 @@ export function RatingExplainer() {
       <Typography sx={{ mb: 2 }}>
         <strong>Finishing position</strong> is the best input a battle royale
         has — placing second every time beats alternating first and last. Rapid
-        Royale counts it twice over: the win, and finishing in the top three,
-        which is what separates someone who goes deep every match from someone
-        who wins a few and drops early in the rest. Top five was left out; every
-        top three is already a top five.
+        Royale counts it twice over, at the same weight each: the win, and
+        finishing in the top three, which is what separates someone who goes
+        deep every match from someone who wins a few and drops early in the
+        rest. Every win is already a top three, so weighting the win more would
+        count it twice. Top five was left out; every top three is already a top
+        five.
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        Both are held to under a third of the rating on purpose. A win is shared
+        Together they are held to under a third of the rating on purpose. A win is shared
         with two teammates, so it says as much about who you queued with as
         about you. The rest — KDA, kills, score, revives and damage, all per
         minute or hour — is yours alone, and it carries the rating.
