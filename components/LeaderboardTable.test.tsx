@@ -352,7 +352,7 @@ describe('LeaderboardTable', () => {
       render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Phone' })]} />);
       expect(screen.getByText('Rating')).toBeInTheDocument();
       expect(screen.getByText('Win %')).toBeInTheDocument();
-      for (const hidden of ['W–L', 'Badges', 'K/D', 'Kills', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
+      for (const hidden of ['W–L', 'Badges', 'K/D', 'Kills', 'Assists', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
         expect(screen.queryByText(hidden)).not.toBeInTheDocument();
       }
     });
@@ -364,7 +364,7 @@ describe('LeaderboardTable', () => {
       for (const shown of ['Rating', 'Win %', 'W–L', 'Badges', 'K/D', 'K/match']) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }
-      for (const hidden of ['Kills', 'HS', 'KPM', 'DPM', 'Rev/h', 'Time']) {
+      for (const hidden of ['Kills', 'Assists', 'HS', 'KPM', 'DPM', 'Rev/h', 'Time']) {
         expect(screen.queryByText(hidden)).not.toBeInTheDocument();
       }
     });
@@ -373,7 +373,7 @@ describe('LeaderboardTable', () => {
   it('shows every column on a wide screen', () => {
     withViewport([], () => {
       render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Desktop' })]} />);
-      for (const shown of ['Rating', 'Win %', 'Badges', 'Kills', 'HS', 'K/D', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
+      for (const shown of ['Rating', 'Win %', 'Badges', 'Kills', 'Assists', 'HS', 'K/D', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }
     });

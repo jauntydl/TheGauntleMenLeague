@@ -25,13 +25,13 @@ const DASH = '—';
  * the rated columns are: Rapid Royale's set is one column wider than
  * Gauntlet's, because it keeps K/D beside the KDA it rates.
  */
-export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1314, rapidRoyale: 1382 };
+export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1394, rapidRoyale: 1462 };
 
 /** Container padding (24px a side), the grid border, and its scrollbar. */
 export const CONTAINER_CHROME_PX = 65;
 
 /** Narrowest viewport allowed to show every column. */
-export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1400, rapidRoyale: 1450 };
+export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1460, rapidRoyale: 1530 };
 
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
@@ -493,6 +493,12 @@ export function LeaderboardTable({
         renderCell: (p) => fmtInt(p.row.kills),
       },
       {
+        field: 'assists',
+        headerName: 'Assists',
+        width: 80,
+        renderCell: (p) => fmtInt(p.row.assists),
+      },
+      {
         field: 'headshots',
         headerName: 'HS',
         width: 76,
@@ -547,6 +553,7 @@ export function LeaderboardTable({
       top3Pct: !isNarrow,
       // Only on a wide screen: the supporting detail.
       kills: !isMedium,
+      assists: !isMedium,
       headshots: !isMedium,
       kpm: !isMedium,
       dpm: !isMedium,
