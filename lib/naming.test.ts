@@ -103,6 +103,7 @@ describe('pickInGameNameFor', () => {
 describe('shownName', () => {
   it('prefers a hand-set name over the resolved one and the EA ID', () => {
     expect(shownName({ eaId: 'Antimere99', inGameName: 'Antimere99' })).toBe('OO');
+    expect(shownName({ eaId: 'HoRR1DDD', inGameName: 'HoRR1DDD' })).toBe('D3VouRR');
   });
 
   it('falls back to the in-game name, then the EA ID', () => {

@@ -131,6 +131,7 @@ export function pickInGameNameFor(
  */
 export const NAME_OVERRIDES: Record<string, string> = {
   Antimere99: 'OO',
+  HoRR1DDD: 'D3VouRR',
 };
 
 /** The name the board shows for a row: an override, the in-game name, or the EA ID. */

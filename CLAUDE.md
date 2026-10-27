@@ -63,7 +63,7 @@ mode has **no objective counters** (only `intel_pickup`), and has placement
 counters (`topthree`, `topfive`, `topten`; `topten` was 100% for everyone).
 
 `NAME_OVERRIDES` in `lib/naming.ts` hand-sets a displayed name (Antimere99 →
-OO), applied at render — not in `roster.json`, whose `inGameName` the build
+OO, HoRR1DDD → D3VouRR), applied at render — not in `roster.json`, whose `inGameName` the build
 treats as a refreshable cache.
 
 ---
