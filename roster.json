@@ -1586,5 +1586,17 @@
     "source": "selfserve",
     "inGameName": "sonofthebearded",
     "inGamePlatform": "xboxone"
+  },
+  {
+    "eaId": "AusEisen",
+    "displayName": "AusEisen",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1798127396",
+    "nucleusId": "1003775644821",
+    "source": "selfserve",
+    "inGameName": "Aus Eisen",
+    "inGamePlatform": "xboxone"
   }
 ]
