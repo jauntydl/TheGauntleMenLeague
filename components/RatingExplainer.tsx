@@ -21,7 +21,7 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   kd: { label: 'Kills / deaths', why: 'Staying alive matters when dying ends your squad’s round.' },
   kda: {
     label: 'KDA',
-    why: 'Kills plus half of your assists, per death: staying alive, crediting the knocks you set up.',
+    why: 'Kills plus assists, per death: staying alive, crediting the knocks you set up.',
   },
   kpm: {
     label: 'Kills per minute',

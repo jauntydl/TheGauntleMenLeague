@@ -62,7 +62,7 @@ export type Metrics = {
   /** null when the denominator is zero; the UI renders these as an em dash. */
   winPct: number | null;
   kd: number | null;
-  /** (kills + half of assists) per death. Rapid Royale only — it is what that
+  /** (kills + assists) per death. Rapid Royale only — it is what that
    *  mode rates in place of K/D. */
   kda: number | null;
   /** Kills per match. Distinct from kpm, which is per minute. */

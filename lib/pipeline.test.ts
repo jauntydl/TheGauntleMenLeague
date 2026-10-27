@@ -307,7 +307,7 @@ describe('buildBoard', () => {
     const row = buildBoard([dark], [rr], 'Season5').seasons.Season5[0];
     expect(row.matches).toBe(85);
     expect(row.top3Pct).toBe(80);
-    expect(row.kda).toBe(8.24); // (989 + 446 / 2) / 147, rounded
+    expect(row.kda).toBe(9.76); // (989 + 446) / 147, rounded
     expect(row.kd).toBe(6.73);
     expect(row.rating).not.toBeNull();
   });

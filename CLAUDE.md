@@ -165,7 +165,7 @@ cannot quietly disagree with the code.
 |---|---|---|
 | 20% | Win rate | Still the heaviest single weight — it's the point of the mode |
 | 10% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
-| 18% | KDA | (kills + 0.5 × assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference |
+| 18% | KDA | (kills + assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference |
 | 16% | Kills per minute | |
 | 15% | Score per minute | Also where objective play still counts |
 | 13% | Revives per hour | |

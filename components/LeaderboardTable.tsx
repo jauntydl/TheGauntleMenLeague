@@ -233,7 +233,7 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     field: 'kda',
     headerName: 'KDA',
     width: 68,
-    description: '(Kills + half of assists) per death',
+    description: '(Kills + assists) per death',
     renderCell: (p) => fmtNum(p.row.kda),
     getSortComparator: nullsLastComparator,
   },

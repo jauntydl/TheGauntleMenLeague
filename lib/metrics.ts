@@ -21,11 +21,11 @@ const AUTO_CLASSES = ['ar', 'crb', 'smg', 'mg'] as const;
 const PRECISION_CLASSES = ['snp', 'dmr'] as const;
 const OTHER_CLASSES = ['sg', 'pst'] as const;
 
-/** An assist is worth half a kill in KDA. Set 2026-10-27. */
-export const KDA_ASSIST_VALUE = 0.5;
+/** An assist is worth a full kill in KDA, as in the standard formula. Set 2026-10-27. */
+export const KDA_ASSIST_VALUE = 1;
 
 /**
- * Kills per death, or (kills + half of assists) per death for KDA. Exported
+ * Kills per death, or (kills + assists) per death for KDA. Exported
  * so a re-rank of committed rows computes it exactly as the build does.
  *
  * Kills-as-K/D covers "played matches, died zero times" — a real, if rare,

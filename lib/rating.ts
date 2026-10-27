@@ -45,8 +45,8 @@ const GAUNTLET_WEIGHTS = {
  * and left out; it nests a third time.
  *
  * Survival is rated as KDA rather than K/D, because in trios the knock a
- * teammate finishes is as much the fight as the finish: an assist is worth
- * half a kill (KDA_ASSIST_VALUE). Plain K/D stays on the board unrated, for
+ * teammate finishes is as much the fight as the finish: an assist counts
+ * as a full kill (KDA_ASSIST_VALUE). Plain K/D stays on the board unrated, for
  * reference. Assists per minute was rated alongside it at first and dropped
  * once KDA carried the assists — rating both counted them twice.
  *

@@ -317,14 +317,14 @@ describe('computeMetrics on Rapid Royale', () => {
     expect(rr(rrSlice).top3Pct).toBeCloseTo(80, 1);
   });
 
-  it('counts an assist as half a kill in KDA, and keeps plain K/D beside it', () => {
+  it('counts an assist as a full kill in KDA, and keeps plain K/D beside it', () => {
     const m = rr(rrSlice);
-    expect(m.kda).toBeCloseTo((989 + 0.5 * 446) / 147, 6);
+    expect(m.kda).toBeCloseTo((989 + 446) / 147, 6);
     expect(m.kd).toBeCloseTo(989 / 147, 6);
   });
 
   it('gives KDA the same zero-death and no-match handling as K/D', () => {
-    expect(rr({ ...rrSlice, deaths_gm_rr_trio: 0 }).kda).toBe(989 + 223);
+    expect(rr({ ...rrSlice, deaths_gm_rr_trio: 0 }).kda).toBe(989 + 446);
     expect(rr({ ...rrSlice, matches_gm_rr_trio: 0 }).kda).toBeNull();
   });
 
