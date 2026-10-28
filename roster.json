@@ -1608,5 +1608,17 @@
     "personaId": "1010654636077",
     "nucleusId": "1023007636077",
     "source": "selfserve"
+  },
+  {
+    "eaId": "dorde002",
+    "displayName": "dorde002",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009572716299",
+    "nucleusId": "1021178316299",
+    "source": "selfserve",
+    "inGameName": "dorde002",
+    "inGamePlatform": "ea"
   }
 ]
