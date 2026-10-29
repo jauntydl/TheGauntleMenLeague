@@ -1654,5 +1654,17 @@
     "source": "selfserve",
     "inGameName": "TheCannon",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "xsqueezex",
+    "displayName": "xsqueezex",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "792645381",
+    "nucleusId": "2799745165",
+    "source": "selfserve",
+    "inGameName": "xSqUeEzEx",
+    "inGamePlatform": "steam"
   }
 ]
