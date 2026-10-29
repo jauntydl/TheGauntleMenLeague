@@ -1642,5 +1642,17 @@
     "personaId": "784036141",
     "nucleusId": "2794943276",
     "source": "selfserve"
+  },
+  {
+    "eaId": "daaacannon",
+    "displayName": "daaacannon",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "233035587",
+    "nucleusId": "2250808289",
+    "source": "selfserve",
+    "inGameName": "TheCannon",
+    "inGamePlatform": "steam"
   }
 ]
