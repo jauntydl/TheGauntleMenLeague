@@ -1632,5 +1632,15 @@
     "source": "selfserve",
     "inGameName": "Surfsausage",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "Spritchard14",
+    "displayName": "Spritchard14",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "784036141",
+    "nucleusId": "2794943276",
+    "source": "selfserve"
   }
 ]
