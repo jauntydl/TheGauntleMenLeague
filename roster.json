@@ -1620,5 +1620,17 @@
     "source": "selfserve",
     "inGameName": "dorde002",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Surfsausages",
+    "displayName": "Surfsausages",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "234856834",
+    "nucleusId": "2316468810",
+    "source": "selfserve",
+    "inGameName": "Surfsausage",
+    "inGamePlatform": "steam"
   }
 ]
