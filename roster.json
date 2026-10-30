@@ -1666,5 +1666,15 @@
     "source": "selfserve",
     "inGameName": "xSqUeEzEx",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "Ghost690212",
+    "displayName": "Ghost690212",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1008978878334",
+    "nucleusId": "1019637278334",
+    "source": "selfserve"
   }
 ]
