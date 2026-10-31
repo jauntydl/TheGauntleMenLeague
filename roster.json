@@ -1694,5 +1694,17 @@
     "source": "selfserve",
     "inGameName": "doublecuppdavy",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Clam_inspection",
+    "displayName": "Clam_inspection",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1007427268365",
+    "nucleusId": "1016273068365",
+    "source": "selfserve",
+    "inGameName": "Clam_inspection",
+    "inGamePlatform": "ea"
   }
 ]
