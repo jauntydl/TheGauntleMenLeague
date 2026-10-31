@@ -25,7 +25,7 @@ data is committed, so a page load can never hit the free community API.
 
 Current state (2026-10-31): 142 roster members · Season 5 Trio has 55
 ranked, 24 provisional; Solo has 8 ranked, 46 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 311 tests passing · `tsc --noEmit` clean · deployed.
+Seasons 3–4 archived, Season 2 dropped · 313 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
