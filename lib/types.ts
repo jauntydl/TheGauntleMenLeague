@@ -140,7 +140,15 @@ export type UnresolvedEntry = {
 
 export type BoardFile = {
   /** seasons lists seasons, one tab each; a season may hold several boards. */
-  meta: { currentSeason: string; seasons: string[]; builtAt: string };
+  meta: {
+    currentSeason: string;
+    seasons: string[];
+    builtAt: string;
+    /** When the current season launched, from the game events feed; null if it never said. */
+    seasonStart?: string | null;
+    /** The K every rate was blended with when this board was rated — see rating.ts. */
+    confidenceGames?: number;
+  };
   /** Keyed by board key — the season, or season-variant (Season5-solo). See
    *  lib/modes.ts boardKey. provisional is keyed the same way. */
   seasons: Record<string, BoardRow[]>;

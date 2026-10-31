@@ -85,6 +85,55 @@ const RAPID_ROYALE_SOLO_WEIGHTS = {
   dpm: 0.1,
 } as const;
 
+/**
+ * A rate is only as believable as the games behind it: a 60% win rate over
+ * 30 games is a fair run of luck, over 300 it is who you are. So before a
+ * rated stat is scored it is blended with K games of league-average play,
+ * and a player's own figure counts for games / (games + K). The board shows
+ * the raw figures; only the score uses the blended ones.
+ *
+ * K is not fixed. It rises by CONFIDENCE_GAMES_PER_WEEK with every week of
+ * the season (launch week is week 1), so the games a rate needs to count
+ * scale with the time there has been to play them: three games a week earn
+ * half, nine a week three quarters, in week 2 and week 12 alike. Set
+ * 2026-10-31 at the user's direction, as an incentive to keep playing — a
+ * good rate held over hundreds of games outranks the same rate over a few
+ * dozen, and a bad one held that long counts in full.
+ *
+ * Considered and dropped: a fixed K of 30 (right around day 30, wrong either
+ * side), one game per day (about 98 by season end, which walls newcomers off
+ * from the top), and paying for games played outright (rewards playing a lot
+ * badly). Stepping weekly rather than daily keeps the drift it causes —
+ * everyone's share moves when K does — to one visible move a week.
+ */
+export const CONFIDENCE_GAMES_PER_WEEK = 3;
+
+/** For a season whose launch neither the feed nor the last board gave. */
+export const FALLBACK_CONFIDENCE_GAMES = 30;
+
+const WEEK_MS = 7 * 86_400_000;
+
+/** The week of the season at `at`, launch week being 1. Never below 1. */
+export function weekOfSeason(seasonStart: Date, at: Date): number {
+  return Math.max(0, Math.floor((at.getTime() - seasonStart.getTime()) / WEEK_MS)) + 1;
+}
+
+/** The K in force at `at`: games of league-average play blended into every rate. */
+export function confidenceGames(seasonStart: Date, at: Date): number {
+  return CONFIDENCE_GAMES_PER_WEEK * weekOfSeason(seasonStart, at);
+}
+
+/** The share of a player's own rate that counts, 0–1. */
+export function ownRateShare(matches: number, k: number): number {
+  return matches + k <= 0 ? 1 : matches / (matches + k);
+}
+
+/** A rate pulled toward the field's average in proportion to how few games back it. */
+export function shrinkRate(value: number, matches: number, fieldMean: number, k: number): number {
+  const w = ownRateShare(matches, k);
+  return w * value + (1 - w) * fieldMean;
+}
+
 export type RatedMetric =
   | keyof typeof GAUNTLET_WEIGHTS
   | keyof typeof RAPID_ROYALE_WEIGHTS
@@ -177,18 +226,36 @@ export function percentile(population: number[], value: number): number {
  * A metric that is null for a player is dropped and the remaining weights are
  * renormalised, so missing data never reads as a bad score.
  */
-export function rateAll(rows: BoardRow[], mode: ModeKey): BoardRow[] {
+export function rateAll(
+  rows: BoardRow[],
+  mode: ModeKey,
+  /** Games of league-average play blended into every rate before scoring. */
+  confidenceGames: number = FALLBACK_CONFIDENCE_GAMES,
+): BoardRow[] {
   const weights = RATING_WEIGHTS[mode];
   const metrics = Object.keys(weights) as RatedMetric[];
+  const finite = (v: number | null | undefined): v is number => v != null && Number.isFinite(v);
 
-  // One population per metric, holding only the players who have that value.
-  // Badge traits are included alongside the rated ones: the weapon shares earn
-  // badges without feeding the rating, so they need populations too.
-  const populations = new Map<RatedMetric | StandoutTrait, number[]>(
-    [...new Set<RatedMetric | StandoutTrait>([...metrics, ...STANDOUT_TRAITS])].map((m) => [
-      m,
-      rows.map((r) => r[m]).filter((v): v is number => v !== null && Number.isFinite(v)),
-    ]),
+  // The field's average on each rated metric, which a short sample is pulled
+  // toward. Unweighted: one player, one vote on what "average" is.
+  const means = new Map<RatedMetric, number>();
+  for (const m of metrics) {
+    const values = rows.map((r) => r[m]).filter(finite);
+    if (values.length > 0) means.set(m, values.reduce((a, v) => a + v, 0) / values.length);
+  }
+  const blended = (row: BoardRow, m: RatedMetric): number | null => {
+    const v = row[m];
+    return finite(v) ? shrinkRate(v, row.matches, means.get(m) ?? v, confidenceGames) : null;
+  };
+
+  // One population per rated metric, of blended figures, holding only the
+  // players who have that value. Badge populations are raw: a badge marks the
+  // figure the board shows, so a short hot streak can still earn one.
+  const rated = new Map<RatedMetric, number[]>(
+    metrics.map((m) => [m, rows.map((r) => blended(r, m)).filter(finite)]),
+  );
+  const raw = new Map<StandoutTrait, number[]>(
+    STANDOUT_TRAITS.map((t) => [t, rows.map((r) => r[t]).filter(finite)]),
   );
 
   return rows.map((row) => {
@@ -196,10 +263,10 @@ export function rateAll(rows: BoardRow[], mode: ModeKey): BoardRow[] {
     let weightUsed = 0;
 
     for (const m of metrics) {
-      const value = row[m];
-      if (value === null || !Number.isFinite(value)) continue;
+      const value = blended(row, m);
+      if (value === null) continue;
       const weight = weights[m]!;
-      weighted += percentile(populations.get(m) ?? [], value) * weight;
+      weighted += percentile(rated.get(m) ?? [], value) * weight;
       weightUsed += weight;
     }
 
@@ -214,8 +281,8 @@ export function rateAll(rows: BoardRow[], mode: ModeKey): BoardRow[] {
     const scored: { trait: StandoutTrait; pct: number }[] = [];
     for (const t of STANDOUT_TRAITS) {
       const value = row[t];
-      if (value === null || !Number.isFinite(value)) continue;
-      const pct = percentile(populations.get(t) ?? [], value);
+      if (!finite(value)) continue;
+      const pct = percentile(raw.get(t) ?? [], value);
       if (pct >= STANDOUT_FLOOR) scored.push({ trait: t, pct });
     }
     scored.sort((a, b) => b.pct - a.pct);

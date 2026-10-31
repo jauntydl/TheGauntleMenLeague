@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   fetchCurrentSeason,
+  fetchCurrentSeasonInfo,
   resolvePlayer,
   fetchBulk,
   fetchBulkSkippingFailures,
@@ -52,6 +53,20 @@ describe('fetchCurrentSeason', () => {
       json({ events: [{ name: 'BP04', active: true }, { name: 'Season2', active: true }] }),
     );
     await expect(fetchCurrentSeason({ fetchImpl, sleep: noSleep })).resolves.toBe('Season2');
+  });
+
+  it('reads the season launch from the feed, in seconds', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      json({ events: [{ name: 'Season5', active: true, validUntil: { start: { value: 1791892800 }, end: { value: 1800359940 } } }] }),
+    );
+    const info = await fetchCurrentSeasonInfo({ fetchImpl, sleep: noSleep });
+    expect(info.name).toBe('Season5');
+    expect(info.startsAt?.toISOString()).toBe('2026-10-13T12:00:00.000Z');
+  });
+
+  it('gives a null launch when the feed carries none', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(json({ events: [{ name: 'Season5', active: true }] }));
+    await expect(fetchCurrentSeasonInfo({ fetchImpl, sleep: noSleep })).resolves.toEqual({ name: 'Season5', startsAt: null });
   });
 
   it('throws when no active season exists', async () => {

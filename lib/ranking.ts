@@ -1,5 +1,5 @@
 import type { BoardRow } from './types';
-import { rateAll } from './rating';
+import { rateAll, FALLBACK_CONFIDENCE_GAMES } from './rating';
 import type { ModeKey } from './modes';
 
 /**
@@ -34,6 +34,8 @@ const byStanding = (a: BoardRow, b: BoardRow): number =>
 export function rankPlayers(
   rows: BoardRow[],
   mode: ModeKey,
+  /** Games of league-average play blended into every rate — see rating.ts. */
+  confidenceGames: number = FALLBACK_CONFIDENCE_GAMES,
 ): { ranked: BoardRow[]; provisional: BoardRow[] } {
   const eligible: BoardRow[] = [];
   const provisional: BoardRow[] = [];
@@ -52,7 +54,7 @@ export function rankPlayers(
   // Rate against the ranked field only: a percentile is meaningless against a
   // population you were excluded from, so provisional players keep rating null
   // and are ordered on win rate alone.
-  const rated = rateAll(eligible, mode);
+  const rated = rateAll(eligible, mode, confidenceGames);
   rated.sort(byStanding);
   provisional.sort(byStanding);
 

@@ -1,6 +1,7 @@
 import type { BoardFile, BoardRow, RawResponse, RosterEntry } from './types';
 import { buildBoard, toBulkPlayer } from './pipeline';
 import { rankPlayers } from './ranking';
+import { FALLBACK_CONFIDENCE_GAMES } from './rating';
 import { hasStatData } from './extract';
 import { pickInGameNameFor } from './naming';
 import { boardKey, compareSeasons, modeForBoard, modesForSeason } from './modes';
@@ -95,7 +96,9 @@ export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
       ...(addition.seasons[season] ?? []),
       ...(addition.provisional[season] ?? []),
     ];
-    const ranked = rankPlayers(all, modeForBoard(season).key);
+    // The K the committed board was rated with, so a signup re-ranks everyone
+    // on the same footing as the last build did.
+    const ranked = rankPlayers(all, modeForBoard(season).key, board.meta.confidenceGames ?? FALLBACK_CONFIDENCE_GAMES);
     seasons[season] = ranked.ranked;
     provisional[season] = ranked.provisional;
   }

@@ -16,7 +16,8 @@
  * one such member in late October 2026 and the board went stale for a week.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { fetchCurrentSeason, resolvePlayer, fetchBulkSkippingFailures, fetchPersonas } from '../lib/gametools';
+import { fetchCurrentSeasonInfo, resolvePlayer, fetchBulkSkippingFailures, fetchPersonas } from '../lib/gametools';
+import { confidenceGames, weekOfSeason } from '../lib/rating';
 import { pickInGameNameFor } from '../lib/naming';
 import { buildBoard, toBulkPlayer } from '../lib/pipeline';
 import type { BoardFile, RosterEntry } from '../lib/types';
@@ -63,7 +64,7 @@ async function main() {
   console.log(`Roster: ${roster.length} members`);
   validateRoster(roster);
 
-  const currentSeason = await fetchCurrentSeason();
+  const { name: currentSeason, startsAt } = await fetchCurrentSeasonInfo();
   console.log(`Current season: ${currentSeason}`);
 
   // Members (by eaId) the API would not answer for this run, after two tries.
@@ -158,7 +159,23 @@ async function main() {
   const previous: BoardFile | null = existsSync('data/board.json')
     ? JSON.parse(readFileSync('data/board.json', 'utf8'))
     : null;
-  const board = buildBoard(roster, responses, currentSeason, new Date(), previous, failed);
+  // The season's launch sets the K every rate is blended with. The feed
+  // normally carries it; failing that, the last board's — but only for the
+  // same season, or a rollover would inherit the finished season's clock.
+  const now = new Date();
+  const seasonStart =
+    startsAt ??
+    (previous?.meta.currentSeason === currentSeason && previous.meta.seasonStart
+      ? new Date(previous.meta.seasonStart)
+      : null);
+  if (seasonStart) {
+    console.log(
+      `${currentSeason} week ${weekOfSeason(seasonStart, now)}: rates blended with ${confidenceGames(seasonStart, now)} games of league-average play`,
+    );
+  } else {
+    console.warn('No launch date for the season from the feed or the last board — rating with the fallback K');
+  }
+  const board = buildBoard(roster, responses, currentSeason, now, previous, failed, seasonStart);
 
   const ranked = board.seasons[currentSeason]?.length ?? 0;
   const prov = board.provisional[currentSeason]?.length ?? 0;

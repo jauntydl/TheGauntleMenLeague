@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { percentile, rateAll as rateFor, RATING_WEIGHTS, ratedMetrics } from './rating';
+import {
+  percentile,
+  rateAll as rateFor,
+  RATING_WEIGHTS,
+  ratedMetrics,
+  confidenceGames,
+  ownRateShare,
+  shrinkRate,
+  weekOfSeason,
+  CONFIDENCE_GAMES_PER_WEEK,
+  FALLBACK_CONFIDENCE_GAMES,
+} from './rating';
 
 const rateAll = (rows: BoardRow[]) => rateFor(rows, 'gauntlet');
 import type { BoardRow } from './types';
@@ -32,7 +43,92 @@ describe('percentile', () => {
   });
 });
 
+describe('confidenceGames', () => {
+  const launch = new Date('2026-10-13T12:00:00Z');
+
+  it('is 3 in launch week and climbs by 3 each week', () => {
+    expect(CONFIDENCE_GAMES_PER_WEEK).toBe(3);
+    expect(weekOfSeason(launch, launch)).toBe(1);
+    expect(confidenceGames(launch, launch)).toBe(3);
+    expect(confidenceGames(launch, new Date('2026-10-20T11:59:00Z'))).toBe(3);
+    expect(confidenceGames(launch, new Date('2026-10-20T12:00:00Z'))).toBe(6);
+    expect(weekOfSeason(launch, new Date('2026-10-31T00:00:00Z'))).toBe(3);
+    expect(confidenceGames(launch, new Date('2026-10-31T00:00:00Z'))).toBe(9);
+  });
+
+  it('never drops below launch week, even before launch', () => {
+    expect(weekOfSeason(launch, new Date('2026-10-01T00:00:00Z'))).toBe(1);
+    expect(confidenceGames(launch, new Date('2026-10-01T00:00:00Z'))).toBe(3);
+  });
+
+  it('has a fallback for a season whose launch is unknown', () => {
+    expect(FALLBACK_CONFIDENCE_GAMES).toBe(30);
+  });
+});
+
+describe('shrinkRate', () => {
+  it('counts a rate for the games behind it: half at K games', () => {
+    expect(ownRateShare(30, 30)).toBeCloseTo(0.5);
+    expect(ownRateShare(90, 30)).toBeCloseTo(0.75);
+    expect(ownRateShare(300, 30)).toBeCloseTo(10 / 11);
+  });
+
+  it('pulls a short sample toward the field and leaves a long one nearly alone', () => {
+    // 60% over 30 games with a 40% field: half yours, half theirs.
+    expect(shrinkRate(60, 30, 40, 30)).toBeCloseTo(50);
+    expect(shrinkRate(60, 300, 40, 30)).toBeCloseTo(58.18, 1);
+  });
+});
+
 describe('rateAll', () => {
+  it('rates the same good rate higher over more games, and the same bad rate lower', () => {
+    // Three players identical on everything but win rate and games. The
+    // average player anchors the field mean between the other two, so the
+    // short sample is pulled toward it and the long one barely moves.
+    const field = [
+      row({ eaId: 'avg', matches: 100, winPct: 50 }),
+      row({ eaId: 'luckyShort', matches: 30, winPct: 70 }),
+      row({ eaId: 'provenLong', matches: 300, winPct: 70 }),
+      row({ eaId: 'unluckyShort', matches: 30, winPct: 30 }),
+      row({ eaId: 'provenBad', matches: 300, winPct: 30 }),
+    ];
+    const by = Object.fromEntries(rateFor(field, 'gauntlet', 30).map((r) => [r.eaId, r.rating!]));
+    expect(by.provenLong).toBeGreaterThan(by.luckyShort);
+    expect(by.provenBad).toBeLessThan(by.unluckyShort);
+    // Without the weighting the pairs would tie: the raw rates are equal.
+    const raw = Object.fromEntries(rateFor(field, 'gauntlet', 0).map((r) => [r.eaId, r.rating!]));
+    expect(raw.provenLong).toBe(raw.luckyShort);
+  });
+
+  it('weights harder as K rises: a long 62% overtakes a short 66% once K is high enough', () => {
+    const field = [
+      row({ eaId: 'avg', matches: 100, winPct: 50 }),
+      row({ eaId: 'short', matches: 30, winPct: 66 }),
+      row({ eaId: 'long', matches: 300, winPct: 62 }),
+    ];
+    const by = (k: number) => Object.fromEntries(rateFor(field, 'gauntlet', k).map((r) => [r.eaId, r.rating!]));
+    expect(by(0).short).toBeGreaterThan(by(0).long);
+    expect(by(30).short).toBeGreaterThan(by(30).long);
+    expect(by(90).long).toBeGreaterThan(by(90).short);
+  });
+
+  it('leaves badges on the raw figures — a badge marks what the board shows', () => {
+    const field = [
+      row({ eaId: 'a', matches: 100, winPct: 50 }),
+      row({ eaId: 'b', matches: 100, winPct: 50 }),
+      row({ eaId: 'c', matches: 100, winPct: 50 }),
+      row({ eaId: 'd', matches: 100, winPct: 50 }),
+      row({ eaId: 'e', matches: 100, winPct: 50 }),
+      row({ eaId: 'f', matches: 100, winPct: 50 }),
+      row({ eaId: 'g', matches: 100, winPct: 50 }),
+      row({ eaId: 'h', matches: 100, winPct: 50 }),
+      row({ eaId: 'i', matches: 100, winPct: 50 }),
+      row({ eaId: 'short', matches: 30, winPct: 90 }),
+    ];
+    const short = rateFor(field, 'gauntlet', 300).find((r) => r.eaId === 'short')!;
+    expect(short.standouts).toContain('winPct');
+  });
+
   it('totals one in every mode, and weights each mode as set', () => {
     // The weights total one so the explainer's percentages add up on the page.
     for (const mode of ['gauntlet', 'rapidRoyale', 'rapidRoyaleSolo'] as const) {

@@ -103,6 +103,19 @@ describe('buildBoard', () => {
     expect(typeof board.meta.builtAt).toBe('string');
   });
 
+  it('records the season launch and the K it rated with, from the day of the season', () => {
+    const launch = new Date('2026-10-13T12:00:00Z');
+    const board = buildBoard([dark], [rawSample], 'Season4', new Date('2026-10-31T00:00:00Z'), null, new Set(), launch);
+    expect(board.meta.seasonStart).toBe('2026-10-13T12:00:00.000Z');
+    expect(board.meta.confidenceGames).toBe(9);
+  });
+
+  it('falls back to a fixed K when the launch is unknown, and says so in meta', () => {
+    const board = buildBoard([dark], [rawSample], 'Season4');
+    expect(board.meta.seasonStart).toBeNull();
+    expect(board.meta.confidenceGames).toBe(30);
+  });
+
   it('lists roster members with no ids as unresolved', () => {
     const ghost: RosterEntry = {
       eaId: 'kathemkh9', displayName: 'Kathem', platform: 'ps',

@@ -7,7 +7,15 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { RATING_WEIGHTS, STANDOUT_FLOOR, ratedMetrics, type RatedMetric } from '@/lib/rating';
+import {
+  RATING_WEIGHTS,
+  STANDOUT_FLOOR,
+  CONFIDENCE_GAMES_PER_WEEK,
+  FALLBACK_CONFIDENCE_GAMES,
+  ratedMetrics,
+  shrinkRate,
+  type RatedMetric,
+} from '@/lib/rating';
 import { MIN_MATCHES } from '@/lib/ranking';
 import { FIRST_RAPID_ROYALE_SEASON, MODES, type ModeKey } from '@/lib/modes';
 import { MODE_ACCENT } from '@/app/accents';
@@ -83,7 +91,18 @@ function WeightTable({ mode }: { mode: ModeKey }) {
   );
 }
 
-export function RatingExplainer() {
+export function RatingExplainer({
+  confidenceGames = FALLBACK_CONFIDENCE_GAMES,
+  weekOfSeason = null,
+}: {
+  /** The K the board was last rated with (board meta). */
+  confidenceGames?: number;
+  /** Which week of the season that was, or null if the launch is unknown. */
+  weekOfSeason?: number | null;
+}) {
+  const k = confidenceGames;
+  // A worked example on a 40% field, so the reader can check the arithmetic.
+  const example = (games: number) => shrinkRate(60, games, 40, k).toFixed(0);
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 } }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -192,6 +211,32 @@ export function RatingExplainer() {
         entirely. But it also means <strong>your rating can move when other people
         play</strong>, even on a day you do not. You are ranked against the field,
         so the field shifting moves you.
+      </Typography>
+
+      <Typography variant="h6" component="h2" gutterBottom>
+        A rate counts for the games behind it
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        A 60% win rate over 30 games is a fair run of luck; over 300 it is who
+        you are. So before a stat is scored it is blended with K games of
+        league-average play, and your own figure counts for{' '}
+        <strong>games ÷ (games + K)</strong>. K rises by {CONFIDENCE_GAMES_PER_WEEK} with
+        every week of the season
+        {weekOfSeason === null
+          ? `, and stands at ${k}`
+          : `: this is week ${weekOfSeason}, so K is ${k}`}
+        . Put simply, <strong>{CONFIDENCE_GAMES_PER_WEEK} games a week earn you half</strong>,
+        three times that earns three quarters, whatever week it is.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        With K at {k} and a league average of 40%, a 60% win rate scores like{' '}
+        {example(30)}% over 30 games and {example(300)}% over 300. The board
+        always shows your real figures — hover a rating to see how much of it
+        is your own. This is why grinding pays: a good rate held over hundreds
+        of games outranks the same rate over a few dozen, and a bad one held
+        that long counts in full. Two side effects worth knowing: the standings
+        shift a little each week as K steps up, and a late joiner is measured
+        from launch week like everyone else.
       </Typography>
 
       <Typography variant="h6" component="h2" gutterBottom>

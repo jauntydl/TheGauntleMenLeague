@@ -308,6 +308,20 @@ describe('LeaderboardTable', () => {
     expect(columnDescription('objPtsPerHour', 'Objective points', 'OBJ/h', 'rapidRoyale')).toBe('Objective points');
   });
 
+  it('says on each rating how much of it is the player\'s own', () => {
+    withViewport([], () => {
+      render(
+        <LeaderboardTable
+          mode="gauntlet"
+          confidenceGames={30}
+          rows={[row({ eaId: 'Thirty', matches: 30 }), row({ eaId: 'Ninety', matches: 90 })]}
+        />,
+      );
+      expect(screen.getByLabelText(/30 games: 50% their own rates, 50% league average/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/90 games: 75% their own rates, 25% league average/)).toBeInTheDocument();
+    });
+  });
+
   it('shows no match-count column — W-L already carries it', () => {
     // 492-75 is 567 matches and says more doing it, so the M column was pure
     // duplication taking width from a board that has none to spare.

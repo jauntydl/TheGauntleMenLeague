@@ -75,13 +75,25 @@ async function request(url: string, init: RequestInit, deps: Deps): Promise<Resp
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-/** Read the current season id from the live game events feed. Never hardcode it. */
-export async function fetchCurrentSeason(deps: Deps = {}): Promise<string> {
+/**
+ * Read the current season from the live game events feed: its id, never
+ * hardcoded, and when it launched (`validUntil.start`, in seconds), which
+ * sets the K rates are blended with. Null when the feed carries no start.
+ */
+export async function fetchCurrentSeasonInfo(deps: Deps = {}): Promise<{ name: string; startsAt: Date | null }> {
   const res = await request(`${API_BASE}/bf6/gameevents/`, { method: 'GET' }, deps);
-  const body = (await res.json()) as { events?: { name?: string; active?: boolean }[] };
+  const body = (await res.json()) as {
+    events?: { name?: string; active?: boolean; validUntil?: { start?: { value?: number } } }[];
+  };
   const season = body.events?.find((e) => e.active && /^Season\d+$/.test(e.name ?? ''));
   if (!season?.name) throw new Error('No active season found in /bf6/gameevents/');
-  return season.name;
+  const start = season.validUntil?.start?.value;
+  return { name: season.name, startsAt: typeof start === 'number' ? new Date(start * 1000) : null };
+}
+
+/** The current season id alone. */
+export async function fetchCurrentSeason(deps: Deps = {}): Promise<string> {
+  return (await fetchCurrentSeasonInfo(deps)).name;
 }
 
 /** Resolve an EA ID to its persona/nucleus ids. Returns null when unknown. */

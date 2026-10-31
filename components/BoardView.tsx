@@ -231,7 +231,13 @@ export function BoardView({ board }: { board: BoardFile }) {
           table grows to fit every row and pushes the page taller than the
           viewport, which is the whole problem. */}
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <LeaderboardTable rows={rows} mode={mode.key} provisional={showingProvisional} fill />
+        <LeaderboardTable
+          rows={rows}
+          mode={mode.key}
+          provisional={showingProvisional}
+          confidenceGames={board.meta.confidenceGames}
+          fill
+        />
       </Box>
     </Container>
     </ThemeProvider>

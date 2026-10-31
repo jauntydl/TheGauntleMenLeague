@@ -54,6 +54,12 @@ describe('RatingExplainer', () => {
     expect(screen.getByText(new RegExp(`${MIN_MATCHES} matches`))).toBeInTheDocument();
   });
 
+  it('explains that a rate counts for the games behind it, from the day of the season', () => {
+    render(<RatingExplainer confidenceGames={9} weekOfSeason={3} />);
+    expect(screen.getAllByText(/3 games a week/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/week 3/).length).toBeGreaterThan(0);
+  });
+
   it('warns that a rating moves when other people play', () => {
     render(<RatingExplainer />);
     expect(screen.getByText(/can move when other people/i)).toBeInTheDocument();

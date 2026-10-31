@@ -2,6 +2,7 @@ import type { BoardFile, BoardRow, RawResponse, RosterEntry, UnresolvedEntry } f
 import { extractSlices, readPlayerIds, hasStatData } from './extract';
 import { computeMetrics } from './metrics';
 import { rankPlayers } from './ranking';
+import { confidenceGames, FALLBACK_CONFIDENCE_GAMES } from './rating';
 import { boardKey, compareBoardKeys, modeForBoard, modesForSeason, parseBoardKey } from './modes';
 import type { BulkPlayer } from './gametools';
 
@@ -45,6 +46,10 @@ const roundRate = (v: number | null): number | null =>
  * the API would not answer for them. They get no row — there is nothing to
  * compute from — and are listed as unresolved with a reason that says it was
  * the API's fault, not their privacy settings.
+ *
+ * `seasonStart` sets the K every rate is blended with (rating.ts), from the
+ * week of the season `now` falls in; without it the fallback K applies, and
+ * meta records which so the page can say.
  */
 export function buildBoard(
   roster: RosterEntry[],
@@ -53,7 +58,9 @@ export function buildBoard(
   now: Date = new Date(),
   archive: BoardFile | null = null,
   failed: ReadonlySet<string> = new Set(),
+  seasonStart: Date | null = null,
 ): BoardFile {
+  const k = seasonStart ? confidenceGames(seasonStart, now) : FALLBACK_CONFIDENCE_GAMES;
   const byPersona = new Map(roster.filter((r) => r.personaId).map((r) => [r.personaId!, r]));
 
   const rowsByBoard = new Map<string, BoardRow[]>();
@@ -156,7 +163,7 @@ export function buildBoard(
     // which is documented-unstable. Sort by eaId first so tied rows land in
     // the same place on every run, keeping the daily build idempotent.
     const sorted = [...rows].sort((a, b) => a.eaId.localeCompare(b.eaId));
-    const split = rankPlayers(sorted, modeForBoard(key).key);
+    const split = rankPlayers(sorted, modeForBoard(key).key, k);
     seasons[key] = split.ranked;
     provisional[key] = split.provisional;
   }
@@ -182,6 +189,8 @@ export function buildBoard(
       currentSeason,
       seasons: seasonNames,
       builtAt: now.toISOString(),
+      seasonStart: seasonStart ? seasonStart.toISOString() : null,
+      confidenceGames: k,
     },
     seasons,
     provisional,

@@ -261,6 +261,26 @@ field changed. Consequence worth knowing: *a rating moves when other people
 play.* A metric that is `null` for a player is dropped and the remaining
 weights renormalise, so missing data never reads as a bad score.
 
+**Rates are blended with K games of league-average play before scoring**
+(2026-10-31, the user's direction: "60% win rate with 30 games isn't the same
+as 60% with 300 — the one with 300 should be rewarded for consistent
+performance"). A player's own figure counts for `games / (games + K)`; the
+board shows the raw figures and only the score uses the blended ones. K is
+**3 × the week of the season** (launch week is 1: 3, 6, 9 …), from
+`meta.seasonStart`, which the build takes from the game events feed's
+`validUntil.start`; `meta.confidenceGames` records the K a board was rated
+with, and the join route re-ranks with that same K so a signup and a build
+agree. With no launch known the fallback is a fixed 30. The user floated the
+numbers themselves — +1 per day, then +1 per two days, then +3 per week —
+and left the choice to me: weekly steps move the standings once a week
+instead of creeping daily, and end a 14-week season around 42. Considered
+and dropped: a fixed K of 30 (right for one week only) and a direct weight
+on games played (rewards playing a lot badly; a 672-game 29% would climb).
+Consequences: standings move a little when K steps up even if nobody plays;
+a late joiner is measured from launch week like everyone else; badges stay
+on the raw figures. The constant is `CONFIDENCE_GAMES_PER_WEEK` in
+`lib/rating.ts`; the `/rating` page and the rating tooltip read it from there.
+
 **Kills per minute, not per match.** Every other rate in the rating is per unit
 of time, and a Gauntlet match has no fixed length, so per-match quietly
 rewarded whoever survived into long rounds — which win rate already measures.
@@ -326,6 +346,7 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 |---|---|
 | Rank on a **weighted rating**, not raw Win % | Winning alone doesn't say whether you carried your squad or were carried by it. Win rate still dominates at 50% |
 | **Percentile scoring**, not a points formula | Incomparable units; any coefficient making them comparable would be invented and need retuning as the field changed |
+| **Blend rates toward the field mean by games played**, K = 3 × week of season (2026-10-31) | 60% over 30 games is luck, over 300 it is skill. A volume bonus would reward playing a lot badly; a fixed K is only right for one week |
 | **30-match floor**, Provisional shown not hidden | Stops a short fluke topping the board; hiding people hurts morale. `MIN_MATCHES` in `lib/ranking.ts`. (An earlier draft used 10 — stray comments may still say so; the value is 30) |
 | Badges are **top 10%**, not an absolute floor | Absolute floors decay into noise — a 65%-automatic-kills floor sounded selective and covered nearly the whole board. A tenth of the field stays a tenth whatever the meta does |
 | ✈ badge instead of excluding jet players | The two Gauntlet variants can't be separated; be honest rather than fabricate a split |

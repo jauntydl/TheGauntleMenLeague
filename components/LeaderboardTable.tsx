@@ -11,7 +11,14 @@ import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
 import { MODES, type ModeKey } from '@/lib/modes';
 import { shownName } from '@/lib/naming';
-import { RATING_WEIGHTS, ratedMetrics, type RatedMetric, type StandoutTrait } from '@/lib/rating';
+import {
+  RATING_WEIGHTS,
+  FALLBACK_CONFIDENCE_GAMES,
+  ownRateShare,
+  ratedMetrics,
+  type RatedMetric,
+  type StandoutTrait,
+} from '@/lib/rating';
 
 const DASH = '—';
 
@@ -281,11 +288,21 @@ const RATED_LABEL: Record<RatedMetric, string> = {
   dpm: 'damage per minute',
 };
 
-function ratingDescription(mode: ModeKey): string {
+function ratingDescription(mode: ModeKey, confidenceGames: number): string {
   const parts = ratedMetrics(mode).map(
     (m) => `${RATED_LABEL[m]} ${Math.round(RATING_WEIGHTS[mode][m]! * 100)}%`,
   );
-  return `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field.`;
+  return (
+    `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field, ` +
+    `after blending in ${confidenceGames} games of league-average play so a rate counts for the games behind it. ` +
+    'Hover a rating for the split; see How the rating works.'
+  );
+}
+
+/** What a rating's tooltip says: how much of it is the player's own figures. */
+export function ownShareLabel(matches: number, confidenceGames: number): string {
+  const pct = Math.round(ownRateShare(matches, confidenceGames) * 100);
+  return `${fmtInt(matches)} games: ${pct}% their own rates, ${100 - pct}% league average`;
 }
 
 export function LeaderboardTable({
@@ -293,8 +310,11 @@ export function LeaderboardTable({
   mode,
   provisional = false,
   fill = false,
+  confidenceGames = FALLBACK_CONFIDENCE_GAMES,
 }: {
   rows: BoardRow[];
+  /** The K these rows were rated with (board meta), for the rating tooltip. */
+  confidenceGames?: number;
   /** The mode the season is ranked on, which decides the rated columns. */
   mode: ModeKey;
   provisional?: boolean;
@@ -404,14 +424,16 @@ export function LeaderboardTable({
         field: 'rating',
         headerName: 'Rating',
         width: isNarrow ? 88 : 96,
-        description: ratingDescription(mode),
+        description: ratingDescription(mode, confidenceGames),
         renderCell: (p) =>
           p.row.rating === null ? (
             <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
           ) : (
-            <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              {p.row.rating.toFixed(1)}
-            </Box>
+            <Tooltip title={ownShareLabel(p.row.matches, confidenceGames)} placement="right">
+              <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                {p.row.rating.toFixed(1)}
+              </Box>
+            </Tooltip>
           ),
         getSortComparator: nullsLastComparator,
       },
@@ -520,7 +542,7 @@ export function LeaderboardTable({
         description: columnDescription(c.field, c.description, c.headerName, mode),
       };
     });
-  }, [isNarrow, mode]);
+  }, [isNarrow, mode, confidenceGames]);
 
   if (rows.length === 0) {
     return (
