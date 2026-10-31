@@ -5,5 +5,7 @@
     "Season4",
     "Season5"
   ],
-  "builtAt": "2026-10-31T13:59:16.736Z"
+  "builtAt": "2026-10-31T14:33:03.615Z",
+  "seasonStart": "2026-10-13T12:00:00.000Z",
+  "confidenceGames": 9
 }
