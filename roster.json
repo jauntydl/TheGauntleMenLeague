@@ -1676,5 +1676,17 @@
     "personaId": "1008978878334",
     "nucleusId": "1019637278334",
     "source": "selfserve"
+  },
+  {
+    "eaId": "doublecuppdavy",
+    "displayName": "doublecuppdavy",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1003885247787",
+    "nucleusId": "1007816247787",
+    "source": "selfserve",
+    "inGameName": "doublecuppdavy",
+    "inGamePlatform": "ea"
   }
 ]
