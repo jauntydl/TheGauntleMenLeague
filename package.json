@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "data": "tsx scripts/build.ts",
     "data:dry": "tsx scripts/build.ts --dry-run",
+    "data:rerank": "tsx scripts/rerank.ts",
     "roster:parse": "tsx scripts/parse-intros.ts"
   },
   "dependencies": {

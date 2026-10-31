@@ -15,7 +15,8 @@
  * 'fetch_failed', to be tried again next refresh. Five runs in a row died on
  * one such member in late October 2026 and the board went stale for a week.
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { writeBoardFiles } from './write';
 import { fetchCurrentSeasonInfo, resolvePlayer, fetchBulkSkippingFailures, fetchPersonas } from '../lib/gametools';
 import { confidenceGames, weekOfSeason } from '../lib/rating';
 import { pickInGameNameFor } from '../lib/naming';
@@ -205,23 +206,7 @@ async function main() {
     }
   }
 
-  mkdirSync('data', { recursive: true });
-
-  // Single app-facing artifact: API routes import this statically, so no
-  // filesystem access is needed at request time on Vercel.
-  writeFileSync('data/board.json', JSON.stringify(board, null, 2) + '\n');
-
-  // Per-season files as well, so day-to-day diffs stay readable in git history.
-  for (const [season, rows] of Object.entries(board.seasons)) {
-    writeFileSync(
-      `data/${season.toLowerCase()}.json`,
-      JSON.stringify({ season, rows, provisional: board.provisional[season] ?? [] }, null, 2) + '\n',
-    );
-  }
-  writeFileSync('data/unresolved.json', JSON.stringify(board.unresolved, null, 2) + '\n');
-  writeFileSync('data/meta.json', JSON.stringify(board.meta, null, 2) + '\n');
-
-  console.log('Wrote data/board.json and per-season files');
+  writeBoardFiles(board);
 }
 
 main().catch((err) => {

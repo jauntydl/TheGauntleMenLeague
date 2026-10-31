@@ -94,19 +94,23 @@ const RAPID_ROYALE_SOLO_WEIGHTS = {
  *
  * K is not fixed. It rises by CONFIDENCE_GAMES_PER_WEEK with every week of
  * the season (launch week is week 1), so the games a rate needs to count
- * scale with the time there has been to play them: three games a week earn
- * half, nine a week three quarters, in week 2 and week 12 alike. Set
+ * scale with the time there has been to play them: ten games a week earn
+ * half, thirty a week three quarters, in week 2 and week 12 alike. Set
  * 2026-10-31 at the user's direction, as an incentive to keep playing — a
  * good rate held over hundreds of games outranks the same rate over a few
  * dozen, and a bad one held that long counts in full.
  *
  * Considered and dropped: a fixed K of 30 (right around day 30, wrong either
- * side), one game per day (about 98 by season end, which walls newcomers off
- * from the top), and paying for games played outright (rewards playing a lot
- * badly). Stepping weekly rather than daily keeps the drift it causes —
- * everyone's share moves when K does — to one visible move a week.
+ * side), one game per day (about 98 by season end), paying for games played
+ * outright (rewards playing a lot badly), and 3 a week, which went live first:
+ * against this field's median ranked pace of 48 games a week it left the
+ * median player at 94% own and only touched the bottom quarter. At 10, thirty
+ * games by week 3 is exactly half-trusted, the median keeps 83%, and K ends a
+ * 14-week season at 140 (a 300-game player 68% own, a 700-game grinder 83%).
+ * Stepping weekly rather than daily keeps the drift it causes — everyone's
+ * share moves when K does — to one visible move a week.
  */
-export const CONFIDENCE_GAMES_PER_WEEK = 3;
+export const CONFIDENCE_GAMES_PER_WEEK = 10;
 
 /** For a season whose launch neither the feed nor the last board gave. */
 export const FALLBACK_CONFIDENCE_GAMES = 30;

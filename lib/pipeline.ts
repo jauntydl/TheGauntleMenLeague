@@ -197,3 +197,31 @@ export function buildBoard(
     unresolved,
   };
 }
+
+/**
+ * Re-rank a committed board without re-reading anyone's stats. The current
+ * season's boards go through rankPlayers again, with the K the board's own
+ * launch date and builtAt give; archived seasons are untouched, and builtAt
+ * is kept, since no stat was read. For a change to the rating alone — a
+ * weight, CONFIDENCE_GAMES_PER_WEEK — this is what `npm run data:rerank` does
+ * instead of making the API serve the whole roster again.
+ */
+export function rerankBoard(board: BoardFile): BoardFile {
+  const now = new Date(board.meta.builtAt);
+  const seasonStart = board.meta.seasonStart ? new Date(board.meta.seasonStart) : null;
+  const k = seasonStart ? confidenceGames(seasonStart, now) : FALLBACK_CONFIDENCE_GAMES;
+  const seasons = { ...board.seasons };
+  const provisional = { ...board.provisional };
+  for (const key of new Set([...Object.keys(board.seasons), ...Object.keys(board.provisional)])) {
+    if (parseBoardKey(key).season !== board.meta.currentSeason) continue;
+    // Sorted by eaId first for the same reason buildBoard does: ties then land
+    // in the same place on every run.
+    const all = [...(board.seasons[key] ?? []), ...(board.provisional[key] ?? [])].sort((a, b) =>
+      a.eaId.localeCompare(b.eaId),
+    );
+    const split = rankPlayers(all, modeForBoard(key).key, k);
+    seasons[key] = split.ranked;
+    provisional[key] = split.provisional;
+  }
+  return { ...board, meta: { ...board.meta, confidenceGames: k }, seasons, provisional };
+}

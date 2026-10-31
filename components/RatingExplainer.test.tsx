@@ -55,8 +55,8 @@ describe('RatingExplainer', () => {
   });
 
   it('explains that a rate counts for the games behind it, from the day of the season', () => {
-    render(<RatingExplainer confidenceGames={9} weekOfSeason={3} />);
-    expect(screen.getAllByText(/3 games a week/i).length).toBeGreaterThan(0);
+    render(<RatingExplainer confidenceGames={30} weekOfSeason={3} />);
+    expect(screen.getAllByText(/10 games a week/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/week 3/).length).toBeGreaterThan(0);
   });
 

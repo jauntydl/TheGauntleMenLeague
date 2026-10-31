@@ -1,6 +1,6 @@
 // lib/pipeline.test.ts
 import { describe, it, expect } from 'vitest';
-import { buildBoard, toBulkPlayer } from './pipeline';
+import { buildBoard, rerankBoard, toBulkPlayer } from './pipeline';
 import { rawSample } from './fixtures/raw-sample';
 import type { RawResponse, RosterEntry } from './types';
 
@@ -107,7 +107,33 @@ describe('buildBoard', () => {
     const launch = new Date('2026-10-13T12:00:00Z');
     const board = buildBoard([dark], [rawSample], 'Season4', new Date('2026-10-31T00:00:00Z'), null, new Set(), launch);
     expect(board.meta.seasonStart).toBe('2026-10-13T12:00:00.000Z');
-    expect(board.meta.confidenceGames).toBe(9);
+    expect(board.meta.confidenceGames).toBe(30);
+  });
+
+  it('re-ranks the current season from committed rows with the K its own dates give, keeping builtAt', () => {
+    const launch = new Date('2026-10-13T12:00:00Z');
+    const at = new Date('2026-10-31T00:00:00Z');
+    const live = buildBoard([dark], [rawSample], 'Season4', at, null, new Set(), launch);
+    // Ratings cleared and K wrong, as after a constant changes under a committed board.
+    const stale = {
+      ...live,
+      meta: { ...live.meta, confidenceGames: 999 },
+      seasons: { Season4: live.seasons.Season4.map((r) => ({ ...r, rating: 0, rank: 42, standouts: [] })) },
+    };
+    expect(rerankBoard(stale)).toEqual(live);
+  });
+
+  it('leaves archived seasons alone when re-ranking', () => {
+    const at = new Date('2026-10-27T00:00:00.000Z');
+    const live = buildBoard([dark], [rawSample], 'Season4', at);
+    const frozen = { ...live.seasons.Season4[0], eaId: 'frozen', matches: 999, rank: 1, rating: 1 };
+    const board = {
+      ...live,
+      meta: { ...live.meta, seasons: ['Season3', 'Season4'] },
+      seasons: { ...live.seasons, Season3: [frozen] },
+      provisional: { ...live.provisional, Season3: [] },
+    };
+    expect(rerankBoard(board).seasons.Season3).toEqual([frozen]);
   });
 
   it('falls back to a fixed K when the launch is unknown, and says so in meta', () => {

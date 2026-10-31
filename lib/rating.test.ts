@@ -46,19 +46,19 @@ describe('percentile', () => {
 describe('confidenceGames', () => {
   const launch = new Date('2026-10-13T12:00:00Z');
 
-  it('is 3 in launch week and climbs by 3 each week', () => {
-    expect(CONFIDENCE_GAMES_PER_WEEK).toBe(3);
+  it('is 10 in launch week and climbs by 10 each week', () => {
+    expect(CONFIDENCE_GAMES_PER_WEEK).toBe(10);
     expect(weekOfSeason(launch, launch)).toBe(1);
-    expect(confidenceGames(launch, launch)).toBe(3);
-    expect(confidenceGames(launch, new Date('2026-10-20T11:59:00Z'))).toBe(3);
-    expect(confidenceGames(launch, new Date('2026-10-20T12:00:00Z'))).toBe(6);
+    expect(confidenceGames(launch, launch)).toBe(10);
+    expect(confidenceGames(launch, new Date('2026-10-20T11:59:00Z'))).toBe(10);
+    expect(confidenceGames(launch, new Date('2026-10-20T12:00:00Z'))).toBe(20);
     expect(weekOfSeason(launch, new Date('2026-10-31T00:00:00Z'))).toBe(3);
-    expect(confidenceGames(launch, new Date('2026-10-31T00:00:00Z'))).toBe(9);
+    expect(confidenceGames(launch, new Date('2026-10-31T00:00:00Z'))).toBe(30);
   });
 
   it('never drops below launch week, even before launch', () => {
     expect(weekOfSeason(launch, new Date('2026-10-01T00:00:00Z'))).toBe(1);
-    expect(confidenceGames(launch, new Date('2026-10-01T00:00:00Z'))).toBe(3);
+    expect(confidenceGames(launch, new Date('2026-10-01T00:00:00Z'))).toBe(10);
   });
 
   it('has a fallback for a season whose launch is unknown', () => {
