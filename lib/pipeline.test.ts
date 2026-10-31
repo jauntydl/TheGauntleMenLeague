@@ -114,6 +114,19 @@ describe('buildBoard', () => {
     ]);
   });
 
+  it('marks a member the build gave up on as fetch_failed, whether or not they had resolved', () => {
+    // The build skips a member the API would not answer for after two tries.
+    // That is a fault on the API's side, not privacy, and the not-listed page
+    // must say so rather than send them to their settings.
+    const other: RosterEntry = { ...dark, eaId: 'other', displayName: 'Other', personaId: '1', nucleusId: '2' };
+    const ghost: RosterEntry = { eaId: 'kathemkh9', displayName: 'Kathem', platform: 'ps', region: 'NA West', mainMode: 'both' };
+    const board = buildBoard([other, ghost], [rawSample], 'Season4', new Date(), null, new Set(['other', 'kathemkh9']));
+    expect(board.unresolved).toEqual([
+      { eaId: 'other', displayName: 'Other', reason: 'fetch_failed' },
+      { eaId: 'kathemkh9', displayName: 'Kathem', reason: 'fetch_failed' },
+    ]);
+  });
+
   it('marks a resolved member as no_data when no response comes back for their persona', () => {
     // Simulates a member who resolved previously (ids are cached) but has
     // since turned their in-game stats privacy back off: the bulk response

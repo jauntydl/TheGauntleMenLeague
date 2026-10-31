@@ -131,8 +131,11 @@ export type UnresolvedEntry = {
    * 'not_found' — never resolved (no cached ids; privacy off, or a bad EA ID).
    * 'no_data' — was resolved before, but no response came back this run for
    * that persona (most often privacy was turned back off after resolving).
+   * 'fetch_failed' — the build gave up on this member after the API failed
+   * to answer for them twice this run. A fault on the API's side, not the
+   * member's; they are tried again next refresh.
    */
-  reason: 'not_found' | 'no_data';
+  reason: 'not_found' | 'no_data' | 'fetch_failed';
 };
 
 export type BoardFile = {

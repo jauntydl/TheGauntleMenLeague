@@ -1,9 +1,9 @@
 /**
  * When the board refreshes its stats.
  *
- * The daily workflow runs at 09:23 UTC (.github/workflows/daily.yml). This
- * module is the single place that knows it, so the page and the cron cannot
- * quietly disagree about when the next refresh lands.
+ * The workflow runs every fourth hour at :23 UTC (.github/workflows/refresh.yml).
+ * This module is the single place that knows it, so the page and the cron
+ * cannot quietly disagree about when the next refresh lands.
  *
  * This is the time the job is *scheduled*, which is not the time it runs.
  * GitHub schedules are best-effort: observed starts have been hours late and
@@ -11,8 +11,8 @@
  * nextRefreshAfter.
  */
 
-/** Must match the cron in .github/workflows/daily.yml. */
-export const REFRESH_HOUR_UTC = 9;
+/** Must match the cron in .github/workflows/refresh.yml. */
+export const REFRESH_EVERY_HOURS = 4;
 export const REFRESH_MINUTE_UTC = 23;
 
 /**
@@ -24,8 +24,11 @@ export const REFRESH_MINUTE_UTC = 23;
  */
 export function nextRefreshAfter(after: Date): Date {
   const next = new Date(after);
-  next.setUTCHours(REFRESH_HOUR_UTC, REFRESH_MINUTE_UTC, 0, 0);
-  if (next <= after) next.setUTCDate(next.getUTCDate() + 1);
+  next.setUTCMinutes(REFRESH_MINUTE_UTC, 0, 0);
+  // The slot at or before `after`, then one on if that slot has already gone.
+  // setUTCHours past 23 rolls the date, so the day boundary takes care of itself.
+  next.setUTCHours(Math.floor(next.getUTCHours() / REFRESH_EVERY_HOURS) * REFRESH_EVERY_HOURS);
+  if (next <= after) next.setUTCHours(next.getUTCHours() + REFRESH_EVERY_HOURS);
   return next;
 }
 

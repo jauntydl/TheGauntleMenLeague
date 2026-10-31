@@ -1,5 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchCurrentSeason, resolvePlayer, fetchBulk, chunk, BATCH_SIZE, API_BASE } from './gametools';
+import {
+  fetchCurrentSeason,
+  resolvePlayer,
+  fetchBulk,
+  fetchBulkSkippingFailures,
+  chunk,
+  BATCH_SIZE,
+  BULK_FALLBACK_PAUSE_MS,
+  API_BASE,
+} from './gametools';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -128,5 +137,54 @@ describe('fetchBulk', () => {
     const fetchImpl = vi.fn();
     await expect(fetchBulk([], { fetchImpl, sleep: noSleep })).resolves.toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchBulkSkippingFailures', () => {
+  const a = { player_id: 'A', user_id: '1', platform: 'pc' };
+  const b = { player_id: 'B', user_id: '2', platform: 'pc' };
+  const asked = (init: RequestInit) =>
+    (JSON.parse(init.body as string) as { player_id: string }[]).map((p) => p.player_id);
+  const down = () => Promise.resolve(json({ detail: 'down' }, 503));
+
+  it('returns every batch response and skips nobody when nothing fails', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(json({ playerStats: [] }));
+    const out = await fetchBulkSkippingFailures([a, b], { fetchImpl, sleep: noSleep });
+    expect(out.responses).toHaveLength(1);
+    expect(out.skipped).toEqual([]);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-fetches a failed batch one member at a time and keeps those who answer', async () => {
+    const fetchImpl = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      const ids = asked(init);
+      if (ids.length > 1) return down();
+      if (ids[0] === 'A') return Promise.resolve(json({ playerStats: [{ id: 'A' }] }));
+      return down();
+    });
+    const out = await fetchBulkSkippingFailures([a, b], { fetchImpl, retries: 2, sleep: noSleep });
+    expect(out.responses).toEqual([{ playerStats: [{ id: 'A' }] }]);
+    expect(out.skipped.map((s) => s.player)).toEqual([b]);
+    expect(out.skipped[0].error.message).toMatch(/503/);
+  });
+
+  it('gives every member of a failed batch a second try of their own, after a pause', async () => {
+    const fetchImpl = vi.fn().mockImplementation(down);
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const out = await fetchBulkSkippingFailures([a, b], { fetchImpl, retries: 1, sleep });
+    expect(fetchImpl.mock.calls.map((c) => asked(c[1]))).toEqual([['A', 'B'], ['A'], ['B']]);
+    expect(sleep).toHaveBeenCalledWith(BULK_FALLBACK_PAUSE_MS);
+    expect(out.responses).toEqual([]);
+    expect(out.skipped.map((s) => s.player)).toEqual([a, b]);
+  });
+
+  it('leaves the batches that succeed untouched when another fails', async () => {
+    const first = Array.from({ length: BATCH_SIZE }, (_, i) => ({ ...a, player_id: `A${i}` }));
+    const fetchImpl = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      asked(init).includes('B') ? down() : Promise.resolve(json({ playerStats: [] })),
+    );
+    const out = await fetchBulkSkippingFailures([...first, b], { fetchImpl, retries: 1, sleep: noSleep });
+    expect(out.responses).toHaveLength(1);
+    expect(out.skipped.map((s) => s.player)).toEqual([b]);
   });
 });

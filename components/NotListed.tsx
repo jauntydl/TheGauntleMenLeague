@@ -10,6 +10,7 @@ import type { UnresolvedEntry } from '@/lib/types';
 export function NotListed({ entries }: { entries: UnresolvedEntry[] }) {
   const notFound = entries.filter((e) => e.reason === 'not_found');
   const wentPrivate = entries.filter((e) => e.reason === 'no_data');
+  const skipped = entries.filter((e) => e.reason === 'fetch_failed');
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 } }}>
@@ -21,6 +22,14 @@ export function NotListed({ entries }: { entries: UnresolvedEntry[] }) {
         If you have never been added, you can{' '}
         <Link href="/join">add yourself in about a minute</Link>. If you are on the
         roster but show no stats, read on.
+      </Typography>
+
+      <Typography sx={{ mb: 2 }}>
+        Two things keep a roster member off the board: hiding your stats in game, or
+        the stats service failing to answer for you on the last refresh. The second
+        is a technical issue on the service&apos;s side, nothing you did, and it
+        clears by itself — every member is tried twice per refresh, and refreshes
+        run every four hours.
       </Typography>
 
       <Typography sx={{ mb: 2 }}>
@@ -73,6 +82,26 @@ export function NotListed({ entries }: { entries: UnresolvedEntry[] }) {
               </Typography>
               <List dense>
                 {wentPrivate.map((e) => (
+                  <ListItem key={e.eaId} disableGutters>
+                    <ListItemText primary={e.displayName} secondary={`EA ID: ${e.eaId}`} />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          )}
+
+          {skipped.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" component="h2">
+                Skipped on the last refresh ({skipped.length})
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.7, mb: 1 }}>
+                The stats service did not answer for these members on the last
+                refresh, twice over. Nothing to fix on their side — they are tried
+                again at the next one.
+              </Typography>
+              <List dense>
+                {skipped.map((e) => (
                   <ListItem key={e.eaId} disableGutters>
                     <ListItemText primary={e.displayName} secondary={`EA ID: ${e.eaId}`} />
                   </ListItem>

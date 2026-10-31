@@ -1,16 +1,20 @@
-name: Daily stats refresh
+name: Stats refresh
 
 on:
   schedule:
-    # 09:23 UTC daily. gametools caches upstream for 10 minutes, so exact
-    # timing does not matter — only that we call it once a day.
+    # Every four hours at :23 UTC (00:23, 04:23, … 20:23). gametools caches
+    # upstream for 10 minutes, so exact timing does not matter.
     #
     # Deliberately NOT on the hour. GitHub runs scheduled workflows on shared
     # capacity and delays or drops them under load, and :00 is the most
     # contended minute there is. At '0 9 * * *' this job never once started on
     # time: the two runs it managed began at 14:16 and 15:49 UTC, five and
     # nearly seven hours late, and 2026-09-16 was skipped outright.
-    - cron: '23 9 * * *'
+    #
+    # Four-hourly rather than daily since 2026-10-31. With one slot a day, a
+    # run that slipped by seven hours or died on an API hiccup cost the board
+    # a whole day; five such days in a row left it stale from Oct 25 to 31.
+    - cron: '23 */4 * * *'
   workflow_dispatch:
 
 permissions:
@@ -30,7 +34,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Fetch Gauntlet stats
+      - name: Fetch stats
         run: npm run data
 
       - name: Commit if anything changed
@@ -39,8 +43,8 @@ jobs:
           git config user.email "actions@github.com"
           git add data/ roster.json
           if git diff --staged --quiet; then
-            echo "No changes today."
+            echo "No changes this run."
             exit 0
           fi
-          git commit -m "chore: daily stats refresh $(date -u +%Y-%m-%d)"
+          git commit -m "chore: stats refresh $(date -u +%Y-%m-%dT%H:%MZ)"
           git push

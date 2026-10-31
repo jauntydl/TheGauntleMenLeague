@@ -5,7 +5,7 @@ skill-based rate stats. **Seasons 3–4 were Gauntlet** (now archived); Gauntlet
 was removed in Season 5, and **from Season 5 the board ranks Rapid Royale**.
 
 ```
-GitHub Action (daily cron, 09:00 UTC)
+GitHub Action (cron every 4 h at :23 UTC)
   → scripts/build.ts: resolve ids → bulk calls → extract → compute → rank
   → commits data/*.json
   → push triggers Vercel redeploy
@@ -118,33 +118,58 @@ instead of crashing — but a rated metric missing from the current season still
 silently drops out of everyone's rating. Ship code and regenerated data in the
 same push. (Archived seasons are never regenerated, so they never gain it.)
 
-## The daily refresh is best-effort, and has never been on time
+## The refresh runs every four hours, best-effort, and is rarely on time
 
-The cron says 09:23 UTC. GitHub runs scheduled workflows on shared capacity and
-delays or drops them under load, so that is a request, not a promise. Observed:
-the job started at 14:16 UTC one day, 15:49 UTC the next — five and nearly seven
-hours late — and skipped 2026-09-16 entirely.
+The cron (`.github/workflows/refresh.yml`) says :23 past every fourth hour
+UTC. GitHub runs scheduled workflows on shared capacity and delays or drops
+them under load, so that is a request, not a promise. Observed while it was
+daily at 09:23: starts at 14:16 and 15:49 UTC, five and nearly seven hours
+late, and 2026-09-16 skipped entirely. The schedule sits off the top of the
+hour (:00 is the most contended minute), and the board says "next refresh
+**after** <time>" because promising a time the job has never hit made
+ordinary lateness look like the site was broken. `lib/schedule.ts` is the one
+place that knows the cadence; a test checks it against the cron.
 
-Two things follow. The schedule was moved off the top of the hour (:00 is the
-most contended minute) to improve the odds. And the board says "next refresh
-**after** <time>", because promising a time the job has never hit made ordinary
-lateness look like the site was broken.
+It went four-hourly on 2026-10-31 (the user's call). The daily job died five
+runs in a row, 2026-10-26 to 30: a dropped socket mid-stream, then a 503 on a
+different URL each day (the bulk call once, a persona-name lookup three
+times), all around 16:00 UTC, every one answering 200 the next morning. One
+failed request aborted the whole build, so the board sat on Oct 25's data for
+a week. Two things changed:
 
-If a day is missed, the fix is to run `npm run data` locally and push — the
-same thing the workflow does. `gh workflow run` needs admin on the repo, and
-the `gh` CLI here is authenticated as a different account than `origin`
-(which uses the personal SSH key), so dispatching from the CLI fails with 403.
+- **One member can no longer sink the run.** Every per-member call gets at
+  least two tries: the request-level retries, and for a member in a bulk
+  batch that still fails, a second one-player call of their own after a
+  `BULK_FALLBACK_PAUSE_MS` pause (`fetchBulkSkippingFailures`). A member the
+  API still won't answer for is skipped for that run and listed on
+  `/not-listed` as `fetch_failed` ("skipped on the last refresh"), distinct
+  from privacy, and tried again next run. A failed persona-name lookup only
+  leaves the EA ID showing. `MAX_SKIPPED_SHARE` in `scripts/build.ts` still
+  fails the build if more than half the roster is skipped: that is an outage,
+  and a half-empty board is worse than a stale one.
+- **A skipped member drops off the current season for that run** (there is
+  nothing to compute from) and reappears on the next successful one, so
+  ratings can shift for a few hours when someone is skipped. The user chose
+  this over carrying their previous row forward.
 
-Note that signups keep committing board data between refreshes, so the board is
-never truly stale — but `meta.builtAt` only moves on a real refresh, which is
-what the page reports.
+If a run is missed, the next is at most four hours away. Running `npm run
+data` locally and pushing is the same thing the workflow does, for when it
+can't wait. `gh workflow run` needs admin on the repo, and the `gh` CLI here
+is authenticated as a different account than `origin` (which uses the
+personal SSH key), so dispatching from the CLI fails with 403.
+
+Signups keep committing board data between refreshes, so the board is never
+truly stale — but `meta.builtAt` only moves on a real refresh, which is what
+the page reports.
 
 ## Be a polite API consumer
 
 gametools.network is free, donation-funded, unofficial, and the only option —
 EA publishes no public Battlefield stats API, and tracker.gg forbids scraping
-with a legal warning. **Daily cadence only.** `npm run data` makes live calls
-across the whole roster; don't run it casually, and don't add a second cron.
+with a legal warning. **Six runs a day, no more** — the cron went from daily
+to four-hourly on 2026-10-31 at the user's direction. `npm run data` makes
+live calls across the whole roster; don't run it casually, and don't add
+another cron.
 Consider [sponsoring them](https://github.com/sponsors/community-network).
 
 ---
@@ -364,5 +389,8 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
   the generated JSON.
 - Per-season `data/season*.json` files are written for git-diff readability but
   read by nothing.
-- `daily.yml` uses a bare `git push` with no retry; a concurrent push loses that
-  day's refresh (rerun manually from the Actions tab).
+- `refresh.yml` uses a bare `git push` with no retry; a concurrent signup push
+  loses that run, and the next is four hours away.
+- A member skipped (`fetch_failed`) in the last build before a season rolls
+  over is missing from that season's archive, since the archive is that
+  build's output and is never recomputed.

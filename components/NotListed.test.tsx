@@ -31,6 +31,14 @@ describe('NotListed', () => {
     expect(screen.getByText(/everyone on the roster/i)).toBeInTheDocument();
   });
 
+  it('explains a member skipped after a failed lookup as a fault on the stats side, not privacy', () => {
+    render(<NotListed entries={[{ eaId: 'hiccup', displayName: 'Hiccup', reason: 'fetch_failed' }]} />);
+    expect(screen.getByText(/skipped on the last refresh/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/technical/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Hiccup')).toBeInTheDocument();
+    expect(screen.queryByText(/went private/i)).not.toBeInTheDocument();
+  });
+
   it('explains no_data members separately from not_found members', () => {
     render(
       <NotListed

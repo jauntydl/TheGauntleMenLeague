@@ -16,6 +16,15 @@ export const API_BASE = 'https://api.gametools.network';
 export const BATCH_SIZE = 12;
 
 /**
+ * How long to wait before re-asking for a failed batch one member at a time.
+ * The failures seen in the wild (2026-10-26 to 30) were 503s that cleared
+ * within the hour; the request-level retries (0.5s, then 1s) do not outlast a
+ * burst of them, so a pause here gives each member's own second try a chance
+ * of landing after it.
+ */
+export const BULK_FALLBACK_PAUSE_MS = 5_000;
+
+/**
  * `player_id` is the persona ID; `user_id` is the nucleus ID. They are different
  * numbers and swapping them silently returns wrong or empty data.
  */
@@ -110,20 +119,61 @@ export async function fetchPersonas(
     .map((r) => ({ displayName: r.displayName, platform: r.platform }));
 }
 
-/** Fetch raw stats for many players, batched at BATCH_SIZE. */
+async function postBatch(batch: BulkPlayer[], deps: Deps): Promise<RawResponse> {
+  const res = await request(
+    `${API_BASE}/bf6/multiple/?raw=true`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify(batch), // MUST be an array; an object returns 422
+    },
+    deps,
+  );
+  return (await res.json()) as RawResponse;
+}
+
+/**
+ * Fetch raw stats for many players, batched at BATCH_SIZE. Throws on the
+ * first batch that fails — right for a signup, where the one player asked
+ * for must be answered or the signup reported as failed.
+ */
 export async function fetchBulk(players: BulkPlayer[], deps: Deps = {}): Promise<RawResponse[]> {
   const out: RawResponse[] = [];
-  for (const batch of chunk(players, BATCH_SIZE)) {
-    const res = await request(
-      `${API_BASE}/bf6/multiple/?raw=true`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify(batch), // MUST be an array; an object returns 422
-      },
-      deps,
-    );
-    out.push((await res.json()) as RawResponse);
-  }
+  for (const batch of chunk(players, BATCH_SIZE)) out.push(await postBatch(batch, deps));
   return out;
+}
+
+export type SkippedPlayer = { player: BulkPlayer; error: Error };
+
+/**
+ * fetchBulk for the build, where one member the API will not answer for must
+ * not cost everyone else their refresh — which is exactly what happened five
+ * runs in a row in late October 2026. A batch that still fails after the
+ * request-level retries is re-asked one member at a time, so every member
+ * gets a second try of their own; whoever still fails is skipped and
+ * reported, to be tried again next refresh.
+ */
+export async function fetchBulkSkippingFailures(
+  players: BulkPlayer[],
+  deps: Deps = {},
+): Promise<{ responses: RawResponse[]; skipped: SkippedPlayer[] }> {
+  const sleep = deps.sleep ?? defaultSleep;
+  const responses: RawResponse[] = [];
+  const skipped: SkippedPlayer[] = [];
+  for (const batch of chunk(players, BATCH_SIZE)) {
+    try {
+      responses.push(await postBatch(batch, deps));
+      continue;
+    } catch {
+      await sleep(BULK_FALLBACK_PAUSE_MS);
+    }
+    for (const player of batch) {
+      try {
+        responses.push(await postBatch([player], deps));
+      } catch (err) {
+        skipped.push({ player, error: err instanceof Error ? err : new Error(String(err)) });
+      }
+    }
+  }
+  return { responses, skipped };
 }

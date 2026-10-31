@@ -40,6 +40,11 @@ const roundRate = (v: number | null): number | null =>
  *
  * Pure: no network, no filesystem. Each raw response is matched back to its
  * roster member by personaId.
+ *
+ * `failed` names the members (by eaId) the build gave up on this run because
+ * the API would not answer for them. They get no row — there is nothing to
+ * compute from — and are listed as unresolved with a reason that says it was
+ * the API's fault, not their privacy settings.
  */
 export function buildBoard(
   roster: RosterEntry[],
@@ -47,6 +52,7 @@ export function buildBoard(
   currentSeason: string,
   now: Date = new Date(),
   archive: BoardFile | null = null,
+  failed: ReadonlySet<string> = new Set(),
 ): BoardFile {
   const byPersona = new Map(roster.filter((r) => r.personaId).map((r) => [r.personaId!, r]));
 
@@ -159,6 +165,9 @@ export function buildBoard(
     // Imported players cannot be reached and will never fix their privacy, so
     // listing them only drowns out the members who can.
     if (r.source === 'imported') return [];
+    if (failed.has(r.eaId)) {
+      return [{ eaId: r.eaId, displayName: r.displayName, reason: 'fetch_failed' }];
+    }
     if (!r.personaId || !r.nucleusId) {
       return [{ eaId: r.eaId, displayName: r.displayName, reason: 'not_found' }];
     }
