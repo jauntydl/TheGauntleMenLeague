@@ -25,7 +25,7 @@ data is committed, so a page load can never hit the free community API.
 
 Current state (2026-10-31): 142 roster members · Season 5 Trio has 55
 ranked, 24 provisional; Solo has 8 ranked, 46 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 302 tests passing · `tsc --noEmit` clean · deployed.
+Seasons 3–4 archived, Season 2 dropped · 297 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
@@ -366,17 +366,24 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 - **`vitest.setup.ts` polyfills are load-bearing.** MUI X DataGrid virtualises
   rows; jsdom reports every element as 0×0 and has no `ResizeObserver` or
   `matchMedia`. Remove them and every table test fails to find elements.
-- **Narrow viewports use `columnVisibilityModel`, not CSS.** DataGrid sizes its
-  virtual scroller from the columns array, so `display:none` leaves the column's
-  track and horizontal scroll space behind. That was a real bug. jsdom lays out
-  no scrollbars, so no test here can prove 400px is scroll-free — that needs a
-  real phone.
+- **Phones render every column and scroll the grid sideways, with rank and
+  Player frozen at the left** (`PINNED_LEFT` in `components/LeaderboardTable.tsx`,
+  2026-10-31, at the user's request). The earlier tiers dropped columns with
+  `columnVisibilityModel` instead — never with CSS `display:none`, which
+  leaves the column's track and scroll space behind in DataGrid's virtual
+  scroller — but a phone was then left with only rating and win rate. The
+  pinned cells are `position: sticky` with an opaque fill, and
+  `disableVirtualization` keeps them mounted once the reader has scrolled past
+  where DataGrid would drop them (a page is at most 100 rows). jsdom lays out
+  nothing, so the tests check the pinned classes, not geometry.
 
 ---
 
 ## Known loose ends
 
-- Phone width at 400px has never been checked on a real device.
+- Phone width at 400px was checked in headless Chrome (Playwright, 2026-10-31:
+  no page-level horizontal overflow, rank and Player held still while the grid
+  scrolled 500px) but never on a physical phone.
 - `IHerkyI` has 303 Gauntlet matches (ranked #59, rating 13.02), which sits oddly
   against their "low xp but decent at BR" self-description. The EA ID resolves to
   an account whose name matches exactly, so it's probably just modesty.

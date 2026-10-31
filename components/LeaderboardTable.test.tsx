@@ -8,10 +8,6 @@ import {
   fmtHours,
   fmtInt,
   badges,
-  COLUMN_BUDGET_PX,
-  CONTAINER_CHROME_PX,
-  WIDE_TIER_MIN_PX,
-  PLAYER_MIN_WIDTH_PX,
   columnDescription,
 } from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
@@ -312,27 +308,6 @@ describe('LeaderboardTable', () => {
     expect(columnDescription('objPtsPerHour', 'Objective points', 'OBJ/h', 'rapidRoyale')).toBe('Objective points');
   });
 
-  it.each(MODE_KEYS)('keeps the wide tier inside its width budget (%s)', (mode) => {
-    // The board scrolled sideways twice — once when SPM landed, again with
-    // OBJ/h — because columns were added without anyone re-adding up the
-    // widths. This does the addition. The Player column is flex, so jsdom
-    // reports it as 0 and its declared minimum stands in.
-    withViewport([], () => {
-      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Budget' })]} />);
-      const headers = [...container.querySelectorAll('.MuiDataGrid-columnHeader')];
-      const fixed = headers
-        .filter((el) => el.getAttribute('data-field') !== 'eaId')
-        .reduce((total, el) => total + parseInt((el as HTMLElement).style.width || '0', 10), 0);
-      expect(fixed + PLAYER_MIN_WIDTH_PX).toBe(COLUMN_BUDGET_PX[mode]);
-    });
-  });
-
-  it.each(MODE_KEYS)('only offers the wide tier on a viewport that can hold it (%s)', (mode) => {
-    // The breakpoint sat at 1280px while the columns needed ~1400px, which is
-    // the whole reason the full board scrolled sideways on a laptop.
-    expect(COLUMN_BUDGET_PX[mode] + CONTAINER_CHROME_PX).toBeLessThanOrEqual(WIDE_TIER_MIN_PX[mode]);
-  });
-
   it('shows no match-count column — W-L already carries it', () => {
     // 492-75 is 567 matches and says more doing it, so the M column was pure
     // duplication taking width from a board that has none to spare.
@@ -345,35 +320,41 @@ describe('LeaderboardTable', () => {
     });
   });
 
-  it('shows only rank, player, rating and win rate on a phone', () => {
-    // A 400px phone has roughly 368px usable. These four total 324px; adding
-    // K/D would push it past that and bring back the horizontal scroll.
-    withViewport(['max-width:600px', `max-width:${WIDE_TIER_MIN_PX.gauntlet - 1}px`], () => {
+  const ALL_HEADERS = ['Rating', 'Win %', 'W–L', 'Badges', 'Kills', 'Assists', 'HS', 'K/D', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time'];
+
+  it('shows every column on a phone, scrolled sideways rather than dropped', () => {
+    // Phones used to keep only rank, player, rating and win rate, which left
+    // no way to read anything else. Every column now renders and the grid
+    // scrolls horizontally.
+    withViewport(['max-width:600px'], () => {
       render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Phone' })]} />);
-      expect(screen.getByText('Rating')).toBeInTheDocument();
-      expect(screen.getByText('Win %')).toBeInTheDocument();
-      for (const hidden of ['W–L', 'Badges', 'K/D', 'Kills', 'Assists', 'HS', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
-        expect(screen.queryByText(hidden)).not.toBeInTheDocument();
+      for (const shown of ALL_HEADERS) {
+        expect(screen.getByText(shown)).toBeInTheDocument();
       }
     });
   });
 
-  it('adds playstyle and combat rates on a tablet, but not the wide-screen detail', () => {
-    withViewport([`max-width:${WIDE_TIER_MIN_PX.gauntlet - 1}px`], () => {
-      render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Tablet' })]} />);
-      for (const shown of ['Rating', 'Win %', 'W–L', 'Badges', 'K/D', 'K/match']) {
-        expect(screen.getByText(shown)).toBeInTheDocument();
-      }
-      for (const hidden of ['Kills', 'Assists', 'HS', 'KPM', 'DPM', 'Rev/h', 'Time']) {
-        expect(screen.queryByText(hidden)).not.toBeInTheDocument();
-      }
+  it('pins rank and player on a phone, and nothing else', () => {
+    withViewport(['max-width:600px'], () => {
+      const { container } = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Pinned' })]} />);
+      const pinned = (sel: string) =>
+        new Set([...container.querySelectorAll(sel)].map((el) => el.getAttribute('data-field')));
+      expect(pinned('.MuiDataGrid-columnHeader.pinned-col')).toEqual(new Set(['rank', 'eaId']));
+      expect(pinned('.MuiDataGrid-cell.pinned-col')).toEqual(new Set(['rank', 'eaId']));
+    });
+  });
+
+  it('pins nothing on a wide screen', () => {
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Wide' })]} />);
+      expect(container.querySelector('.pinned-col')).toBeNull();
     });
   });
 
   it('shows every column on a wide screen', () => {
     withViewport([], () => {
       render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Desktop' })]} />);
-      for (const shown of ['Rating', 'Win %', 'Badges', 'Kills', 'Assists', 'HS', 'K/D', 'K/match', 'KPM', 'DPM', 'Rev/h', 'Time']) {
+      for (const shown of ALL_HEADERS) {
         expect(screen.getByText(shown)).toBeInTheDocument();
       }
     });

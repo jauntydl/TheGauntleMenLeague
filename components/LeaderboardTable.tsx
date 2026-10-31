@@ -15,27 +15,17 @@ import { RATING_WEIGHTS, ratedMetrics, type RatedMetric, type StandoutTrait } fr
 
 const DASH = '—';
 
-/**
- * What the wide tier costs per mode, and the width it therefore needs.
- *
- * Every fixed column width below, plus the Player column's minimum. Adding a
- * column without widening WIDE_TIER_MIN_PX puts the board back to scrolling
- * sideways, which has now happened twice — once when SPM landed and again
- * with OBJ/h. A test sums the rendered columns against this. Per mode because
- * the rated columns are: Rapid Royale Trio's set is one column wider than
- * Gauntlet's, because it keeps K/D beside the KDA it rates; Solo rates K/D
- * itself and has no revives, so it is narrower than either.
- */
-export const COLUMN_BUDGET_PX: Record<ModeKey, number> = { gauntlet: 1394, rapidRoyale: 1462, rapidRoyaleSolo: 1318 };
-
-/** Container padding (24px a side), the grid border, and its scrollbar. */
-export const CONTAINER_CHROME_PX = 65;
-
-/** Narrowest viewport allowed to show every column. */
-export const WIDE_TIER_MIN_PX: Record<ModeKey, number> = { gauntlet: 1460, rapidRoyale: 1530, rapidRoyaleSolo: 1390 };
-
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
+
+/**
+ * On a phone the rank and Player columns are frozen at the left edge while
+ * the rest of the board scrolls sideways under them — otherwise a reader
+ * scrolled out to DPM has no idea whose row they are on. Fixed widths, not
+ * flex, because each pinned cell's left offset is the sum of those before it.
+ */
+export const PINNED_RANK_WIDTH_PX = 44;
+export const PINNED_PLAYER_WIDTH_PX = 124;
 
 /**
  * The tooltip a column carries in its header.
@@ -60,6 +50,9 @@ export function columnDescription(
 // Grids with 100 rows or fewer show every row without paging, so the footer
 // (page size / page controls) has nothing useful to control — hide it.
 const FOOTER_ROW_THRESHOLD = 100;
+
+/** Left offset of each column pinned on a phone. */
+const PINNED_LEFT: Record<string, number> = { rank: 0, eaId: PINNED_RANK_WIDTH_PX };
 
 // `== null`, not `=== null`: archived rows were frozen before a later metric
 // existed, so a field can be absent from committed JSON as well as null.
@@ -316,17 +309,12 @@ export function LeaderboardTable({
   // noSsr: true avoids a hydration mismatch — without it the server always
   // renders the desktop (non-matching) layout and the client immediately
   // re-renders narrow, producing a visible flash and a markup mismatch.
-  // Three tiers, because two were not enough. Rather than let the board
-  // scroll sideways, progressively drop the columns a reader is least likely
-  // to be scanning for.
   //
-  // The wide tier costs COLUMN_BUDGET_PX of columns plus the container's own
-  // padding, border and scrollbar, so it may only be offered above that. The
-  // breakpoint was 1280px while the columns needed ~1400px, which is why the
-  // full board scrolled sideways on anything narrower than a large desktop —
-  // keep this threshold above COLUMN_BUDGET_PX + CONTAINER_CHROME_PX.
+  // Every column shows at every width. Narrower screens used to drop columns
+  // instead of scrolling, which left phone readers no way to see anything but
+  // the rating and win rate. Now the grid scrolls sideways inside itself and,
+  // on a phone, keeps rank and Player pinned (see PINNED_*_WIDTH_PX).
   const isNarrow = useMediaQuery('(max-width:600px)', { noSsr: true });
-  const isMedium = useMediaQuery(`(max-width:${WIDE_TIER_MIN_PX[mode] - 1}px)`, { noSsr: true });
 
   // Depends on isNarrow: a phone has roughly 368px of usable width, so the
   // handful of columns it does show have to be narrower too, not just fewer.
@@ -337,7 +325,7 @@ export function LeaderboardTable({
       {
         field: 'rank',
         headerName: '#',
-        width: isNarrow ? 44 : 56,
+        width: isNarrow ? PINNED_RANK_WIDTH_PX : 56,
         // The one place this board raises its voice. Gauntlet is an
         // elimination mode, so position is the story — the numeral is lit
         // like a panel readout, brightest at the top and falling away.
@@ -372,8 +360,7 @@ export function LeaderboardTable({
       {
         field: 'eaId',
         headerName: 'Player',
-        flex: 1,
-        minWidth: isNarrow ? 104 : PLAYER_MIN_WIDTH_PX,
+        ...(isNarrow ? { width: PINNED_PLAYER_WIDTH_PX } : { flex: 1, minWidth: PLAYER_MIN_WIDTH_PX }),
         description:
           'The name on the scoreboard in game. Hover a player for their EA ID and the name they go by in Discord.',
         // Sort on what is read, not on the EA ID behind it.
@@ -526,44 +513,14 @@ export function LeaderboardTable({
         align: COLUMN_ALIGN[c.field] ?? 'center',
         headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
         ...c,
-        headerClassName: rated ? 'rated-col' : undefined,
+        headerClassName: [rated && 'rated-col', isNarrow && PINNED_LEFT[c.field] !== undefined && 'pinned-col']
+          .filter(Boolean)
+          .join(' ') || undefined,
+        cellClassName: isNarrow && PINNED_LEFT[c.field] !== undefined ? 'pinned-col' : undefined,
         description: columnDescription(c.field, c.description, c.headerName, mode),
       };
     });
   }, [isNarrow, mode]);
-
-  // Actually remove secondary columns from DataGrid's own column set on
-  // narrow viewports, rather than hiding their cells with CSS — DataGrid
-  // sizes its virtual scroller from the columns array, so CSS-only hiding
-  // leaves the column's track (and horizontal scroll space) behind.
-  const columnVisibility = React.useMemo(
-    () => ({
-      // A phone keeps only rank, player, rating and win rate — 310px of the
-      // ~368px available. Match count and record go; the rating already
-      // encodes them and the floor guarantees a meaningful sample.
-      record: !isNarrow,
-      // From a tablet up: how they play and their headline combat rates.
-      sniperPct: !isNarrow,
-      kd: !isNarrow,
-      kda: !isNarrow,
-      killsPerMatch: !isNarrow,
-      // Objective work is the second-heaviest part of the rating, so it earns
-      // a place alongside them rather than with the supporting rates.
-      objPtsPerHour: !isNarrow,
-      // Rapid Royale's heaviest rates after the win, for the same reason.
-      top3Pct: !isNarrow,
-      // Only on a wide screen: the supporting detail.
-      kills: !isMedium,
-      assists: !isMedium,
-      headshots: !isMedium,
-      kpm: !isMedium,
-      dpm: !isMedium,
-      spm: !isMedium,
-      revivesPerHour: !isMedium,
-      timeSec: !isMedium,
-    }),
-    [isNarrow, isMedium],
-  );
 
   if (rows.length === 0) {
     return (
@@ -581,7 +538,11 @@ export function LeaderboardTable({
       disableRowSelectionOnClick
       density="compact"
       hideFooter={rows.length <= FOOTER_ROW_THRESHOLD}
-      columnVisibilityModel={columnVisibility}
+      // Render every cell rather than virtualising, so the pinned rank and
+      // Player cells still exist once the reader has scrolled far enough right
+      // that DataGrid would otherwise drop them (columnBufferPx did not hold
+      // them in a real browser). Cheap: a page is at most 100 rows.
+      disableVirtualization
       // Win % descending is the agreed default ordering. The page size is
       // pinned to FOOTER_ROW_THRESHOLD explicitly — hideFooter above assumes
       // a single page holds every row up to that threshold, and DataGrid's
@@ -636,6 +597,31 @@ export function LeaderboardTable({
           bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
           boxShadow: (t) => `inset 3px 0 0 ${alpha(t.palette.primary.main, 0.9)}`,
         },
+        // Frozen columns. Each pinned cell sticks at its own left offset inside
+        // DataGrid's scroller, and needs an opaque fill or the scrolled cells
+        // show through it.
+        ...Object.fromEntries(
+          Object.entries(PINNED_LEFT).map(([field, left]) => [
+            `& .pinned-col[data-field="${field}"]`,
+            {
+              position: 'sticky',
+              left,
+              zIndex: 3,
+              // The last pinned column carries a rule so the seam is visible.
+              ...(field === 'eaId' ? { borderRight: '1px solid', borderRightColor: 'divider' } : {}),
+            },
+          ]),
+        ),
+        '& .pinned-col': { bgcolor: 'background.default' },
+        '& .MuiDataGrid-row:hover .pinned-col': {
+          backgroundImage: (t) =>
+            `linear-gradient(${alpha(t.palette.primary.main, 0.06)}, ${alpha(t.palette.primary.main, 0.06)})`,
+        },
+        // Above DataGrid's column separators (zIndex 30 in GridRootStyles):
+        // the headers are position: relative with no z-index of their own,
+        // so a scrolled-under header's separator otherwise draws through the
+        // frozen "#" and "Player" headers.
+        '& .MuiDataGrid-columnHeader.pinned-col': { bgcolor: 'rgba(6,8,13,1)', zIndex: 31 },
         '& .MuiDataGrid-footerContainer': { borderColor: 'divider' },
         '& .MuiDataGrid-columnSeparator': { color: 'rgba(27,38,52,0.9)' },
       }}
