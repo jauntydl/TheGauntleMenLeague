@@ -23,8 +23,8 @@ data is committed, so a page load can never hit the free community API.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-10-31): 142 roster members · Season 5 Trio has 55
-ranked, 24 provisional; Solo has 8 ranked, 46 provisional; 3 unresolved ·
+Current state (2026-11-03): 147 roster members · Season 5 Trio has 59
+ranked, 25 provisional; Solo has 9 ranked, 50 provisional; 3 unresolved ·
 Seasons 3–4 archived, Season 2 dropped · 344 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
