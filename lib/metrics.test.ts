@@ -340,9 +340,62 @@ describe('computeMetrics on Rapid Royale', () => {
     expect(rr({ ...rrSlice, topthree_gm_rr_trio: 51 }).top3Pct).toBeNull(); // fewer than wins
   });
 
+  it('computes the top-5 and top-10 rates for Trio as well, so a retune needs no rebuild', () => {
+    const m = rr({ ...rrSlice, topfive_gm_rr_trio: 75, topten_gm_rr_trio: 83 });
+    expect(m.top5Pct).toBeCloseTo((75 / 85) * 100, 6);
+    expect(m.top10Pct).toBeCloseTo((83 / 85) * 100, 6);
+  });
+
   it('gives Gauntlet none of the Rapid Royale rates', () => {
-    const m = computeFor({ ...rrSlice, matches_gm_gntgauntlet: 10, tp_gm_gntgauntlet: 600, topthree_gm_gntgauntlet: 5 }, MODES.gauntlet);
+    const m = computeFor({
+      ...rrSlice,
+      matches_gm_gntgauntlet: 10, tp_gm_gntgauntlet: 600,
+      topthree_gm_gntgauntlet: 5, topfive_gm_gntgauntlet: 6, topten_gm_gntgauntlet: 8,
+    }, MODES.gauntlet);
     expect(m.top3Pct).toBeNull();
+    expect(m.top5Pct).toBeNull();
+    expect(m.top10Pct).toBeNull();
     expect(m.kda).toBeNull();
+  });
+});
+
+// Real Season 5 Rapid Royale Solo data for EA ID "Ghost690212", read
+// 2026-11-03: 119 matches, 16 wins, 30 top-three, 42 top-five and 72 top-ten
+// finishes. Top ten is far from 100% here — Solo fields more than ten.
+const soloSlice: StatSlice = {
+  matches_gm_rr_solo: 119,
+  wins_gm_rr_solo: 16,
+  losses_gm_rr_solo: 103,
+  kills_gm_rr_solo: 1030,
+  deaths_gm_rr_solo: 424,
+  tp_gm_rr_solo: 64800,
+  topthree_gm_rr_solo: 30,
+  topfive_gm_rr_solo: 42,
+  topten_gm_rr_solo: 72,
+};
+
+describe('computeMetrics on Rapid Royale Solo', () => {
+  const solo = (slice: StatSlice) => computeFor(slice, MODES.rapidRoyaleSolo);
+
+  it('computes the whole placement ladder', () => {
+    const m = solo(soloSlice);
+    expect(m.top3Pct).toBeCloseTo((30 / 119) * 100, 6);
+    expect(m.top5Pct).toBeCloseTo((42 / 119) * 100, 6);
+    expect(m.top10Pct).toBeCloseTo((72 / 119) * 100, 6);
+  });
+
+  it('rejects a top-5 or top-10 count that cannot be real', () => {
+    expect(solo({ ...soloSlice, topfive_gm_rr_solo: 120 }).top5Pct).toBeNull(); // more than matches
+    expect(solo({ ...soloSlice, topfive_gm_rr_solo: 15 }).top5Pct).toBeNull(); // fewer than wins
+    expect(solo({ ...soloSlice, topfive_gm_rr_solo: 29 }).top5Pct).toBeNull(); // fewer than top three
+    expect(solo({ ...soloSlice, topten_gm_rr_solo: 120 }).top10Pct).toBeNull(); // more than matches
+    expect(solo({ ...soloSlice, topten_gm_rr_solo: 41 }).top10Pct).toBeNull(); // fewer than top five
+  });
+
+  it('keeps a lower rung when only a higher one is broken', () => {
+    // A bad top-ten count says nothing about the top-five count beneath it.
+    const m = solo({ ...soloSlice, topten_gm_rr_solo: 120 });
+    expect(m.top5Pct).not.toBeNull();
+    expect(m.top3Pct).not.toBeNull();
   });
 });

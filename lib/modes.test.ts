@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { MODES, boardKey, compareBoardKeys, modesForSeason, parseBoardKey } from './modes';
 
+describe('squad size', () => {
+  it('knows how many play together in each mode', () => {
+    // What the board shows depends on it: Solo has nobody to assist or revive.
+    expect(MODES.gauntlet.squadSize).toBe(4);
+    expect(MODES.rapidRoyale.squadSize).toBe(3);
+    expect(MODES.rapidRoyaleSolo.squadSize).toBe(1);
+  });
+});
+
 describe('board keys', () => {
   it('keeps the bare season key for a season\'s main board', () => {
     // Every archived board is keyed this way; renaming it would orphan them.

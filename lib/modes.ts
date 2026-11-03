@@ -25,6 +25,11 @@ export type Mode = {
   /** The per-mode counter suffix: kills_gm_<suffix>. */
   suffix: string;
   /**
+   * How many play together. 1 means nobody to assist or revive, which is
+   * why the Solo board shows no Assists column and rates no revives.
+   */
+  squadSize: number;
+  /**
    * Appended to the season to key this mode's board: Season5-solo. Absent for
    * a season's first mode, whose board keeps the bare season key — that is
    * what every board was keyed by before seasons had more than one, and the
@@ -34,13 +39,14 @@ export type Mode = {
 };
 
 export const MODES: Record<ModeKey, Mode> = {
-  gauntlet: { key: 'gauntlet', label: 'Gauntlet', gameMode: 'GraniteGauntlet0', suffix: 'gntgauntlet' },
+  gauntlet: { key: 'gauntlet', label: 'Gauntlet', gameMode: 'GraniteGauntlet0', suffix: 'gntgauntlet', squadSize: 4 },
   rapidRoyale: {
     key: 'rapidRoyale',
     label: 'Rapid Royale',
     variant: 'Trio',
     gameMode: 'GraniteRapidTrio0',
     suffix: 'rr_trio',
+    squadSize: 3,
   },
   rapidRoyaleSolo: {
     key: 'rapidRoyaleSolo',
@@ -49,6 +55,7 @@ export const MODES: Record<ModeKey, Mode> = {
     gameMode: 'GraniteRapidSolo0',
     suffix: 'rr_solo',
     boardSuffix: 'solo',
+    squadSize: 1,
   },
 };
 

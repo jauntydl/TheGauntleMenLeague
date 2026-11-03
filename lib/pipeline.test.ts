@@ -350,6 +350,8 @@ describe('buildBoard', () => {
           { name: 'matches_gm_rr_solo', value: 40, fields: dim('GraniteRapidSolo0', season) },
           { name: 'wins_gm_rr_solo', value: 4, fields: dim('GraniteRapidSolo0', season) },
           { name: 'topthree_gm_rr_solo', value: 10, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'topfive_gm_rr_solo', value: 13, fields: dim('GraniteRapidSolo0', season) },
+          { name: 'topten_gm_rr_solo', value: 29, fields: dim('GraniteRapidSolo0', season) },
           { name: 'tp_gm_rr_solo', value: 24000, fields: dim('GraniteRapidSolo0', season) },
           { name: 'kills_gm_rr_solo', value: 120, fields: dim('GraniteRapidSolo0', season) },
           { name: 'deaths_gm_rr_solo', value: 36, fields: dim('GraniteRapidSolo0', season) },
@@ -366,6 +368,8 @@ describe('buildBoard', () => {
     const solo = board.seasons['Season5-solo'][0];
     expect(solo.matches).toBe(40);
     expect(solo.top3Pct).toBe(25);
+    expect(solo.top5Pct).toBe(32.5);
+    expect(solo.top10Pct).toBe(72.5);
     expect(solo.kd).toBe(3.33);
     // Solo rates plain K/D; KDA is Trio's.
     expect(solo.kda).toBeNull();
@@ -391,6 +395,8 @@ describe('buildBoard', () => {
             { name: 'matches_gm_rr_trio', value: 85, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'wins_gm_rr_trio', value: 52, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'topthree_gm_rr_trio', value: 68, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'topfive_gm_rr_trio', value: 75, fields: dim('GraniteRapidTrio0', 'Season5') },
+            { name: 'topten_gm_rr_trio', value: 83, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'tp_gm_rr_trio', value: 60134, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'assists_gm_rr_trio', value: 446, fields: dim('GraniteRapidTrio0', 'Season5') },
             { name: 'kills_gm_rr_trio', value: 989, fields: dim('GraniteRapidTrio0', 'Season5') },
@@ -402,6 +408,9 @@ describe('buildBoard', () => {
     const row = buildBoard([dark], [rr], 'Season5').seasons.Season5[0];
     expect(row.matches).toBe(85);
     expect(row.top3Pct).toBe(80);
+    // Rounded like every other rate, so the committed JSON stays readable.
+    expect(row.top5Pct).toBe(88.24);
+    expect(row.top10Pct).toBe(97.65);
     expect(row.kda).toBe(9.76); // (989 + 446) / 147, rounded
     expect(row.kd).toBe(6.73);
     expect(row.rating).not.toBeNull();

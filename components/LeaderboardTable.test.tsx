@@ -18,7 +18,7 @@ const row = (over: Partial<BoardRow>): BoardRow => {
     eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
     matches: 20, wins: 10, losses: 10, kills: 100, headshots: 25, deaths: 50, damage: 1000,
     assists: 0, revives: 0, score: 42000, timeSec: 3600,
-    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, kda: null, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
+    winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, top5Pct: null, top10Pct: null, kda: null, revivesPerHour: 3, rating: 50, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: 1,
     ...over,
   };
   // eaId is the roster key, is unique in production, and is what the Player
@@ -279,6 +279,43 @@ describe('LeaderboardTable', () => {
       // KDA is rated; K/D stays, unmarked, for reference.
       expect(markedFields(r.container)).not.toContain('kd');
       expect(rFields).not.toContain('objPtsPerHour');
+    });
+  });
+
+  const fieldsOf = (mode: (typeof MODE_KEYS)[number]): (string | null)[] => {
+    const r = render(<LeaderboardTable mode={mode} rows={[row({ displayName: `F-${mode}` })]} />);
+    const fields = [...r.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
+    r.unmount();
+    return fields;
+  };
+
+  it('shows Solo its placement ladder — Top 5 and Top 10, and no Top 3', () => {
+    withViewport([], () => {
+      const fields = fieldsOf('rapidRoyaleSolo');
+      expect(fields).toEqual(expect.arrayContaining(['top5Pct', 'top10Pct']));
+      expect(fields).not.toContain('top3Pct');
+      // Trio is unchanged: top three, and neither of the wider rungs.
+      const trio = fieldsOf('rapidRoyale');
+      expect(trio).toContain('top3Pct');
+      expect(trio).not.toContain('top5Pct');
+      expect(trio).not.toContain('top10Pct');
+    });
+  });
+
+  it('labels the Solo placement columns', () => {
+    withViewport([], () => {
+      render(<LeaderboardTable mode="rapidRoyaleSolo" rows={[row({ displayName: 'Labels' })]} />);
+      expect(screen.getByText('Top 5')).toBeInTheDocument();
+      expect(screen.getByText('Top 10')).toBeInTheDocument();
+    });
+  });
+
+  it('shows no Assists column on Solo, where nobody has a kill to assist', () => {
+    withViewport([], () => {
+      expect(fieldsOf('rapidRoyaleSolo')).not.toContain('assists');
+      // The squad modes keep it: in Trio it is the count behind KDA.
+      expect(fieldsOf('rapidRoyale')).toContain('assists');
+      expect(fieldsOf('gauntlet')).toContain('assists');
     });
   });
 

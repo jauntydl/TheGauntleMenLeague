@@ -213,6 +213,22 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     renderCell: (p) => fmtPct(p.row.top3Pct),
     getSortComparator: nullsLastComparator,
   },
+  top5Pct: {
+    field: 'top5Pct',
+    headerName: 'Top 5',
+    width: 72,
+    description: 'Share of matches finished in the top five',
+    renderCell: (p) => fmtPct(p.row.top5Pct),
+    getSortComparator: nullsLastComparator,
+  },
+  top10Pct: {
+    field: 'top10Pct',
+    headerName: 'Top 10',
+    width: 76,
+    description: 'Share of matches finished in the top ten',
+    renderCell: (p) => fmtPct(p.row.top10Pct),
+    getSortComparator: nullsLastComparator,
+  },
   objPtsPerHour: {
     field: 'objPtsPerHour',
     headerName: 'OBJ/h',
@@ -279,6 +295,8 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
 const RATED_LABEL: Record<RatedMetric, string> = {
   winPct: 'win rate',
   top3Pct: 'top-three rate',
+  top5Pct: 'top-five rate',
+  top10Pct: 'top-ten rate',
   objPtsPerHour: 'objectives',
   kd: 'K/D',
   kda: 'KDA',
@@ -502,12 +520,20 @@ export function LeaderboardTable({
         width: 80,
         renderCell: (p) => fmtInt(p.row.kills),
       },
-      {
-        field: 'assists',
-        headerName: 'Assists',
-        width: 80,
-        renderCell: (p) => fmtInt(p.row.assists),
-      },
+      // Only where there is a squad to assist. In Solo an assist is damage
+      // on a kill somebody else took — the column read 0 or 1 all the way
+      // down — so it was dropped there (2026-11-03). Trio keeps it as the
+      // count behind KDA.
+      ...(MODES[mode].squadSize > 1
+        ? [
+            {
+              field: 'assists',
+              headerName: 'Assists',
+              width: 80,
+              renderCell: (p: { row: BoardRow }) => fmtInt(p.row.assists),
+            } satisfies GridColDef<BoardRow>,
+          ]
+        : []),
       {
         field: 'headshots',
         headerName: 'HS',

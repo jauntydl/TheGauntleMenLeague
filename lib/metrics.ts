@@ -115,12 +115,22 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
   // Kept only because it is already in the committed JSON.
   const objActions = own('obj_armed') + own('obj_defended') + own('obj_destroyed') + own('obj_disarmed');
 
-  // Finishing in the top three, Rapid Royale only. Placement is the best input
-  // a battle royale has, but Gauntlet's placement counters did not add up —
-  // one player showed more top-ten finishes than matches. So the figure must
-  // sit between the wins and the matches, which it has to if it is real.
+  // Finishing in the top three, five and ten, Rapid Royale only. Placement is
+  // the best input a battle royale has, but Gauntlet's placement counters did
+  // not add up — one player showed more top-ten finishes than matches. So
+  // each figure must sit between the wins and the matches, and a wider rung
+  // can never be smaller than the one inside it (a top-five count below the
+  // top-three count cannot be real), which they have to if they are real. A
+  // broken rung takes the wider rungs with it, since they are measured
+  // against it, but never the tighter ones beneath.
   const top3 = own('topthree');
-  const top3Trusted = rapidRoyale && matches > 0 && top3 >= wins && top3 <= matches;
+  const top5 = own('topfive');
+  const top10 = own('topten');
+  const placementTrusted = (count: number, inner: number): boolean =>
+    rapidRoyale && matches > 0 && count >= wins && count >= inner && count <= matches;
+  const top3Trusted = placementTrusted(top3, 0);
+  const top5Trusted = placementTrusted(top5, top3);
+  const top10Trusted = placementTrusted(top10, top5);
 
   // Playstyle, as a share of weapon kills rather than of all kills: melee,
   // grenades, gadgets and vehicles account for the rest, so weapon classes
@@ -172,6 +182,8 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
     // fabricated zero would sit that player at the bottom of a 25% percentile.
     objPtsPerHour: hours > 0 && objPts > 0 ? objPts / hours : null,
     top3Pct: top3Trusted ? (top3 / matches) * 100 : null,
+    top5Pct: top5Trusted ? (top5 / matches) * 100 : null,
+    top10Pct: top10Trusted ? (top10 / matches) * 100 : null,
     revivesPerHour: hours > 0 ? revives / hours : null,
     // Both filled in by rateAll once the whole field is known.
     rating: null,

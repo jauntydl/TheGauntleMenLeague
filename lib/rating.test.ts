@@ -19,7 +19,7 @@ const row = (over: Partial<BoardRow>): BoardRow => ({
   eaId: 'x', displayName: 'X', platform: 'pc', region: 'NA', mainMode: 'gauntlet',
   matches: 50, wins: 25, losses: 25, kills: 100, headshots: 25, deaths: 50, damage: 1000,
   assists: 0, revives: 0, score: 42000, timeSec: 3600,
-  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, kda: null,
+  winPct: 50, kd: 2, killsPerMatch: 5, kpm: 1, dpm: 10, spm: 700, objPerMatch: 1.5, objPts: 900, objPtsPerHour: 60, top3Pct: null, top5Pct: null, top10Pct: null, kda: null,
   revivesPerHour: 3, rating: null, standouts: [], sniperPct: 20, autoPct: 75, sniperKills: 20, autoKills: 75, sniperPerMatch: 1, autoPerMatch: 3.75, jetPct: 0, rank: null,
   ...over,
 });
@@ -139,13 +139,17 @@ describe('rateAll', () => {
     const g = RATING_WEIGHTS.gauntlet;
     expect(g.winPct).toBe(Math.max(...Object.values(g)));
     expect(g.objPtsPerHour).toBe(Math.max(...Object.values(g).filter((w) => w !== g.winPct)));
-    // Rapid Royale: every win is a top three, so placement splits evenly
-    // rather than counting the win twice.
-    for (const mode of ['rapidRoyale', 'rapidRoyaleSolo'] as const) {
-      expect(RATING_WEIGHTS[mode].winPct).toBe(RATING_WEIGHTS[mode].top3Pct);
-    }
-    // Solo leans on kills.
+    // Trio: every win is a top three, so placement splits evenly rather
+    // than counting the win twice.
+    expect(RATING_WEIGHTS.rapidRoyale.winPct).toBe(RATING_WEIGHTS.rapidRoyale.top3Pct);
+    // Solo: a ladder, each rung lighter than the one above — a win earns all
+    // three, a fourth place two, an eighth place one. Placement stays at the
+    // 30% Trio holds it to.
     const s = RATING_WEIGHTS.rapidRoyaleSolo;
+    expect(s.winPct!).toBeGreaterThan(s.top5Pct!);
+    expect(s.top5Pct!).toBeGreaterThan(s.top10Pct!);
+    expect(s.winPct! + s.top5Pct! + s.top10Pct!).toBeCloseTo(0.3, 6);
+    // Solo leans on kills.
     expect(s.kpm).toBe(Math.max(...Object.values(s)));
   });
 
@@ -159,7 +163,7 @@ describe('rateAll', () => {
       'winPct', 'top3Pct', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
     expect(Object.keys(RATING_WEIGHTS.rapidRoyaleSolo)).toEqual([
-      'winPct', 'top3Pct', 'kpm', 'kd', 'spm', 'dpm',
+      'winPct', 'top5Pct', 'top10Pct', 'kpm', 'kd', 'spm', 'dpm',
     ]);
   });
 
@@ -169,11 +173,36 @@ describe('rateAll', () => {
     expect(RATING_WEIGHTS.rapidRoyaleSolo.objPtsPerHour).toBeUndefined();
   });
 
-  it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five out of both', () => {
+  it('rates Solo placement on top five and top ten, not top three (2026-11-03)', () => {
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.top3Pct).toBeUndefined();
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.top5Pct).toBeDefined();
+    expect(RATING_WEIGHTS.rapidRoyaleSolo.top10Pct).toBeDefined();
+  });
+
+  it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five and ten out of Trio', () => {
     expect(RATING_WEIGHTS.rapidRoyale.objPtsPerHour).toBeUndefined();
     // Rapid Royale rates KDA in K/D's place; rating both would count kills twice.
     expect(RATING_WEIGHTS.rapidRoyale.kd).toBeUndefined();
-    expect(Object.keys(RATING_WEIGHTS.gauntlet)).not.toContain('top3Pct');
+    // Trio keeps top three alone: top five would nest the same finish a third time.
+    expect(RATING_WEIGHTS.rapidRoyale.top5Pct).toBeUndefined();
+    expect(RATING_WEIGHTS.rapidRoyale.top10Pct).toBeUndefined();
+    for (const m of ['top3Pct', 'top5Pct', 'top10Pct']) {
+      expect(Object.keys(RATING_WEIGHTS.gauntlet)).not.toContain(m);
+    }
+  });
+
+  it('rates a Solo field on its placement ladder, and not on top three', () => {
+    const [low, high] = rateFor([
+      row({ eaId: 'low', top5Pct: 30, top10Pct: 50 }),
+      row({ eaId: 'high', top5Pct: 60, top10Pct: 80 }),
+    ], 'rapidRoyaleSolo');
+    expect(high.rating!).toBeGreaterThan(low.rating!);
+    // Top three is on every Solo row but rates nothing there.
+    const [a, b] = rateFor([
+      row({ eaId: 'a', top3Pct: 10 }),
+      row({ eaId: 'b', top3Pct: 90 }),
+    ], 'rapidRoyaleSolo');
+    expect(a.rating).toBe(b.rating);
   });
 
   it('lists a mode\'s rated metrics heaviest first', () => {

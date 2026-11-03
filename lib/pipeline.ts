@@ -118,6 +118,8 @@ export function buildBoard(
         objPts: roundRate(metrics.objPts) ?? 0,
         objPtsPerHour: roundRate(metrics.objPtsPerHour),
         top3Pct: roundRate(metrics.top3Pct),
+        top5Pct: roundRate(metrics.top5Pct),
+        top10Pct: roundRate(metrics.top10Pct),
         revivesPerHour: roundRate(metrics.revivesPerHour),
         sniperPct: roundRate(metrics.sniperPct),
         autoPct: roundRate(metrics.autoPct),

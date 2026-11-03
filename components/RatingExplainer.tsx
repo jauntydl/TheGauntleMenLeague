@@ -47,6 +47,14 @@ const REASONS: Record<RatedMetric, { label: string; why: string }> = {
     label: 'Top-three rate',
     why: 'Going deep every match, not just winning some and dropping early in the rest.',
   },
+  top5Pct: {
+    label: 'Top-five rate',
+    why: 'Going deep every match in a lobby of many. A win is a top five too, so it earns this rung as well.',
+  },
+  top10Pct: {
+    label: 'Top-ten rate',
+    why: 'Some credit for outlasting most of the lobby, even in a match that ended short of the top five.',
+  },
   dpm: { label: 'Damage per minute', why: 'Counts the shots that set up a teammate’s kill — lightly, since the kill itself is already counted.' },
   revivesPerHour: {
     label: 'Revives per hour',
@@ -136,13 +144,21 @@ export function RatingExplainer({
       </Typography>
       <Typography sx={{ mb: 2 }}>
         <strong>Finishing position</strong> is the best input a battle royale
-        has — placing second every time beats alternating first and last. Rapid
-        Royale counts it twice over, at the same weight each: the win, and
-        finishing in the top three, which is what separates someone who goes
-        deep every match from someone who wins a few and drops early in the
-        rest. Every win is already a top three, so weighting the win more would
-        count it twice. Top five was left out; every top three is already a top
+        has — placing second every time beats alternating first and last. Trio
+        counts it twice over, at the same weight each: the win, and finishing
+        in the top three, which is what separates someone who goes deep every
+        match from someone who wins a few and drops early in the rest. Every
+        win is already a top three, so weighting the win more would count it
+        twice. Top five was left out of Trio; every top three is already a top
         five.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        Solo fields far more players, so it counts placement as a ladder: the
+        win, the top five and the top ten, each rung lighter than the one
+        above. The rungs nest — a win is also a top five and a top ten — so
+        every finish earns each rung it reached: an eighth place scores one, a
+        fourth place two, a win all three. Top three drops out of the Solo
+        rating; the top five takes its place.
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Together they are held to under a third of the rating on purpose. In
@@ -153,8 +169,9 @@ export function RatingExplainer({
         leans hardest on kills, and rates plain K/D where Trio rates KDA.
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        The figure is checked before it counts: a top-three count must sit
-        between your wins and your matches, as it has to if it is real.
+        Each figure is checked before it counts: a placement count must sit
+        between your wins and your matches, and a wider rung can never be
+        smaller than the one inside it, as they have to if they are real.
         Gauntlet&rsquo;s placement figures failed exactly that — one player
         showed more top-ten finishes than matches played — so Gauntlet seasons
         were never ranked on placement.

@@ -25,7 +25,7 @@ data is committed, so a page load can never hit the free community API.
 
 Current state (2026-10-31): 142 roster members · Season 5 Trio has 55
 ranked, 24 provisional; Solo has 8 ranked, 46 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 333 tests passing · `tsc --noEmit` clean · deployed.
+Seasons 3–4 archived, Season 2 dropped · 344 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
@@ -69,7 +69,11 @@ Rapid Royale suffix notes (verified 2026-10-27): `rr_all` matches `rr_trio`
 field for field (likely a parent rollup); `granitebr` is a battle-royale rollup
 that differs between the squad BR and Rapid Royale slices — never read it. The
 mode has **no objective counters** (only `intel_pickup`), and has placement
-counters (`topthree`, `topfive`, `topten`; `topten` was 100% for everyone).
+counters (`topthree`, `topfive`, `topten`). In Trio `topten` sat near 100%
+for everyone, so Trio rates `topthree` alone; Solo lobbies are bigger (top
+ten ran 52–76% for the players checked on 2026-11-03), so Solo rates
+`topfive` and `topten`. All three rates are computed on every Rapid Royale
+row, whether or not the mode rates them.
 
 `NAME_OVERRIDES` in `lib/naming.ts` hand-sets a displayed name (Antimere99 →
 OO, HoRR1DDD → D3VouRR), applied at render — not in `roster.json`, whose `inGameName` the build
@@ -226,21 +230,29 @@ cannot quietly disagree with the code.
 Placement is held to 30% deliberately: a win and a top three are shared with
 two teammates, so they say as much about who you queued with as about you.
 
-**Rapid Royale Solo (Season 5 on), set 2026-10-27:**
+**Rapid Royale Solo (Season 5 on), set 2026-10-27; placement retuned
+2026-11-03** ("account for TOP5 instead of TOP3 and also give some credit
+for TOP10" — the user's words):
 
 | Weight | Metric | Why |
 |---|---|---|
-| 15% | Win rate | Even split with top 3, as in Trio |
-| 15% | Top-3 rate | |
+| 15% | Win rate | Top of a placement ladder — win 15 / top 5 10 / top 10 5, still 30% in all. The rungs nest, so a win earns all three, a 4th place two, an 8th place one |
+| 10% | Top-5 rate | In place of top 3. Guarded like top 3, and must also be ≥ the top-3 count |
+| 5% | Top-10 rate | "Some credit" for outlasting most of the lobby. The 15/10/5 split inside the 30% was my call, not the user's numbers — a one-line retune |
 | 25% | Kills per minute | The user asked for kills emphasised |
 | 20% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows |
 | 15% | Score per minute | |
 | 10% | Damage per minute | |
 
-No revives in Solo — nobody to pick up.
-Tried and dropped, don't re-add without asking: **top-5 rate** (nests a third
-time), **objective score per minute** (`score_objective_total`), **assists per
-minute** (double-counts assists once KDA carries them). Kricked's objective
+No revives in Solo — nobody to pick up. **No Assists column on Solo either**
+(2026-11-03, "get rid of Assists"): a Solo assist is damage on someone else's
+kill, and the column read 0 or 1 all the way down. `MODES[mode].squadSize`
+(4 / 3 / 1) is what hides it; Trio keeps the column as the count behind KDA.
+`top3Pct` is still computed on Solo rows, unrated and not shown.
+Tried and dropped, don't re-add without asking: **top-5 rate in Trio** (nests a
+third time there — Solo rates it since 2026-11-03), **objective score per
+minute** (`score_objective_total`), **assists per minute** (double-counts
+assists once KDA carries them). Kricked's objective
 formula is Gauntlet-only — Rapid Royale has nothing for it to count.
 
 **Gauntlet (Seasons 3–4, archived), set 2026-09-15.** Frozen with the seasons;
@@ -374,6 +386,7 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 | Badges are **top 10%**, not an absolute floor | Absolute floors decay into noise — a 65%-automatic-kills floor sounded selective and covered nearly the whole board. A tenth of the field stays a tenth whatever the meta does |
 | ✈ badge instead of excluding jet players | The two Gauntlet variants can't be separated; be honest rather than fabricate a split |
 | **No filters at all** (2026-09-13) | Region / platform / main-mode chips were removed at the user's request — the board is Gauntlet-only, so slicing by community metadata added confusion rather than signal. `region`, `platform` and `mainMode` are still parsed into `roster.json` and carried on each row, so re-adding a filter later is cheap |
+| **Solo placement is a ladder**: win 15 / top 5 10 / top 10 5 (2026-11-03) | The user asked for top 5 in place of top 3 "and some credit for top 10". A Solo lobby is big enough that top ten ran 52–76%, where Trio's sat near 100% — so Trio stays on top 3 alone |
 | `getRowId` = `eaId`, not a composite | `eaId` is the roster key; a duplicate should throw loudly, not be papered over |
 | GitHub Actions, not Vercel Cron | Committing each run gives free **git snapshot history**, which makes a rolling-form board possible later with no redesign. Vercel Hobby caps cron at daily anyway |
 | Retry only 5xx + transport errors | 422 is what this API returns for a malformed bulk body — masking it behind retries turns an instant diagnosable failure into a slow confusing one |

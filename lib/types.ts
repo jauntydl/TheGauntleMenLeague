@@ -90,6 +90,11 @@ export type Metrics = {
   /** Share of matches finished in the top three, Rapid Royale only. Null
    *  when the placement counter is inconsistent with wins and matches. */
   top3Pct: number | null;
+  /** Top five and top ten, under the same guard and also no smaller than the
+   *  rung inside them. Solo rates these two (2026-11-03); Trio carries them
+   *  unrated. Absent on rows built before that date. */
+  top5Pct: number | null;
+  top10Pct: number | null;
   /** Overall rating, 0-100, percentile-weighted against the ranked field. */
   rating: number | null;
   /** The trait this player is most exceptional at, if any names them. */

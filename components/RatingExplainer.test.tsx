@@ -40,6 +40,17 @@ describe('RatingExplainer', () => {
     expect(rowFor('Rapid Royale Solo', 'Kills per minute')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.kpm! * 100)}%`,
     );
+    expect(rowFor('Rapid Royale Solo', 'Top-five rate')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.top5Pct! * 100)}%`,
+    );
+    expect(rowFor('Rapid Royale Solo', 'Top-ten rate')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.top10Pct! * 100)}%`,
+    );
+  });
+
+  it('explains Solo\'s placement ladder beside Trio\'s top three', () => {
+    render(<RatingExplainer />);
+    expect(screen.getByText(/top ten/i)).toBeInTheDocument();
   });
 
   it('credits the objective formula to its author and states it in full', () => {

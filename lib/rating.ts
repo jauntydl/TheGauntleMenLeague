@@ -68,17 +68,29 @@ const RAPID_ROYALE_WEIGHTS = {
 } as const;
 
 /**
- * Rapid Royale Solo (Season 5 on). Set 2026-10-27.
+ * Rapid Royale Solo (Season 5 on). Set 2026-10-27; placement retuned
+ * 2026-11-03.
  *
- * Placement splits evenly at 15% each, as in Trio. The rest leans on kills:
- * kills per minute is the heaviest weight at 25%, then K/D at 20%. Plain K/D
- * rather than KDA, because with no teammates an assist is only damage on a
- * kill somebody else took. There is nobody to revive, so revives are not
- * rated; their share went to the kills.
+ * Placement is 30%, as in Trio, but as a ladder rather than an even split:
+ * the win at 15%, finishing top five at 10%, top ten at 5%. The rungs nest —
+ * a win is also a top five and a top ten — so every finish earns each rung
+ * it reached: an eighth place scores one, a fourth place two, a win all
+ * three. Top three was the second rung until 2026-11-03, when the user asked
+ * for top five in its place with some credit for top ten. Solo fields far
+ * more than ten, so the wider rungs still separate people: top ten ran
+ * 52–76% for the players checked, where Trio's sat near 100%. Top three is
+ * still computed for every Solo row, unrated. The split within the 30% is my
+ * call — a one-line retune.
+ *
+ * The rest leans on kills: kills per minute is the heaviest weight at 25%,
+ * then K/D at 20%. Plain K/D rather than KDA, because with no teammates an
+ * assist is only damage on a kill somebody else took. There is nobody to
+ * revive, so revives are not rated; their share went to the kills.
  */
 const RAPID_ROYALE_SOLO_WEIGHTS = {
   winPct: 0.15,
-  top3Pct: 0.15,
+  top5Pct: 0.1,
+  top10Pct: 0.05,
   kpm: 0.25,
   kd: 0.2,
   spm: 0.15,
