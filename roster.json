@@ -1754,5 +1754,17 @@
     "source": "selfserve",
     "inGameName": "YOURNIGHTMARE987",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "ramona1501",
+    "displayName": "ramona1501",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1011088971782",
+    "nucleusId": "1024437971782",
+    "source": "selfserve",
+    "inGameName": "ramona1501",
+    "inGamePlatform": "ea"
   }
 ]
