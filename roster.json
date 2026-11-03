@@ -1730,5 +1730,17 @@
     "source": "selfserve",
     "inGameName": "Shadowduck",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Shadowduck06",
+    "displayName": "Shadowduck06",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009241286979",
+    "nucleusId": "1020300486979",
+    "source": "selfserve",
+    "inGameName": "Shadowduck",
+    "inGamePlatform": "steam"
   }
 ]
