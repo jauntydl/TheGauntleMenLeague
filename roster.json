@@ -1742,5 +1742,17 @@
     "source": "selfserve",
     "inGameName": "Shadowduck",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "YOURNIGHTMARE987",
+    "displayName": "YOURNIGHTMARE987",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1005411252757",
+    "nucleusId": "1011065452757",
+    "source": "selfserve",
+    "inGameName": "YOURNIGHTMARE987",
+    "inGamePlatform": "ea"
   }
 ]
