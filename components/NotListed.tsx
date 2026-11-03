@@ -29,7 +29,7 @@ export function NotListed({ entries }: { entries: UnresolvedEntry[] }) {
         the stats service failing to answer for you on the last refresh. The second
         is a technical issue on the service&apos;s side, nothing you did, and it
         clears by itself — every member is tried twice per refresh, and refreshes
-        run every four hours.
+        run every two hours.
       </Typography>
 
       <Typography sx={{ mb: 2 }}>

@@ -11,21 +11,21 @@ describe('nextRefreshAfter', () => {
 
   it('gives the slot after when the build finished past one', () => {
     expect(nextRefreshAfter(new Date('2026-09-15T09:30:00Z')).toISOString()).toBe(
-      '2026-09-15T12:23:00.000Z',
+      '2026-09-15T10:23:00.000Z',
     );
   });
 
   it('treats a build exactly on the scheduled minute as that run, not the next', () => {
     expect(nextRefreshAfter(new Date('2026-09-15T08:23:00Z')).toISOString()).toBe(
-      '2026-09-15T12:23:00.000Z',
+      '2026-09-15T10:23:00.000Z',
     );
   });
 
   it('rolls over a day, a month and a year', () => {
-    expect(nextRefreshAfter(new Date('2026-09-15T20:30:00Z')).toISOString()).toBe(
+    expect(nextRefreshAfter(new Date('2026-09-15T22:30:00Z')).toISOString()).toBe(
       '2026-09-16T00:23:00.000Z',
     );
-    expect(nextRefreshAfter(new Date('2026-09-30T22:00:00Z')).toISOString()).toBe(
+    expect(nextRefreshAfter(new Date('2026-09-30T22:30:00Z')).toISOString()).toBe(
       '2026-10-01T00:23:00.000Z',
     );
     expect(nextRefreshAfter(new Date('2026-12-31T23:00:00Z')).toISOString()).toBe(

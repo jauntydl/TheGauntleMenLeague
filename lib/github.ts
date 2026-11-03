@@ -69,10 +69,14 @@ async function gh(
   if (!res.ok) {
     // GitHub answers a lost race with 409 on the blob/tree calls and 422 on
     // the ref update; both mean the same thing to a caller that must retry.
-    if (res.status === 409 || res.status === 422) throw new RefMovedError();
+    // Only on the git data calls: a 422 from the Actions API means something
+    // else entirely (e.g. a workflow with no workflow_dispatch trigger).
+    if (path.includes('/git/') && (res.status === 409 || res.status === 422)) throw new RefMovedError();
     const body = await res.text();
     throw new Error(`GitHub ${init.method ?? 'GET'} ${path} failed: ${res.status} ${body.slice(0, 200)}`);
   }
+  // A workflow dispatch answers 204 with no body.
+  if (res.status === 204) return null;
   return res.json();
 }
 
@@ -151,4 +155,49 @@ export async function commitFiles(
   );
 
   return created.sha;
+}
+
+/** The newest run of a workflow, as far as the refresh cooldown cares. */
+export type WorkflowRun = {
+  /** When the run was created (queued), ISO 8601. */
+  createdAt: string;
+  /** queued, in_progress, completed, … */
+  status: string;
+};
+
+/**
+ * The most recent run of `workflow` (its file name, e.g. refresh.yml), of any
+ * trigger — schedule or manual — or null if it has never run.
+ *
+ * Read from GitHub rather than remembered in the function: serverless
+ * instances share no memory, so only GitHub knows when the last run began.
+ */
+export async function latestWorkflowRun(
+  cfg: RepoConfig,
+  workflow: string,
+  deps: Deps = {},
+): Promise<WorkflowRun | null> {
+  const body = (await gh(
+    cfg,
+    `/repos/${cfg.repo}/actions/workflows/${encodeURIComponent(workflow)}/runs?per_page=1`,
+    { method: 'GET' },
+    deps,
+  )) as { workflow_runs?: { created_at: string; status: string }[] };
+  const run = body.workflow_runs?.[0];
+  return run ? { createdAt: run.created_at, status: run.status } : null;
+}
+
+/**
+ * Start `workflow` on the configured branch, as its workflow_dispatch trigger.
+ *
+ * Needs the token's Actions: Read and write permission, on top of the
+ * Contents permission signups use.
+ */
+export async function dispatchWorkflow(cfg: RepoConfig, workflow: string, deps: Deps = {}): Promise<void> {
+  await gh(
+    cfg,
+    `/repos/${cfg.repo}/actions/workflows/${encodeURIComponent(workflow)}/dispatches`,
+    { method: 'POST', body: JSON.stringify({ ref: cfg.branch }) },
+    deps,
+  );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { commitFiles, readConfig, readFile, RefMovedError } from './github';
+import { commitFiles, dispatchWorkflow, latestWorkflowRun, readConfig, readFile, RefMovedError } from './github';
 
 const cfg = { repo: 'owner/repo', branch: 'main', token: 'tok' };
 
@@ -117,5 +117,42 @@ describe('commitFiles', () => {
   it('surfaces other failures with their status', async () => {
     const { deps } = fakeGithub({ 'git/trees': { status: 500, body: { message: 'boom' } } });
     await expect(commitFiles(cfg, [{ path: 'a', content: 'b' }], 'msg', deps)).rejects.toThrow('500');
+  });
+});
+
+describe('latestWorkflowRun', () => {
+  it('returns the newest run of the workflow', async () => {
+    const { calls, deps } = fakeGithub({
+      'actions/workflows/refresh.yml/runs': {
+        body: { workflow_runs: [{ created_at: '2026-11-02T10:00:00Z', status: 'completed', id: 1 }] },
+      },
+    });
+    expect(await latestWorkflowRun(cfg, 'refresh.yml', deps)).toEqual({
+      createdAt: '2026-11-02T10:00:00Z',
+      status: 'completed',
+    });
+    expect(calls[0].url).toContain('per_page=1');
+  });
+
+  it('returns null for a workflow that has never run', async () => {
+    const { deps } = fakeGithub({ 'actions/workflows/refresh.yml/runs': { body: { workflow_runs: [] } } });
+    expect(await latestWorkflowRun(cfg, 'refresh.yml', deps)).toBeNull();
+  });
+});
+
+describe('dispatchWorkflow', () => {
+  it('starts the workflow on the configured branch and accepts an empty 204', async () => {
+    const { calls, deps } = fakeGithub({ 'actions/workflows/refresh.yml/dispatches': { status: 204, body: null } });
+    await dispatchWorkflow(cfg, 'refresh.yml', deps);
+    expect(calls[0]).toMatchObject({ method: 'POST', body: { ref: 'main' } });
+  });
+
+  it('does not mistake an Actions 422 for a lost commit race', async () => {
+    // 422 here means the workflow cannot be dispatched — retrying a commit
+    // would be the wrong response to it.
+    const { deps } = fakeGithub({ 'actions/workflows/refresh.yml/dispatches': { status: 422, body: {} } });
+    const err = await dispatchWorkflow(cfg, 'refresh.yml', deps).catch((e) => e);
+    expect(err).not.toBeInstanceOf(RefMovedError);
+    expect(String(err)).toContain('422');
   });
 });

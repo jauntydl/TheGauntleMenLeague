@@ -1,7 +1,7 @@
 /**
  * When the board refreshes its stats.
  *
- * The workflow runs every fourth hour at :23 UTC (.github/workflows/refresh.yml).
+ * The workflow runs every second hour at :23 UTC (.github/workflows/refresh.yml).
  * This module is the single place that knows it, so the page and the cron
  * cannot quietly disagree about when the next refresh lands.
  *
@@ -12,7 +12,7 @@
  */
 
 /** Must match the cron in .github/workflows/refresh.yml. */
-export const REFRESH_EVERY_HOURS = 4;
+export const REFRESH_EVERY_HOURS = 2;
 export const REFRESH_MINUTE_UTC = 23;
 
 /**

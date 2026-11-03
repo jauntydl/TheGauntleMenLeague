@@ -2,7 +2,7 @@ name: Stats refresh
 
 on:
   schedule:
-    # Every four hours at :23 UTC (00:23, 04:23, … 20:23). gametools caches
+    # Every two hours at :23 UTC (00:23, 02:23, … 22:23). gametools caches
     # upstream for 10 minutes, so exact timing does not matter.
     #
     # Deliberately NOT on the hour. GitHub runs scheduled workflows on shared
@@ -14,8 +14,16 @@ on:
     # Four-hourly rather than daily since 2026-10-31. With one slot a day, a
     # run that slipped by seven hours or died on an API hiccup cost the board
     # a whole day; five such days in a row left it stale from Oct 25 to 31.
-    - cron: '23 */4 * * *'
+    # Two-hourly since 2026-11-02 (the user's call), alongside the owner's
+    # hidden manual refresh (app/api/refresh), which dispatches this workflow.
+    - cron: '23 */2 * * *'
   workflow_dispatch:
+
+# A manual refresh can land while a scheduled one is running; queue it behind
+# rather than racing it to push. Never cancel: a cancelled run loses its data.
+concurrency:
+  group: stats-refresh
+  cancel-in-progress: false
 
 permissions:
   # Only needs to push the regenerated data. No API keys: gametools is

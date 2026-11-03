@@ -13,6 +13,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { ThemeProvider, alpha } from '@mui/material/styles';
 import { LeaderboardTable } from './LeaderboardTable';
+import { SecretRefresh } from './SecretRefresh';
 import { formatEastern, nextRefreshAfter } from '@/lib/schedule';
 import { boardKey, modeForSeason, modesForSeason, type ModeKey } from '@/lib/modes';
 import type { BoardFile } from '@/lib/types';
@@ -102,7 +103,9 @@ export function BoardView({ board }: { board: BoardFile }) {
               derived from builtAt so the server and the browser render the
               same string. "Stats read" rather than "updated": a signup adds a
               player without re-reading anyone else's stats. "after" because
-              the job is scheduled, not guaranteed — see lib/schedule.ts. */}
+              the job is scheduled, not guaranteed — see lib/schedule.ts.
+              Five quick taps on it open the owner's manual refresh. */}
+          <SecretRefresh>
           <Chip
             size="small"
             variant="outlined"
@@ -117,6 +120,7 @@ export function BoardView({ board }: { board: BoardFile }) {
               '& .MuiChip-label': { whiteSpace: 'normal', py: 0.4, lineHeight: 1.35 },
             }}
           />
+          </SecretRefresh>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
