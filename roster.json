@@ -1706,5 +1706,17 @@
     "source": "selfserve",
     "inGameName": "Clam_inspection",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "TRAFIK1391",
+    "displayName": "TRAFIK1391",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1003218225332",
+    "nucleusId": "1006165625332",
+    "source": "selfserve",
+    "inGameName": "TRAFIK1391",
+    "inGamePlatform": "ea"
   }
 ]
