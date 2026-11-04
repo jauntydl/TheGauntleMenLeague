@@ -1778,5 +1778,17 @@
     "source": "selfserve",
     "inGameName": "GH0STMX",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "DOES2017",
+    "displayName": "DOES2017",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1855770718",
+    "nucleusId": "1004923247261",
+    "source": "selfserve",
+    "inGameName": "DOES2017",
+    "inGamePlatform": "ea"
   }
 ]
