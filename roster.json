@@ -1814,5 +1814,17 @@
     "source": "selfserve",
     "inGameName": "LINUX23A4",
     "inGamePlatform": "steam"
+  },
+  {
+    "eaId": "Alfredo1396",
+    "displayName": "Alfredo1396",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1010728546397",
+    "nucleusId": "1023359546397",
+    "source": "selfserve",
+    "inGameName": "Alfredo1396",
+    "inGamePlatform": "ea"
   }
 ]
