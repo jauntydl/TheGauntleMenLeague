@@ -1766,5 +1766,17 @@
     "source": "selfserve",
     "inGameName": "ramona1501",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "GH0STMX",
+    "displayName": "GH0STMX",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "863545179",
+    "nucleusId": "2351374757",
+    "source": "selfserve",
+    "inGameName": "GH0STMX",
+    "inGamePlatform": "ea"
   }
 ]
