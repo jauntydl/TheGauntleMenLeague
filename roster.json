@@ -1802,5 +1802,17 @@
     "source": "selfserve",
     "inGameName": "PIPXMUYGRANDE",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "LINUX23A4",
+    "displayName": "LINUX23A4",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009708812252",
+    "nucleusId": "1021124412252",
+    "source": "selfserve",
+    "inGameName": "LINUX23A4",
+    "inGamePlatform": "steam"
   }
 ]
