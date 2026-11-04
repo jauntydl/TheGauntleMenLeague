@@ -1826,5 +1826,17 @@
     "source": "selfserve",
     "inGameName": "Alfredo1396",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Topis91",
+    "displayName": "Topis91",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1003786161988",
+    "nucleusId": "1007296561988",
+    "source": "selfserve",
+    "inGameName": "Topis91",
+    "inGamePlatform": "ea"
   }
 ]
