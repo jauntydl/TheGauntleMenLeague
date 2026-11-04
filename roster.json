@@ -1850,5 +1850,17 @@
     "source": "selfserve",
     "inGameName": "jems615",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Hellscyth",
+    "displayName": "Hellscyth",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1006861026523",
+    "nucleusId": "1014918826523",
+    "source": "selfserve",
+    "inGameName": "Hellscyth",
+    "inGamePlatform": "ea"
   }
 ]
