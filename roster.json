@@ -1838,5 +1838,17 @@
     "source": "selfserve",
     "inGameName": "Topis91",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "jems615",
+    "displayName": "jems615",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1004906207490",
+    "nucleusId": "1009708407490",
+    "source": "selfserve",
+    "inGameName": "jems615",
+    "inGamePlatform": "ea"
   }
 ]
