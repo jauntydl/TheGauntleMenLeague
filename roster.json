@@ -1790,5 +1790,17 @@
     "source": "selfserve",
     "inGameName": "DOES2017",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "PIPXMUYGRANDE",
+    "displayName": "PIPXMUYGRANDE",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1009498088088",
+    "nucleusId": "1019801088088",
+    "source": "selfserve",
+    "inGameName": "PIPXMUYGRANDE",
+    "inGamePlatform": "ea"
   }
 ]
