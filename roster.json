@@ -1862,5 +1862,17 @@
     "source": "selfserve",
     "inGameName": "Hellscyth",
     "inGamePlatform": "ea"
+  },
+  {
+    "eaId": "Maluma020617",
+    "displayName": "Maluma020617",
+    "platform": "pc",
+    "region": "unknown",
+    "mainMode": "gauntlet",
+    "personaId": "1008928354043",
+    "nucleusId": "1018756554043",
+    "source": "selfserve",
+    "inGameName": "Maluma020617",
+    "inGamePlatform": "ea"
   }
 ]
