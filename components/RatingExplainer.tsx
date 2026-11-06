@@ -26,6 +26,10 @@ import { MODE_ACCENT } from '@/app/accents';
  */
 const REASONS: Record<RatedMetric, { label: string; why: string }> = {
   winPct: { label: 'Win rate', why: 'Last one standing is the whole point of the mode.' },
+  wins: {
+    label: 'Total wins',
+    why: 'The one count in the rating. A rough session costs every rate, but a win count only goes up, so a game is always worth playing.',
+  },
   kd: { label: 'Kills / deaths', why: 'Staying alive matters when dying ends your round.' },
   kda: {
     label: 'KDA',
@@ -109,6 +113,8 @@ export function RatingExplainer({
   weekOfSeason?: number | null;
 }) {
   const k = confidenceGames;
+  // Read from the weights, like the tables, so the prose cannot drift.
+  const winsShare = Math.round(RATING_WEIGHTS.rapidRoyale.wins! * 100);
   // A worked example on a 40% field, so the reader can check the arithmetic.
   const example = (games: number) => shrinkRate(60, games, 40, k).toFixed(0);
   return (
@@ -161,12 +167,23 @@ export function RatingExplainer({
         rating; the top five takes its place.
       </Typography>
       <Typography sx={{ mb: 2 }}>
-        Together they are held to under a third of the rating on purpose. In
-        Trio a win is shared with two teammates, so it says as much about who
-        you queued with as about you. The rest — your fighting, score and
-        damage, all per minute or hour — is yours alone, and it carries the
-        rating. Solo has nobody to share a win with and nobody to revive, so it
-        leans hardest on kills, and rates plain K/D where Trio rates KDA.
+        The placement rates together are held to under a third of the rating
+        on purpose. In Trio a win is shared with two teammates, so it says as
+        much about who you queued with as about you. The rest — your fighting,
+        score and damage, all per minute or hour — is yours alone, and it
+        carries the rating. Solo has nobody to share a win with and nobody to
+        revive, so it leans hardest on kills, and rates plain K/D where Trio
+        rates KDA.
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        <strong>Total wins</strong> sits beside those rates in both modes, at{' '}
+        {winsShare}%. It is not a rate: it is the wins you have banked this
+        season, and it is the only figure on the board that playing cannot
+        lower. Every rate falls after a rough session, which would tell anyone
+        minding their rating to stop playing; a win count only ever goes up,
+        so a game is always worth sitting down for. It is scored as it stands,
+        never blended, and held light because it also tracks how much someone
+        plays.
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Each figure is checked before it counts: a placement count must sit
@@ -271,7 +288,7 @@ export function RatingExplainer({
       <Typography sx={{ mb: 2 }}>
         The icons beside a name are not part of the rating. Each one marks the
         top {100 - STANDOUT_FLOOR}% of the ranked field on one stat — win rate,
-        K/D, kills per match, score per minute, objective points per hour
+        total wins, K/D, kills per match, score per minute, objective points per hour
         (Gauntlet only), revives per hour, scoped kills per match or automatic
         kills per match —
         plus one for flying jets. Hover a badge to see which stat it is and what your figure
@@ -290,7 +307,9 @@ export function RatingExplainer({
       </Typography>
       <Typography sx={{ mb: 2 }}>
         <strong>Total kills and total score</strong> reward whoever plays the most
-        hours. Every part of the rating is a rate for that reason.
+        hours. Every part of the rating but one is a rate for that reason;
+        total wins is the exception, above, and is kept small for the same
+        reason.
       </Typography>
       <Box sx={{ mt: 4 }}>
         <Link href="/">← Back to the board</Link>

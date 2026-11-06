@@ -46,6 +46,17 @@ describe('RatingExplainer', () => {
     expect(rowFor('Rapid Royale Solo', 'Top-ten rate')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.top10Pct! * 100)}%`,
     );
+    expect(rowFor('Rapid Royale Trio', 'Total wins')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyale.wins! * 100)}%`,
+    );
+    expect(rowFor('Rapid Royale Solo', 'Total wins')).toHaveTextContent(
+      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.wins! * 100)}%`,
+    );
+  });
+
+  it('names total wins as the one count in the rating, and says why', () => {
+    render(<RatingExplainer />);
+    expect(screen.getByText(/only figure on the board that playing cannot lower/i)).toBeInTheDocument();
   });
 
   it('explains Solo\'s placement ladder beside Trio\'s top three', () => {

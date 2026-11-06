@@ -86,6 +86,7 @@ describe('badges', () => {
 
   it('says what the badge was for and what the figure was', () => {
     expect(badges(row({ standouts: ['kd'], kd: 5.07 }))[0].detail).toBe('Top 10% — K/D — 5.07');
+    expect(badges(row({ standouts: ['wins'], wins: 1298 }))[0].detail).toBe('Top 10% — wins — 1,298 all season');
     expect(badges(row({ standouts: ['autoPerMatch'], autoPerMatch: 21.4, autoKills: 8132 }))[0].detail)
       .toBe('Top 10% — automatic kills — 21.4 per match, 8,132 all season');
     expect(badges(row({ jetPct: 34.6 }))[0].detail)
@@ -367,7 +368,10 @@ describe('LeaderboardTable', () => {
       const fields = [...container.querySelectorAll('.MuiDataGrid-columnHeader')]
         .map((el) => el.getAttribute('data-field'));
       expect(fields).not.toContain('matches');
-      expect(fields).toContain('record');
+      // The column's field is the win count, so it sorts on wins and, where
+      // the mode rates total wins, lights up as a rated column.
+      expect(fields).toContain('wins');
+      expect(fields).not.toContain('record');
     });
   });
 

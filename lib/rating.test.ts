@@ -151,6 +151,11 @@ describe('rateAll', () => {
     expect(s.winPct! + s.top5Pct! + s.top10Pct!).toBeCloseTo(0.3, 6);
     // Solo leans on kills.
     expect(s.kpm).toBe(Math.max(...Object.values(s)));
+    // Total wins at 5% in both Rapid Royale modes (2026-11-06): the one
+    // figure playing cannot lower. Gauntlet is archived and never gained it.
+    expect(RATING_WEIGHTS.rapidRoyale.wins).toBe(0.05);
+    expect(s.wins).toBe(0.05);
+    expect(RATING_WEIGHTS.gauntlet.wins).toBeUndefined();
   });
 
   it('rates the metrics the explainer promises, and nothing else', () => {
@@ -160,10 +165,10 @@ describe('rateAll', () => {
       'winPct', 'objPtsPerHour', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
     expect(Object.keys(RATING_WEIGHTS.rapidRoyale)).toEqual([
-      'winPct', 'top3Pct', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
+      'winPct', 'top3Pct', 'wins', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
     expect(Object.keys(RATING_WEIGHTS.rapidRoyaleSolo)).toEqual([
-      'winPct', 'top5Pct', 'top10Pct', 'kpm', 'kd', 'spm', 'dpm',
+      'winPct', 'top5Pct', 'top10Pct', 'wins', 'kpm', 'kd', 'spm', 'dpm',
     ]);
   });
 
@@ -209,8 +214,37 @@ describe('rateAll', () => {
     const order = ratedMetrics('rapidRoyale');
     const w = RATING_WEIGHTS.rapidRoyale;
     for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
-    expect(order[0]).toBe('kda');
+    // Total wins is the lightest weight in both Rapid Royale modes, so the
+    // W–L column sits at the end of the rated group.
+    expect(order.at(-1)).toBe('wins');
     expect(ratedMetrics('rapidRoyaleSolo')[0]).toBe('kpm');
+    expect(ratedMetrics('rapidRoyaleSolo').at(-1)).toBe('wins');
+  });
+
+  it('scores total wins as a count: more wins rate higher, however many games they took', () => {
+    // Identical on every rate; apart only on how many wins they have banked.
+    // A count is not blended toward the field mean — the count already
+    // carries its own volume — so the short sample's 20 wins stay 20, and
+    // the rating is the same whatever K is.
+    const field = [
+      row({ eaId: 'mid', matches: 100, wins: 50 }),
+      row({ eaId: 'few', matches: 30, wins: 20 }),
+      row({ eaId: 'many', matches: 300, wins: 100 }),
+    ];
+    const by = (k: number) => Object.fromEntries(rateFor(field, 'rapidRoyale', k).map((r) => [r.eaId, r.rating!]));
+    expect(by(40).many).toBeGreaterThan(by(40).mid);
+    expect(by(40).mid).toBeGreaterThan(by(40).few);
+    expect(by(1000)).toEqual(by(0));
+  });
+
+  it('awards a badge for total wins — the figure people count in each other', () => {
+    const field = [
+      ...'abcdefghi'.split('').map((id) => row({ eaId: id, matches: 100, wins: 50 })),
+      row({ eaId: 'grinder', matches: 600, wins: 300 }),
+    ];
+    const grinder = rateFor(field, 'rapidRoyale').find((r) => r.eaId === 'grinder')!;
+    expect(grinder.standouts).toContain('wins');
+    expect(rateFor(field, 'rapidRoyale').find((r) => r.eaId === 'a')!.standouts).not.toContain('wins');
   });
 
   it('rates a Rapid Royale field on its own metrics', () => {

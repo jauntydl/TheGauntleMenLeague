@@ -140,6 +140,8 @@ export type Badge = { id: StandoutTrait | 'jet'; icon: React.ReactNode; detail: 
 
 const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: BoardRow) => string }> = {
   winPct: { icon: '🏆', detail: (r) => `win rate — ${r.winPct?.toFixed(1)}%` },
+  // The count, not the rate: a medal for the wins banked over the season.
+  wins: { icon: '🏅', detail: (r) => `wins — ${fmtInt(r.wins)} all season` },
   kd: { icon: '🛡️', detail: (r) => `K/D — ${r.kd?.toFixed(2)}` },
   killsPerMatch: { icon: '💀', detail: (r) => `kills — ${r.killsPerMatch?.toFixed(1)} per match` },
   spm: { icon: '⭐', detail: (r) => `score — ${fmtInt(Math.round(r.spm ?? 0))} per minute` },
@@ -204,6 +206,15 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     description: 'Share of matches won',
     renderCell: (p) => fmtPct(p.row.winPct),
     getSortComparator: nullsLastComparator,
+  },
+  // The field is the win count, so the column sorts on wins and is what the
+  // rating reads where a mode rates total wins; the cell shows the record.
+  wins: {
+    field: 'wins',
+    headerName: 'W–L',
+    width: 80,
+    description: 'Wins–losses this season',
+    renderCell: (p) => `${p.row.wins}–${p.row.losses}`,
   },
   top3Pct: {
     field: 'top3Pct',
@@ -294,6 +305,7 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
 /** The Rating header's tooltip, written from the mode's weights. */
 const RATED_LABEL: Record<RatedMetric, string> = {
   winPct: 'win rate',
+  wins: 'total wins',
   top3Pct: 'top-three rate',
   top5Pct: 'top-five rate',
   top10Pct: 'top-ten rate',
@@ -312,7 +324,7 @@ function ratingDescription(mode: ModeKey, confidenceGames: number): string {
   );
   return (
     `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field, ` +
-    `after blending in ${confidenceGames} games of league-average play so a rate counts for the games behind it. ` +
+    `after blending in ${confidenceGames} games of league-average play so a rate counts for the games behind it (total wins counts as it stands). ` +
     'Hover a rating for the split; see How the rating works.'
   );
 }
@@ -503,17 +515,14 @@ export function LeaderboardTable({
       ...ratedMetrics(mode).map((m) => RATED_COLUMNS[m]),
 
       // Everything below here is context, not rating input: volume, record and
-      // the two counts the rating deliberately does not read.
+      // the counts the rating deliberately does not read.
       //
       // Plain K/D leads it where the mode rates KDA instead, kept for
-      // reference because it is the figure everyone already knows.
+      // reference because it is the figure everyone already knows. The W–L
+      // record follows, where the mode does not rate total wins (Gauntlet);
+      // where it does, the column sits in the rated group above.
       ...(RATING_WEIGHTS[mode].kd === undefined ? [RATED_COLUMNS.kd] : []),
-      {
-        field: 'record',
-        headerName: 'W–L',
-        width: 80,
-        valueGetter: (_v, r) => `${r.wins}–${r.losses}`,
-      },
+      ...(RATING_WEIGHTS[mode].wins === undefined ? [RATED_COLUMNS.wins] : []),
       {
         field: 'kills',
         headerName: 'Kills',

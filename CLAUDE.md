@@ -23,9 +23,9 @@ data is committed, so a page load can never hit the free community API.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-11-03): 147 roster members · Season 5 Trio has 59
+Current state (2026-11-06): 147 roster members · Season 5 Trio has 59
 ranked, 25 provisional; Solo has 9 ranked, 50 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 344 tests passing · `tsc --noEmit` clean · deployed.
+Seasons 3–4 archived, Season 2 dropped · 347 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
@@ -200,7 +200,7 @@ Consider [sponsoring them](https://github.com/sponsors/community-network).
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run locally |
-| `npm test` | 333 tests |
+| `npm test` | 347 tests |
 | `npm run build` | Production build |
 | `npm run data` | Refresh `data/` from the API — **makes live network calls** |
 | `npm run data:dry` | Same, writes nothing |
@@ -215,20 +215,41 @@ Weights live in `RATING_WEIGHTS[mode]` (`lib/rating.ts`). The `/rating` page
 reads them from there rather than repeating the numbers in prose, so the page
 cannot quietly disagree with the code.
 
-**Rapid Royale Trio (Season 5 on), set 2026-10-27** — the user's direction, in order:
+**Rapid Royale Trio (Season 5 on), set 2026-10-27; total wins added
+2026-11-06** — the user's direction, in order:
 
 | Weight | Metric | Why |
 |---|---|---|
 | 15% | Win rate | Even with top 3 — "all who win got into Top3 anyway", so a heavier win counts it twice |
 | 15% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
-| 18% | KDA | (kills + assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference |
-| 16% | Kills per minute | |
+| 15% | KDA | (kills + assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference. Was 18 until total wins took 3 |
 | 15% | Score per minute | Also where objective play still counts |
+| 14% | Kills per minute | Was 16 until total wins took 2 |
 | 13% | Revives per hour | |
 | 8% | Damage per minute | |
+| 5% | **Total wins** | A count, not a rate — see below |
 
-Placement is held to 30% deliberately: a win and a top three are shared with
-two teammates, so they say as much about who you queued with as about you.
+The two placement rates are held to 30% deliberately: a win and a top three
+are shared with two teammates, so they say as much about who you queued
+with as about you.
+
+**Total wins (both Rapid Royale modes, 2026-11-06).** The user's reasoning:
+"i don't want to discourage players from trying to keep playing to win (and
+failing in the process) worried about it might ruin their stats". Every
+rate falls after a rough session, so a rate-only board tells a player
+minding their rating to stop; the win count is the only figure on the board
+that playing cannot lower. It is scored as the raw percentile of the count,
+**never blended** (`COUNT_METRICS` in `lib/rating.ts` — a count already
+carries its own volume, and blending would hand a thirty-game player wins
+they never had), and it earns a badge (🏅, top 10%) so the incentive is
+visible, not buried in a weight. Kept at 5% on purpose: wins track matches
+closely (correlation 0.90 across the Trio field), so a heavier weight is the
+rejected games-played bonus in all but name. The 5% came out of KDA and KPM
+together, at the user's direction, split in proportion (18 → 15, 16 → 14 in
+Trio; 25 → 22 KPM, 20 → 18 K/D in Solo); the win rate kept its 15. The W–L
+column's field is `wins`, so it sorts on the count and moves into the rated
+group where the mode rates it; in Gauntlet it stays unrated among the
+context columns. Re-rank at the time moved nobody more than three places.
 
 **Rapid Royale Solo (Season 5 on), set 2026-10-27; placement retuned
 2026-11-03** ("account for TOP5 instead of TOP3 and also give some credit
@@ -239,10 +260,11 @@ for TOP10" — the user's words):
 | 15% | Win rate | Top of a placement ladder — win 15 / top 5 10 / top 10 5, still 30% in all. The rungs nest, so a win earns all three, a 4th place two, an 8th place one |
 | 10% | Top-5 rate | In place of top 3. Guarded like top 3, and must also be ≥ the top-3 count |
 | 5% | Top-10 rate | "Some credit" for outlasting most of the lobby. The 15/10/5 split inside the 30% was my call, not the user's numbers — a one-line retune |
-| 25% | Kills per minute | The user asked for kills emphasised |
-| 20% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows |
+| 22% | Kills per minute | The user asked for kills emphasised. Was 25 until total wins took 3 |
+| 18% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows. Was 20 until total wins took 2 |
 | 15% | Score per minute | |
 | 10% | Damage per minute | |
+| 5% | **Total wins** | As in Trio, 2026-11-06 — the one count in the rating |
 
 No revives in Solo — nobody to pick up. **No Assists column on Solo either**
 (2026-11-03, "get rid of Assists"): a Solo assist is damage on someone else's
@@ -387,6 +409,7 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 | ✈ badge instead of excluding jet players | The two Gauntlet variants can't be separated; be honest rather than fabricate a split |
 | **No filters at all** (2026-09-13) | Region / platform / main-mode chips were removed at the user's request — the board is Gauntlet-only, so slicing by community metadata added confusion rather than signal. `region`, `platform` and `mainMode` are still parsed into `roster.json` and carried on each row, so re-adding a filter later is cheap |
 | **Solo placement is a ladder**: win 15 / top 5 10 / top 10 5 (2026-11-03) | The user asked for top 5 in place of top 3 "and some credit for top 10". A Solo lobby is big enough that top ten ran 52–76%, where Trio's sat near 100% — so Trio stays on top 3 alone |
+| **Total wins at 5%, raw count, never blended** (2026-11-06) | The only figure playing cannot lower, so a rough session is never a reason to stop. Small because it tracks games played (0.90); taken from KDA/KPM, not win rate, at the user's direction. A games-played weight stays rejected |
 | `getRowId` = `eaId`, not a composite | `eaId` is the roster key; a duplicate should throw loudly, not be papered over |
 | GitHub Actions, not Vercel Cron | Committing each run gives free **git snapshot history**, which makes a rolling-form board possible later with no redesign. Vercel Hobby caps cron at daily anyway |
 | Retry only 5xx + transport errors | 422 is what this API returns for a malformed bulk body — masking it behind retries turns an instant diagnosable failure into a slow confusing one |

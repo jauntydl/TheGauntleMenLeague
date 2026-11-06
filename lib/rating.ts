@@ -33,16 +33,27 @@ const GAUNTLET_WEIGHTS = {
 } as const;
 
 /**
- * Rapid Royale Trio (Season 5 on). Set 2026-10-27.
+ * Rapid Royale Trio (Season 5 on). Set 2026-10-27; total wins added
+ * 2026-11-06.
  *
- * Placement is 30%, split evenly: the win at 15% and finishing top three at
- * 15%. Every win is also a top three, so a heavy win weight counts the same
- * win twice; the even split lets the top-three rate separate someone who goes
- * deep every match from someone who wins some and drops early in the rest.
- * Placement is held at 30% deliberately. A win and a top three are shared with
- * two teammates, so both say as much about who you queued with as about you —
- * the other 70% goes to what is yours alone. Top five was considered and left
- * out; it nests a third time.
+ * Placement is 35%: the win at 15%, finishing top three at 15%, and total
+ * wins at 5%. Every win is also a top three, so a heavy win weight counts
+ * the same win twice; the even split lets the top-three rate separate
+ * someone who goes deep every match from someone who wins some and drops
+ * early in the rest. The two rates are held to 30% deliberately. A win and a
+ * top three are shared with two teammates, so both say as much about who you
+ * queued with as about you — the rest goes to what is yours alone. Top five
+ * was considered and left out; it nests a third time.
+ *
+ * Total wins is the one count in the rating, and it is there for a
+ * different reason: it is the only figure on the board that playing cannot
+ * lower. Every rate falls after a rough session, which tells a player
+ * minding their stats to stop; a win count only ever goes up, so every game
+ * is worth sitting down for. It is scored as the raw count, never blended
+ * (COUNT_METRICS), and kept small because it tracks games played closely
+ * (0.90 across this field) — heavier, it would be the volume bonus that was
+ * rejected, in all but name. Its 5% came out of KDA and KPM in proportion
+ * (18 → 15, 16 → 14), at the user's direction, so the win rate kept its 15.
  *
  * Survival is rated as KDA rather than K/D, because in trios the knock a
  * teammate finishes is as much the fight as the finish: an assist counts
@@ -60,8 +71,9 @@ const GAUNTLET_WEIGHTS = {
 const RAPID_ROYALE_WEIGHTS = {
   winPct: 0.15,
   top3Pct: 0.15,
-  kda: 0.18,
-  kpm: 0.16,
+  wins: 0.05,
+  kda: 0.15,
+  kpm: 0.14,
   spm: 0.15,
   revivesPerHour: 0.13,
   dpm: 0.08,
@@ -80,10 +92,13 @@ const RAPID_ROYALE_WEIGHTS = {
  * more than ten, so the wider rungs still separate people: top ten ran
  * 52–76% for the players checked, where Trio's sat near 100%. Top three is
  * still computed for every Solo row, unrated. The split within the 30% is my
- * call — a one-line retune.
+ * call — a one-line retune. Total wins sits beside the ladder at 5%
+ * (2026-11-06), as in Trio and for the same reason: the one figure playing
+ * cannot lower. Its share came out of kills per minute and K/D in
+ * proportion (25 → 22, 20 → 18), at the user's direction.
  *
- * The rest leans on kills: kills per minute is the heaviest weight at 25%,
- * then K/D at 20%. Plain K/D rather than KDA, because with no teammates an
+ * The rest leans on kills: kills per minute is the heaviest weight at 22%,
+ * then K/D at 18%. Plain K/D rather than KDA, because with no teammates an
  * assist is only damage on a kill somebody else took. There is nobody to
  * revive, so revives are not rated; their share went to the kills.
  */
@@ -91,8 +106,9 @@ const RAPID_ROYALE_SOLO_WEIGHTS = {
   winPct: 0.15,
   top5Pct: 0.1,
   top10Pct: 0.05,
-  kpm: 0.25,
-  kd: 0.2,
+  wins: 0.05,
+  kpm: 0.22,
+  kd: 0.18,
   spm: 0.15,
   dpm: 0.1,
 } as const;
@@ -155,6 +171,13 @@ export type RatedMetric =
   | keyof typeof RAPID_ROYALE_WEIGHTS
   | keyof typeof RAPID_ROYALE_SOLO_WEIGHTS;
 
+/**
+ * Rated metrics that are counts rather than rates. A count is scored as it
+ * stands: it already carries its own volume, and blending it toward the
+ * field mean would hand a thirty-game player wins they never had.
+ */
+const COUNT_METRICS: ReadonlySet<RatedMetric> = new Set<RatedMetric>(['wins']);
+
 export const RATING_WEIGHTS: Record<ModeKey, Partial<Record<RatedMetric, number>>> = {
   gauntlet: GAUNTLET_WEIGHTS,
   rapidRoyale: RAPID_ROYALE_WEIGHTS,
@@ -181,9 +204,15 @@ export function ratedMetrics(mode: ModeKey): RatedMetric[] {
  * player is but a lot about how they play. Kills rather than share, because a
  * share only says what someone carried; per match rather than a season total,
  * because a total mostly says who played the most.
+ *
+ * Total wins is the deliberate exception to that last rule (2026-11-06). The
+ * count is the figure people quote at each other, and the badge is what
+ * makes the reason it is rated — keep playing, the wins bank — visible on
+ * the board rather than buried in a weight.
  */
 export const STANDOUT_TRAITS = [
   'winPct',
+  'wins',
   'kd',
   'killsPerMatch',
   'spm',
@@ -261,7 +290,9 @@ export function rateAll(
   }
   const blended = (row: BoardRow, m: RatedMetric): number | null => {
     const v = row[m];
-    return finite(v) ? shrinkRate(v, row.matches, means.get(m) ?? v, confidenceGames) : null;
+    if (!finite(v)) return null;
+    if (COUNT_METRICS.has(m)) return v;
+    return shrinkRate(v, row.matches, means.get(m) ?? v, confidenceGames);
   };
 
   // One population per rated metric, of blended figures, holding only the
