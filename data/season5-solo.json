@@ -30,6 +30,7 @@
       "rating": 93.64,
       "standouts": [
         "winPct",
+        "wins",
         "kd",
         "spm"
       ],
@@ -75,7 +76,7 @@
       "top5Pct": 57.63,
       "top10Pct": 81.36,
       "revivesPerHour": 0,
-      "rating": 82.73,
+      "rating": 82.45,
       "standouts": [
         "autoPerMatch"
       ],
@@ -121,7 +122,7 @@
       "top5Pct": 54.35,
       "top10Pct": 91.3,
       "revivesPerHour": 0,
-      "rating": 80.45,
+      "rating": 78.23,
       "standouts": [
         "killsPerMatch"
       ],
@@ -167,7 +168,7 @@
       "top5Pct": 53.41,
       "top10Pct": 69.32,
       "revivesPerHour": 0,
-      "rating": 63.64,
+      "rating": 64.55,
       "standouts": [],
       "sniperPct": 6.41,
       "autoPct": 90.43,
@@ -211,7 +212,7 @@
       "top5Pct": 38.46,
       "top10Pct": 57.69,
       "revivesPerHour": 0,
-      "rating": 50.91,
+      "rating": 49.95,
       "standouts": [
         "sniperPerMatch"
       ],
@@ -257,7 +258,7 @@
       "top5Pct": 46.84,
       "top10Pct": 64.56,
       "revivesPerHour": 0,
-      "rating": 47.27,
+      "rating": 48.05,
       "standouts": [],
       "sniperPct": 0.59,
       "autoPct": 93.48,
@@ -301,7 +302,7 @@
       "top5Pct": 35.29,
       "top10Pct": 60.5,
       "revivesPerHour": 0,
-      "rating": 45.45,
+      "rating": 46.32,
       "standouts": [],
       "sniperPct": 0.89,
       "autoPct": 94.75,
@@ -345,7 +346,7 @@
       "top5Pct": 40.82,
       "top10Pct": 58.16,
       "revivesPerHour": 0,
-      "rating": 33.18,
+      "rating": 34.36,
       "standouts": [],
       "sniperPct": 1.63,
       "autoPct": 95.36,
@@ -389,7 +390,7 @@
       "top5Pct": 30.36,
       "top10Pct": 58.93,
       "revivesPerHour": 0,
-      "rating": 25.45,
+      "rating": 24.91,
       "standouts": [],
       "sniperPct": 0.72,
       "autoPct": 95.9,
@@ -433,7 +434,7 @@
       "top5Pct": 36.17,
       "top10Pct": 51.06,
       "revivesPerHour": 0,
-      "rating": 22.73,
+      "rating": 23,
       "standouts": [],
       "sniperPct": 3.27,
       "autoPct": 90.2,
