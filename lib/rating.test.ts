@@ -143,18 +143,20 @@ describe('rateAll', () => {
     // than counting the win twice.
     expect(RATING_WEIGHTS.rapidRoyale.winPct).toBe(RATING_WEIGHTS.rapidRoyale.top3Pct);
     // Solo: a ladder, each rung lighter than the one above — a win earns all
-    // three, a fourth place two, an eighth place one. Placement stays at the
-    // 30% Trio holds it to.
+    // three, a fourth place two, an eighth place one.
     const s = RATING_WEIGHTS.rapidRoyaleSolo;
     expect(s.winPct!).toBeGreaterThan(s.top5Pct!);
     expect(s.top5Pct!).toBeGreaterThan(s.top10Pct!);
-    expect(s.winPct! + s.top5Pct! + s.top10Pct!).toBeCloseTo(0.3, 6);
-    // Solo leans on kills.
-    expect(s.kpm).toBe(Math.max(...Object.values(s)));
-    // Total wins at 5% in both Rapid Royale modes (2026-11-06): the one
-    // figure playing cannot lower. Gauntlet is archived and never gained it.
+    expect(s.winPct! + s.top5Pct! + s.top10Pct!).toBeCloseTo(0.35, 6);
+    // Solo (2026-11-07): the win leads the table, and the two win figures
+    // together (30) sit nearer the three kill figures (40) than they did.
+    expect(s.winPct).toBe(Math.max(...Object.values(s)));
+    expect(s.winPct! + s.wins!).toBeCloseTo(0.3, 6);
+    expect(s.kpm! + s.kd! + s.dpm!).toBeCloseTo(0.4, 6);
+    // Total wins in both Rapid Royale modes (2026-11-06): the one figure
+    // playing cannot lower. Gauntlet is archived and never gained it.
     expect(RATING_WEIGHTS.rapidRoyale.wins).toBe(0.05);
-    expect(s.wins).toBe(0.05);
+    expect(s.wins).toBe(0.1);
     expect(RATING_WEIGHTS.gauntlet.wins).toBeUndefined();
   });
 
@@ -214,11 +216,11 @@ describe('rateAll', () => {
     const order = ratedMetrics('rapidRoyale');
     const w = RATING_WEIGHTS.rapidRoyale;
     for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
-    // Total wins is the lightest weight in both Rapid Royale modes, so the
-    // W–L column sits at the end of the rated group.
+    // Total wins is Trio's lightest weight, so its W–L column sits at the end
+    // of the rated group. Solo leads with the win rate since 2026-11-07.
     expect(order.at(-1)).toBe('wins');
-    expect(ratedMetrics('rapidRoyaleSolo')[0]).toBe('kpm');
-    expect(ratedMetrics('rapidRoyaleSolo').at(-1)).toBe('wins');
+    expect(ratedMetrics('rapidRoyaleSolo')[0]).toBe('winPct');
+    expect(ratedMetrics('rapidRoyaleSolo').at(-1)).toBe('top10Pct');
   });
 
   it('scores total wins as a count: more wins rate higher, however many games they took', () => {

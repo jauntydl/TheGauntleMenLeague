@@ -294,18 +294,26 @@ context columns. Re-rank at the time moved nobody more than three places.
 
 **Rapid Royale Solo (Season 5 on), set 2026-10-27; placement retuned
 2026-11-03** ("account for TOP5 instead of TOP3 and also give some credit
-for TOP10" — the user's words):
+for TOP10" — the user's words); **wins over kills 2026-11-07** ("wins (win
+rate, number of wins) should matter a bit more than KPM/DPM/KD than it is
+now" — shown a 6-point and a 10-point shift, they chose "SOLO only B", the
+10):
 
 | Weight | Metric | Why |
 |---|---|---|
-| 15% | Win rate | Top of a placement ladder — win 15 / top 5 10 / top 10 5, still 30% in all. The rungs nest, so a win earns all three, a 4th place two, an 8th place one |
-| 10% | Top-5 rate | In place of top 3. Guarded like top 3, and must also be ≥ the top-3 count |
-| 5% | Top-10 rate | "Some credit" for outlasting most of the lobby. The 15/10/5 split inside the 30% was my call, not the user's numbers — a one-line retune |
-| 22% | Kills per minute | The user asked for kills emphasised. Was 25 until total wins took 3 |
-| 18% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows. Was 20 until total wins took 2 |
+| 20% | Win rate | Heads the table since 2026-11-07 (was 15). Top of a placement ladder — win 20 / top 5 10 / top 10 5. The rungs nest, so a win earns all three, a 4th place two, an 8th place one |
+| 18% | Kills per minute | Was 25, then 22 when total wins took 3 (11-06), then 18 when wins took 4 more (11-07) |
 | 15% | Score per minute | |
-| 10% | Damage per minute | |
-| 5% | **Total wins** | As in Trio, 2026-11-06 — the one count in the rating |
+| 14% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows. Was 20 → 18 → 14 on the same two days |
+| 10% | Top-5 rate | In place of top 3. Guarded like top 3, and must also be ≥ the top-3 count |
+| 10% | **Total wins** | The one count in the rating; 5 on 11-06, 10 on 11-07 |
+| 8% | Damage per minute | Was 10 |
+| 5% | Top-10 rate | "Some credit" for outlasting most of the lobby. The 15/10/5 ladder split was my call, not the user's numbers |
+
+Win figures 30 against kill figures 40, from 20 against 50. The ten points
+came out of KPM, K/D and DPM in proportion. Trio was deliberately left
+alone: its placement already sits level with its kill stats and it rates
+KDA, not K/D, so the imbalance the user saw was Solo's.
 
 No revives in Solo — nobody to pick up. **No Assists column on Solo either**
 (2026-11-03, "get rid of Assists"): a Solo assist is damage on someone else's
@@ -451,6 +459,7 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 | **No filters at all** (2026-09-13) | Region / platform / main-mode chips were removed at the user's request — the board is Gauntlet-only, so slicing by community metadata added confusion rather than signal. `region`, `platform` and `mainMode` are still parsed into `roster.json` and carried on each row, so re-adding a filter later is cheap |
 | **Solo placement is a ladder**: win 15 / top 5 10 / top 10 5 (2026-11-03) | The user asked for top 5 in place of top 3 "and some credit for top 10". A Solo lobby is big enough that top ten ran 52–76%, where Trio's sat near 100% — so Trio stays on top 3 alone |
 | **Total wins at 5%, raw count, never blended** (2026-11-06) | The only figure playing cannot lower, so a rough session is never a reason to stop. Small because it tracks games played (0.90); taken from KDA/KPM, not win rate, at the user's direction. A games-played weight stays rejected |
+| **Solo: win figures 30 vs kill figures 40** (2026-11-07) | The user wanted wins to "matter a bit more than KPM/DPM/KD" in Solo and chose the larger of two shifts. Total wins at 10 there is tolerable because Solo wins track games played loosely (0.54), where Trio's 0.90 keeps it at 5 |
 | `getRowId` = `eaId`, not a composite | `eaId` is the roster key; a duplicate should throw loudly, not be papered over |
 | GitHub Actions, not Vercel Cron | Committing each run gives free **git snapshot history**, which makes a rolling-form board possible later with no redesign. Vercel Hobby caps cron at daily anyway |
 | Retry only 5xx + transport errors | 422 is what this API returns for a malformed bulk body — masking it behind retries turns an instant diagnosable failure into a slow confusing one |

@@ -81,36 +81,41 @@ const RAPID_ROYALE_WEIGHTS = {
 
 /**
  * Rapid Royale Solo (Season 5 on). Set 2026-10-27; placement retuned
- * 2026-11-03.
+ * 2026-11-03; wins over kills 2026-11-07.
  *
- * Placement is 30%, as in Trio, but as a ladder rather than an even split:
- * the win at 15%, finishing top five at 10%, top ten at 5%. The rungs nest —
+ * Placement is a ladder rather than Trio's even split: the win at 20%,
+ * finishing top five at 10%, top ten at 5%. The rungs nest —
  * a win is also a top five and a top ten — so every finish earns each rung
  * it reached: an eighth place scores one, a fourth place two, a win all
  * three. Top three was the second rung until 2026-11-03, when the user asked
  * for top five in its place with some credit for top ten. Solo fields far
  * more than ten, so the wider rungs still separate people: top ten ran
  * 52–76% for the players checked, where Trio's sat near 100%. Top three is
- * still computed for every Solo row, unrated. The split within the 30% is my
- * call — a one-line retune. Total wins sits beside the ladder at 5%
- * (2026-11-06), as in Trio and for the same reason: the one figure playing
- * cannot lower. Its share came out of kills per minute and K/D in
- * proportion (25 → 22, 20 → 18), at the user's direction.
+ * still computed for every Solo row, unrated. Total wins sits beside the
+ * ladder at 10% (2026-11-06, raised 2026-11-07), as in Trio and for the same
+ * reason: the one figure playing cannot lower.
  *
- * The rest leans on kills: kills per minute is the heaviest weight at 22%,
- * then K/D at 18%. Plain K/D rather than KDA, because with no teammates an
- * assist is only damage on a kill somebody else took. There is nobody to
- * revive, so revives are not rated; their share went to the kills.
+ * The win figures lead the kill figures since 2026-11-07. The user looked at
+ * the table with the win at 15 and total wins at 5 against 50 for kills per
+ * minute, K/D and damage together and said wins "should matter a bit more
+ * than KPM/DPM/KD than it is now"; of two sizes shown they chose the larger.
+ * Ten points moved out of the three kill stats in proportion (22 → 18,
+ * 18 → 14, 10 → 8), five to the win rate and five to total wins, so the win
+ * figures carry 30 against the kill figures' 40 and the win rate heads the
+ * table. Solo alone: Trio's placement already sits level with its kill stats
+ * and it rates KDA, not K/D. Plain K/D rather than KDA here, because with
+ * no teammates an assist is only damage on a kill somebody else took. There
+ * is nobody to revive, so revives are not rated.
  */
 const RAPID_ROYALE_SOLO_WEIGHTS = {
-  winPct: 0.15,
+  winPct: 0.2,
   top5Pct: 0.1,
   top10Pct: 0.05,
-  wins: 0.05,
-  kpm: 0.22,
-  kd: 0.18,
+  wins: 0.1,
+  kpm: 0.18,
+  kd: 0.14,
   spm: 0.15,
-  dpm: 0.1,
+  dpm: 0.08,
 } as const;
 
 /**
