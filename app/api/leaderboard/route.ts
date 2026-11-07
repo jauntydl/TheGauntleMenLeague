@@ -1,8 +1,8 @@
 import { getSeason } from '@/lib/data';
 
-export function GET(req: Request): Response {
+export async function GET(req: Request): Promise<Response> {
   const season = new URL(req.url).searchParams.get('season') ?? undefined;
-  const result = getSeason(season);
+  const result = await getSeason(season);
 
   if (!result) {
     return Response.json({ error: 'Unknown season' }, { status: 404 });

@@ -5,25 +5,31 @@ import { GET as meta } from './meta/route';
 import { GET as unresolved } from './unresolved/route';
 import { getMeta } from '@/lib/data';
 import { REFRESH_ATTEMPTS } from '@/lib/refresh';
+import { BOARD_CACHE_TAG } from '@/lib/data';
+
+// next/cache only works inside a Next server; the route is tested for what
+// it asks of it.
+vi.mock('next/cache', () => ({ revalidateTag: vi.fn() }));
+import { revalidateTag } from 'next/cache';
 
 describe('GET /api/leaderboard', () => {
   it('defaults to the current season', async () => {
     const res = await leaderboard(new Request('http://x/api/leaderboard'));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.season).toBe(getMeta().currentSeason);
+    expect(body.season).toBe((await getMeta()).currentSeason);
     expect(Array.isArray(body.ranked)).toBe(true);
     expect(Array.isArray(body.provisional)).toBe(true);
   });
 
   it('accepts an explicit season', async () => {
-    const current = getMeta().currentSeason;
+    const current = (await getMeta()).currentSeason;
     const res = await leaderboard(new Request(`http://x/api/leaderboard?season=${current}`));
     expect((await res.json()).season).toBe(current);
   });
 
   it('accepts the numeric form the spec documents (?season=4)', async () => {
-    const current = getMeta().currentSeason;
+    const current = (await getMeta()).currentSeason;
     const numeric = current.replace(/^Season/, '');
     const res = await leaderboard(new Request(`http://x/api/leaderboard?season=${numeric}`));
     expect(res.status).toBe(200);
@@ -186,5 +192,54 @@ describe('POST /api/refresh', () => {
     const ip = { 'x-forwarded-for': '8.8.8.8' };
     for (let i = 0; i < REFRESH_ATTEMPTS; i++) await post({ password: `guess${i}` }, ip);
     expect((await post({ password: PW }, ip)).status).toBe(429);
+  });
+});
+
+describe('POST /api/revalidate', () => {
+  const SECRET = 'test-only-revalidate-secret';
+  const post = async (auth?: string, headers: Record<string, string> = {}) => {
+    const { POST } = await import('./revalidate/route');
+    return POST(
+      new Request('http://x/api/revalidate', {
+        method: 'POST',
+        headers: { ...(auth === undefined ? {} : { authorization: auth }), ...headers },
+      }),
+    );
+  };
+
+  beforeEach(() => {
+    resetLimit();
+    vi.unstubAllEnvs();
+    vi.mocked(revalidateTag).mockClear();
+    vi.stubEnv('REVALIDATE_SECRET', SECRET);
+  });
+
+  it('purges the board cache for the right secret', async () => {
+    // The refresh workflow calls this after its push, so the site re-reads
+    // the board at once instead of at the next minute.
+    const res = await post(`Bearer ${SECRET}`);
+    expect(res.status).toBe(200);
+    expect((await res.json()).ok).toBe(true);
+    expect(revalidateTag).toHaveBeenCalledWith(BOARD_CACHE_TAG);
+  });
+
+  it('refuses a wrong secret, and a missing one, without purging anything', async () => {
+    expect((await post('Bearer guess')).status).toBe(401);
+    expect((await post()).status).toBe(401);
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('refuses everyone when no secret is configured', async () => {
+    // Unset answers like a wrong guess: nothing for an outsider to learn.
+    vi.stubEnv('REVALIDATE_SECRET', '');
+    expect((await post('Bearer ')).status).toBe(401);
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('limits guesses per caller', async () => {
+    const ip = { 'x-forwarded-for': '7.7.7.7' };
+    for (let i = 0; i < REFRESH_ATTEMPTS; i++) await post(`Bearer guess${i}`, ip);
+    expect((await post(`Bearer ${SECRET}`, ip)).status).toBe(429);
+    expect(revalidateTag).not.toHaveBeenCalled();
   });
 });

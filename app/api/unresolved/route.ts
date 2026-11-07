@@ -1,5 +1,5 @@
 import { getUnresolved } from '@/lib/data';
 
-export function GET(): Response {
-  return Response.json(getUnresolved());
+export async function GET(): Promise<Response> {
+  return Response.json(await getUnresolved());
 }

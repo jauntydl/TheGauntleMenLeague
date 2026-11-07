@@ -1,5 +1,5 @@
 import { getMeta } from '@/lib/data';
 
-export function GET(): Response {
-  return Response.json(getMeta());
+export async function GET(): Promise<Response> {
+  return Response.json(await getMeta());
 }

@@ -7,13 +7,16 @@ was removed in Season 5, and **from Season 5 the board ranks Rapid Royale**.
 ```
 GitHub Action (cron every 2 h at :23 UTC, or the owner's hidden refresh)
   → scripts/build.ts: resolve ids → bulk calls → extract → compute → rank
-  → commits data/*.json
-  → push triggers Vercel redeploy
-  → Next.js App Router + MUI renders from the committed JSON
+  → commits data/*.json, then POSTs /api/revalidate (needs REVALIDATE_SECRET; optional)
+  → Vercel skips the build for a data-only commit (vercel.json ignoreCommand)
+  → Next.js App Router + MUI reads data/board.json from GitHub at request time, cached 60 s
 ```
 
 No database. No runtime writes. **No upstream API call at request time** — the
-data is committed, so a page load can never hit the free community API.
+data is committed, so a page load can never hit the free community API. Since
+2026-11-07 the site reads the committed `data/board.json` back from GitHub at
+request time (our own file, through Next's data cache — see "The site reads
+the board from GitHub" below), so a data commit no longer redeploys anything.
 
 - Live: <https://the-gauntle-men-league.vercel.app>
 - Repo: `github.com/jauntydl/TheGauntleMenLeague` (public)
@@ -25,7 +28,7 @@ data is committed, so a page load can never hit the free community API.
 
 Current state (2026-11-06): 147 roster members · Season 5 Trio has 59
 ranked, 25 provisional; Solo has 9 ranked, 50 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 347 tests passing · `tsc --noEmit` clean · deployed.
+Seasons 3–4 archived, Season 2 dropped · 355 tests passing · `tsc --noEmit` clean · deployed.
 
 ---
 
@@ -182,6 +185,44 @@ Signups keep committing board data between refreshes, so the board is never
 truly stale — but `meta.builtAt` only moves on a real refresh, which is what
 the page reports.
 
+## The site reads the board from GitHub, not from its bundle (2026-11-07)
+
+"Refresh takes way too long since it's essentially a rebuild" — the user.
+A refresh was two builds in a row: the Action (checkout, install, the polite
+roster-wide fetch; 3 m 13 s to 4 m 33 s across the twelve runs before the
+change) and then, because `lib/data.ts` statically imported the JSON, a full
+Vercel build to ship one changed file. The second build is gone:
+
+- **`getBoard()` is async** and reads `data/board.json` from the repo through
+  `readFile` in `lib/github.ts`, with the fetch carrying
+  `next: { revalidate: BOARD_REVALIDATE_SEC (60), tags: [BOARD_CACHE_TAG] }`
+  so Next's data cache answers page loads — one GitHub read a minute at most,
+  however many people are looking. The pages' `export const revalidate = 60`
+  repeats the number as a literal because Next.js requires one. The static
+  import stays as the **fallback**: no `GITHUB_TOKEN` (local dev, tests) or a
+  read GitHub refuses serves the build-time snapshot with a `console.warn`,
+  stale rather than a 500. The fallback goes staler with every data-only
+  commit, since those no longer build; that is what it is for.
+- **`POST /api/revalidate`** purges the cache by tag. Bearer secret in
+  `REVALIDATE_SECRET` (a Vercel env var and a GitHub repo secret of the same
+  name — neither is set by the code; the owner sets both), checked with the
+  same constant-time compare and per-IP guess limit as the manual refresh,
+  and an unset secret refuses everyone. The workflow calls it after a push
+  and **skips, never fails**, when the secret is missing or the site does
+  not answer: the data is already pushed and the minute's cache does the job.
+- **`vercel.json` `ignoreCommand`** skips the build when the diff between the
+  last *successful* deployment (`VERCEL_GIT_PREVIOUS_SHA`) and the new commit
+  touches only `data/` and `roster.json`. Against the previous deployment,
+  not `HEAD^`: the "code commit, then data commit, one push" order above
+  would otherwise diff two data commits and never build the code. Any doubt
+  (no previous SHA, SHA not in the clone) exits 1 and builds. A skipped
+  build shows in Vercel as **Canceled**, which is the expected state for
+  every bot and signup commit now.
+- Consequences: the join route's player is live within a minute of the
+  commit with no deploy; the GitHub contents API's base64 path tops out at
+  1 MB and `board.json` is ~390 KB (switch `readFile` to the raw media type
+  before then); Next's data cache holds entries up to 2 MB.
+
 ## Be a polite API consumer
 
 gametools.network is free, donation-funded, unofficial, and the only option —
@@ -200,7 +241,7 @@ Consider [sponsoring them](https://github.com/sponsors/community-network).
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run locally |
-| `npm test` | 347 tests |
+| `npm test` | 355 tests |
 | `npm run build` | Production build |
 | `npm run data` | Refresh `data/` from the API — **makes live network calls** |
 | `npm run data:dry` | Same, writes nothing |
@@ -420,8 +461,9 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 ## Architecture
 
 - **`lib/` is framework-free** — no Next.js, no `node:fs` — so it unit-tests
-  without a harness. `lib/data.ts` is the one deliberate exception: it statically
-  imports the generated JSON, which is what bundles the data for deployment.
+  without a harness. `lib/data.ts` is the one deliberate exception: it reads
+  the committed board from GitHub with Next's `fetch` cache options on the
+  request, and statically imports the generated JSON as the fallback snapshot.
 - **`buildBoard` is pure.** Network and filesystem live only in `scripts/build.ts`.
 - **Seasons are discovered, never hardcoded.** `fetchCurrentSeason` reads the
   active `Season\d+` from the live `/bf6/gameevents/` feed, and `lib/pipeline.ts`
@@ -436,8 +478,9 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
   `lib/join.ts`. The route resolves the EA ID, fetches that one player's stats,
   merges the row into `data/board.json`, re-ranks every season through the same
   `rankPlayers` the build uses, and commits roster + board + season files as
-  **one** commit via `lib/github.ts`. Vercel redeploys on the push, so the player
-  is live in about a minute. Git is the store; a bad signup is a revert.
+  **one** commit via `lib/github.ts`. The site re-reads the board within a
+  minute of the push (no deploy — the build is skipped for data commits), so
+  the player is live in about a minute. Git is the store; a bad signup is a revert.
 - **The join route re-reads from GitHub, never from its own bundle.**
   `lib/data.ts` holds a build-time snapshot; two signups a minute apart would
   both write on top of it and the second would erase the first. It also means a
@@ -478,6 +521,13 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
   read by nothing.
 - `refresh.yml` uses a bare `git push` with no retry; a concurrent signup push
   loses that run, and the next is two hours away.
+- `REVALIDATE_SECRET` is not set anywhere yet (2026-11-07), so the workflow's
+  revalidate step skips and the board shows a refresh up to a minute after
+  the push. Setting it on Vercel and as a repo Actions secret makes it immediate.
+- Whether Vercel's clone holds `VERCEL_GIT_PREVIOUS_SHA` for the ignore
+  command is unverified: if it does not, every data commit still builds
+  (safe, but the point of the change is lost). Check that the first bot
+  commit after this lands shows as Canceled in the Vercel deployments list.
 - A member skipped (`fetch_failed`) in the last build before a season rolls
   over is missing from that season's archive, since the archive is that
   build's output and is never recomputed.

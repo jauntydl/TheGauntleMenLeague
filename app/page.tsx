@@ -1,9 +1,9 @@
 import { getBoard } from '@/lib/data';
 import { BoardView } from '@/components/BoardView';
 
-// Data changes once a day, so there is nothing to render per-request.
-export const revalidate = 3600;
+// A literal, as Next.js requires; it is BOARD_REVALIDATE_SEC in lib/data.
+export const revalidate = 60;
 
-export default function Page() {
-  return <BoardView board={getBoard()} />;
+export default async function Page() {
+  return <BoardView board={await getBoard()} />;
 }

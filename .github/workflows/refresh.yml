@@ -46,13 +46,37 @@ jobs:
         run: npm run data
 
       - name: Commit if anything changed
+        id: commit
         run: |
           git config user.name "gauntlemen-league-bot"
           git config user.email "actions@github.com"
           git add data/ roster.json
           if git diff --staged --quiet; then
             echo "No changes this run."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "chore: stats refresh $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      # The push no longer redeploys the site: vercel.json skips the build
+      # for a data-only commit, and the site reads data/board.json from the
+      # repo at request time, cached for a minute (lib/data). This call purges
+      # that cache so the new board shows at once. It needs REVALIDATE_SECRET
+      # as a repo secret matching the Vercel env var; without it, or if the
+      # site does not answer, the minute's cache does the job, so neither is
+      # a reason to fail a run whose data is already pushed.
+      - name: Tell the site to re-read the board
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SITE_URL: https://the-gauntle-men-league.vercel.app
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "REVALIDATE_SECRET is not set; the board updates within a minute anyway."
+            exit 0
+          fi
+          curl -fsS -X POST "$SITE_URL/api/revalidate" \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            || echo "Revalidate call failed; the board updates within a minute anyway."
