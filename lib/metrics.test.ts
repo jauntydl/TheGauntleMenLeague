@@ -58,6 +58,11 @@ const scoreSlice: StatSlice = {
 };
 
 describe('computeMetrics', () => {
+  it('carries no placement counts for Gauntlet — its counters never added up', () => {
+    const m = computeMetrics(darkSlice);
+    expect([m.top3, m.top5, m.top10]).toEqual([null, null, null]);
+  });
+
   it('computes rate stats for a jet-heavy player', () => {
     const m = computeMetrics(darkSlice);
     expect(m.matches).toBe(50);
@@ -397,5 +402,25 @@ describe('computeMetrics on Rapid Royale Solo', () => {
     const m = solo({ ...soloSlice, topten_gm_rr_solo: 120 });
     expect(m.top5Pct).not.toBeNull();
     expect(m.top3Pct).not.toBeNull();
+  });
+
+  it('reports the trusted placement counts beside the rates', () => {
+    // The points ledger (lib/ledger.ts) is built from the counts, not the rates.
+    const m = solo(soloSlice);
+    expect([m.top3, m.top5, m.top10]).toEqual([30, 42, 72]);
+  });
+
+  it('nulls a count under the same guard as its rate', () => {
+    const m = solo({ ...soloSlice, topfive_gm_rr_solo: 120 });
+    expect(m.top5).toBeNull();
+    expect(m.top10).toBeNull(); // measured against a broken top five
+    expect(m.top3).toBe(30);
+  });
+
+  it('leaves the ledger fields for the scorer', () => {
+    const m = solo(soloSlice);
+    expect([m.gold, m.silver, m.bronze, m.unplaced, m.placementPts, m.fightPts]).toEqual([
+      null, null, null, null, null, null,
+    ]);
   });
 });

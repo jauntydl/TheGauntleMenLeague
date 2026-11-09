@@ -95,7 +95,29 @@ export type Metrics = {
    *  unrated. Absent on rows built before that date. */
   top5Pct: number | null;
   top10Pct: number | null;
-  /** Overall rating, 0-100, percentile-weighted against the ranked field. */
+  /** The trusted count behind each placement rate, for the Rapid Royale
+   *  points ledger (lib/ledger.ts). Null under the same guard as the rate,
+   *  and absent on rows built before 2026-11-09, which the ledger handles by
+   *  deriving the count from the rate. */
+  top3: number | null;
+  top5: number | null;
+  top10: number | null;
+  /** The points ledger, filled by scoreLedger (lib/ledger.ts) on Rapid
+   *  Royale rows: how many matches ended in each medal, the points those
+   *  earned, the points kills, assists and deaths earned. Null from
+   *  computeMetrics, on Gauntlet rows, and where a placement counter failed
+   *  the trust test; absent on rows built before 2026-11-09. `unplaced` is
+   *  shown as "Losses" — distinct from `losses`, the API's matches − wins. */
+  gold: number | null;
+  silver: number | null;
+  bronze: number | null;
+  unplaced: number | null;
+  placementPts: number | null;
+  fightPts: number | null;
+  /** Overall rating. On Gauntlet (archived) boards: 0-100, percentile-
+   *  weighted against the ranked field. On Rapid Royale boards (Season 5
+   *  on): the season points total, placementPts + fightPts, which may be
+   *  negative. */
   rating: number | null;
   /** The trait this player is most exceptional at, if any names them. */
   standouts: import('./rating').StandoutTrait[];

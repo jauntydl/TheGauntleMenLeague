@@ -184,8 +184,21 @@ export function computeMetrics(slice: StatSlice, mode: Mode): Metrics {
     top3Pct: top3Trusted ? (top3 / matches) * 100 : null,
     top5Pct: top5Trusted ? (top5 / matches) * 100 : null,
     top10Pct: top10Trusted ? (top10 / matches) * 100 : null,
+    // The counts themselves, under the same guard: the points ledger is
+    // built from these, not from the rates.
+    top3: top3Trusted ? top3 : null,
+    top5: top5Trusted ? top5 : null,
+    top10: top10Trusted ? top10 : null,
     revivesPerHour: hours > 0 ? revives / hours : null,
-    // Both filled in by rateAll once the whole field is known.
+    // The ledger is filled by scoreLedger once the mode's rungs are applied;
+    // rating and standouts by the scorer for the mode once the whole field
+    // is known.
+    gold: null,
+    silver: null,
+    bronze: null,
+    unplaced: null,
+    placementPts: null,
+    fightPts: null,
     rating: null,
     standouts: [],
     sniperPct: weaponMixTrusted ? (precisionKills / weaponKills) * 100 : null,
