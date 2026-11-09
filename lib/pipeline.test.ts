@@ -364,16 +364,23 @@ describe('buildBoard', () => {
   it('ranks Rapid Royale Solo on a board of its own, on Solo counters', () => {
     const board = buildBoard([dark], [soloResponse('Season5')], 'Season5');
     expect(board.meta.seasons).toEqual(['Season5']);
-    expect(board.seasons.Season5[0].matches).toBe(85);
+    // The Trio slice has 85 matches and no wins or placements: 85 losses at
+    // −5 is −425 points, which is Provisional however many matches it is.
+    expect(board.seasons.Season5).toEqual([]);
+    expect(board.provisional.Season5[0]).toMatchObject({ matches: 85, rating: -425, unplaced: 85 });
     const solo = board.seasons['Season5-solo'][0];
     expect(solo.matches).toBe(40);
     expect(solo.top3Pct).toBe(25);
     expect(solo.top5Pct).toBe(32.5);
     expect(solo.top10Pct).toBe(72.5);
     expect(solo.kd).toBe(3.33);
-    // Solo rates plain K/D; KDA is Trio's.
+    // Solo shows plain K/D; KDA is Trio's.
     expect(solo.kda).toBeNull();
-    expect(solo.rating).not.toBeNull();
+    // Solo's ledger: 4 wins, 9 more top fives, 16 more top tens, 11 losses;
+    // 120 kills, 30 assists, 36 deaths.
+    expect(solo).toMatchObject({
+      gold: 4, silver: 9, bronze: 16, unplaced: 11, placementPts: 175, fightPts: 99, rating: 274, rank: 1, standouts: [],
+    });
   });
 
   it('archives a Solo board with its season', () => {
@@ -413,7 +420,12 @@ describe('buildBoard', () => {
     expect(row.top10Pct).toBe(97.65);
     expect(row.kda).toBe(9.76); // (989 + 446) / 147, rounded
     expect(row.kd).toBe(6.73);
-    expect(row.rating).not.toBeNull();
+    // The Trio ledger: 52 wins, 16 more top threes, 7 more top fives, 10
+    // losses; 989 kills, 446 assists, 147 deaths.
+    expect(row).toMatchObject({
+      top3: 68, top5: 75, top10: 83,
+      gold: 52, silver: 16, bronze: 7, unplaced: 10, placementPts: 925, fightPts: 1065, rating: 1990, standouts: [],
+    });
   });
 
   it('excludes a season slice with kills but no measurable play (pre-per-mode-counter seasons)', () => {

@@ -98,3 +98,58 @@ describe('rankPlayers', () => {
     expect(rankPlayers([])).toEqual({ ranked: [], provisional: [] });
   });
 });
+
+describe('rankPlayers on a Rapid Royale board', () => {
+  /** A hundred Trio matches: 20 wins, 40 top threes, 55 top fives — 500 points. */
+  const trio = (over: Partial<BoardRow>): BoardRow =>
+    row({ matches: 100, wins: 20, top3: 40, top5: 55, top10: 70, kills: 300, assists: 100, deaths: 200, rating: null, ...over });
+
+  it('ranks only players with the match floor and a total above zero', () => {
+    const { ranked, provisional } = rankFor(
+      [
+        trio({ eaId: 'positive' }),
+        // −250 for 50 losses, +250 for 250 kills: exactly zero.
+        trio({ eaId: 'zero', matches: 50, wins: 0, top3: 0, top5: 0, kills: 250, assists: 0, deaths: 0 }),
+        trio({ eaId: 'negative', matches: 50, wins: 0, top3: 2, top5: 5, kills: 40, assists: 0, deaths: 90 }),
+        trio({ eaId: 'rookie', matches: MIN_MATCHES - 1, top3: 10, top5: 12 }),
+      ],
+      'rapidRoyale',
+    );
+    expect(ranked.map((r) => r.eaId)).toEqual(['positive']);
+    expect(ranked[0].rank).toBe(1);
+    expect(provisional.map((r) => r.eaId)).toEqual(['rookie', 'zero', 'negative']);
+    expect(provisional.map((r) => r.rank)).toEqual([null, null, null]);
+    expect(provisional.map((r) => r.rating)).toEqual([expect.any(Number), 0, -240]);
+  });
+
+  it('orders by points, then gold, then fight points, then EA ID', () => {
+    // All three total 500: more-gold trades 20 fight points for one more win
+    // (placement 370, fights 130); a and b are identical but for their IDs.
+    const { ranked } = rankFor(
+      [trio({ eaId: 'b' }), trio({ eaId: 'a' }), trio({ eaId: 'more-gold', wins: 21, top3: 41, top5: 56, kills: 280 })],
+      'rapidRoyale',
+    );
+    expect(ranked.map((r) => r.rating)).toEqual([500, 500, 500]);
+    expect(ranked.map((r) => r.eaId)).toEqual(['more-gold', 'a', 'b']);
+    expect(ranked.map((r) => r.rank)).toEqual([1, 2, 3]);
+  });
+
+  it('sends a player whose placement failed the trust test to Provisional, last', () => {
+    const { ranked, provisional } = rankFor(
+      [trio({ eaId: 'ok' }), trio({ eaId: 'broken', top5: null, top5Pct: null }), trio({ eaId: 'rookie', matches: 5 })],
+      'rapidRoyale',
+    );
+    expect(ranked.map((r) => r.eaId)).toEqual(['ok']);
+    expect(provisional.map((r) => r.eaId)).toEqual(['rookie', 'broken']);
+    expect(provisional[1].rating).toBeNull();
+  });
+
+  it('leaves no badges on a Rapid Royale row', () => {
+    expect(rankFor([trio({ eaId: 'x', standouts: ['kd'] })], 'rapidRoyale').ranked[0].standouts).toEqual([]);
+  });
+
+  it('uses Solo\'s wider rungs on the Solo board', () => {
+    const { ranked } = rankFor([trio({ eaId: 's' })], 'rapidRoyaleSolo');
+    expect(ranked[0]).toMatchObject({ gold: 20, silver: 35, bronze: 15, unplaced: 30, rating: 725 });
+  });
+});

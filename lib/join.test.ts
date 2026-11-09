@@ -108,10 +108,12 @@ describe('mergePlayer', () => {
 
   it('learns a season the board has never shown', () => {
     const existing = board([row({ eaId: 'a' })]);
+    // Season 5 is a Rapid Royale board, ranked on the points ledger, so the
+    // row needs trusted placement counts and a total above zero to rank.
     const addition: BoardFile = {
       ...board([]),
       meta: { currentSeason: 'Season4', seasons: ['Season5'], builtAt: '2026-09-02T00:00:00.000Z' },
-      seasons: { Season5: [row({ eaId: 'new' })] },
+      seasons: { Season5: [row({ eaId: 'new', top3: 70, top5: 80 })] },
       provisional: {},
     };
     const merged = mergePlayer(existing, addition);
