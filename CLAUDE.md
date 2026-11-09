@@ -1,8 +1,10 @@
 # The GauntleMen League
 
-A Battlefield 6 leaderboard for a ~300 person community, ranked by season on
-skill-based rate stats. **Seasons 3–4 were Gauntlet** (now archived); Gauntlet
-was removed in Season 5, and **from Season 5 the board ranks Rapid Royale**.
+A Battlefield 6 leaderboard for a ~300 person community, ranked by season.
+**Seasons 3–4 were Gauntlet** (now archived, ranked on a percentile rating of
+rate stats); Gauntlet was removed in Season 5, and **from Season 5 the board
+ranks Rapid Royale on a points ledger** — a season total of placement medals
+and kills, assists and deaths (2026-11-09; see "The rating").
 
 ```
 GitHub Action (cron every 2 h at :23 UTC, or the owner's hidden refresh)
@@ -26,9 +28,10 @@ the board from GitHub" below), so a data commit no longer redeploys anything.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-11-06): 147 roster members · Season 5 Trio has 59
-ranked, 25 provisional; Solo has 9 ranked, 50 provisional; 3 unresolved ·
-Seasons 3–4 archived, Season 2 dropped · 355 tests passing · `tsc --noEmit` clean · deployed.
+Current state (2026-11-09): 147 roster members · Season 5 Trio has 63
+ranked, 30 provisional; Solo has 10 ranked, 59 provisional (on the points
+ledger — see below); 3 unresolved · Seasons 3–4 archived, Season 2 dropped ·
+372 tests passing · `tsc --noEmit` clean.
 
 ---
 
@@ -65,18 +68,21 @@ Trio, so every archived key is unchanged) and later modes append a suffix
 (`Season5-solo`). `meta.seasons` lists seasons only — one tab each — and the
 board shows a Trio / Solo sub-tab for each board the file holds. Use
 `boardKey` / `parseBoardKey` / `modeForBoard`, never string-slice keys. Metrics read `<stat>_gm_<suffix>`,
-weights are per mode (`RATING_WEIGHTS[mode]`), and the board draws each mode in
-its own accent (`app/accents.ts`): Gauntlet amber, Rapid Royale magenta.
+Gauntlet's weights are `RATING_WEIGHTS.gauntlet`, the Rapid Royale ledger is
+`lib/ledger.ts` (`isLedgerMode(mode)` tells the two apart), and the board
+draws each mode in its own accent (`app/accents.ts`): Gauntlet amber, Rapid
+Royale magenta.
 
 Rapid Royale suffix notes (verified 2026-10-27): `rr_all` matches `rr_trio`
 field for field (likely a parent rollup); `granitebr` is a battle-royale rollup
 that differs between the squad BR and Rapid Royale slices — never read it. The
 mode has **no objective counters** (only `intel_pickup`), and has placement
 counters (`topthree`, `topfive`, `topten`). In Trio `topten` sat near 100%
-for everyone, so Trio rates `topthree` alone; Solo lobbies are bigger (top
-ten ran 52–76% for the players checked on 2026-11-03), so Solo rates
-`topfive` and `topten`. All three rates are computed on every Rapid Royale
-row, whether or not the mode rates them.
+for everyone; Solo lobbies are bigger (top ten ran 52–76% for the players
+checked on 2026-11-03). That is why the ledger's medal rungs differ by mode
+(`MEDAL_RUNGS`): Trio silver = top three, bronze = top five; Solo silver =
+top five, bronze = top ten. All three rates and their trusted counts
+(`top3`/`top5`/`top10`) are computed on every Rapid Royale row.
 
 `NAME_OVERRIDES` in `lib/naming.ts` hand-sets a displayed name (Antimere99 →
 OO, HoRR1DDD → D3VouRR), applied at render — not in `roster.json`, whose `inGameName` the build
@@ -111,20 +117,24 @@ Discarding your local `roster.json` costs nothing: the build only writes back
 `personaId` / `nucleusId` / `inGameName` as a cache, and whatever it resolved
 locally is re-resolved next run (or is already on the remote).
 
-## ⚠️ Changing a rated metric? Rebuild the data in the same change
+## ⚠️ Changing the rating? Rebuild the data in the same change
 
-`rateAll` runs in **the build, not the renderer** — `rating` and `standouts` are
-computed once and committed. A weight change has no effect on the live board
-until `npm run data` runs — or `npm run data:rerank`, which re-ranks the
-committed rows without an API call and is all a weight or K change needs.
+Scoring runs in **the build, not the renderer** — `rating`, the ledger fields
+and `standouts` are computed once and committed. A point value or weight
+change has no effect on the live board until `npm run data` runs — or
+`npm run data:rerank`, which re-ranks the committed rows without an API call
+and is all a point-value or weight change needs.
 
 Worse, adding a *new* metric without rebuilding takes the page down.
 `lib/data.ts` casts the committed JSON with `as unknown as BoardFile`, so
 TypeScript cannot see the field is missing; at runtime the new column reads
-`undefined`. `fmtNum`/`fmtPct` now guard `== null`, so the page shows dashes
-instead of crashing — but a rated metric missing from the current season still
-silently drops out of everyone's rating. Ship code and regenerated data in the
+`undefined`. `fmtNum`/`fmtPct`/`fmtInt`/`fmtPoints` guard `== null`, so the
+page shows dashes instead of crashing. Ship code and regenerated data in the
 same push. (Archived seasons are never regenerated, so they never gain it.)
+The ledger is the one exception that tolerates old rows: a row without the
+`top3`/`top5`/`top10` counts derives them from its stored rates
+(`medalCounts`), so the join route stays correct between a deploy and the
+next build.
 
 ## The refresh runs every two hours, best-effort, and is rarely on time
 
@@ -245,89 +255,102 @@ Consider [sponsoring them](https://github.com/sponsors/community-network).
 | `npm run build` | Production build |
 | `npm run data` | Refresh `data/` from the API — **makes live network calls** |
 | `npm run data:dry` | Same, writes nothing |
-| `npm run data:rerank` | Re-rank the committed board with **no API call** — all a rating-only change (a weight, the K constant) needs |
+| `npm run data:rerank` | Re-rank the committed board with **no API call** — all a rating-only change (a ledger point value, a Gauntlet weight) needs |
 | `npm run roster:parse -- intros.txt` | One-off roster seeding (done; refuses to overwrite) |
 
 ---
 
 ## The rating
 
-Weights live in `RATING_WEIGHTS[mode]` (`lib/rating.ts`). The `/rating` page
-reads them from there rather than repeating the numbers in prose, so the page
-cannot quietly disagree with the code.
+Two systems. **Rapid Royale (Season 5 on) is a points ledger**
+(`lib/ledger.ts`); **Gauntlet (Seasons 3–4, archived) is a percentile
+rating** of weighted rate stats (`RATING_WEIGHTS.gauntlet`, `lib/rating.ts`).
+The `/rating` page and the table's header tooltips read both from the
+constants rather than repeating the numbers in prose, so neither can quietly
+disagree with the code. Design: `docs/superpowers/specs/2026-11-09-rapid-royale-points-design.md`.
 
-**Rapid Royale Trio (Season 5 on), set 2026-10-27; total wins added
-2026-11-06** — the user's direction, in order:
+### Rapid Royale points (2026-11-09)
 
-| Weight | Metric | Why |
-|---|---|---|
-| 15% | Win rate | Even with top 3 — "all who win got into Top3 anyway", so a heavier win counts it twice |
-| 15% | Top-3 rate | Going deep every match. Guarded: null unless wins ≤ top3 ≤ matches |
-| 15% | KDA | (kills + assists) / deaths — `KDA_ASSIST_VALUE`. Plain K/D stays on the board, **unrated**, for reference. Was 18 until total wins took 3 |
-| 15% | Score per minute | Also where objective play still counts |
-| 14% | Kills per minute | Was 16 until total wins took 2 |
-| 13% | Revives per hour | |
-| 8% | Damage per minute | |
-| 5% | **Total wins** | A count, not a rate — see below |
+The user's call, replacing the weighted rating that ran 2026-10-27 to
+2026-11-09: "tracking traditional stats in a hectic mode as in Rapid Royale
+only discourages people and give people too much stress." The rating is a
+**plain season total** of points — nothing divided by matches or minutes,
+nothing compared to the field, nobody's number moves because someone else
+played. It can go negative. Same logic in Trio and Solo; only the medal
+rungs differ, because a Solo lobby is far bigger.
 
-The two placement rates are held to 30% deliberately: a win and a top three
-are shared with two teammates, so they say as much about who you queued
-with as about you.
+| Result | Trio finish | Solo finish | Points |
+|---|---|---|---|
+| Gold | 1st | 1st | **+15** |
+| Silver | 2nd–3rd | 2nd–5th | **+10** |
+| Bronze | 4th–5th | 6th–10th | **+5** |
+| Loss | 6th or worse | 11th or worse | **−5** |
 
-**Total wins (both Rapid Royale modes, 2026-11-06).** The user's reasoning:
-"i don't want to discourage players from trying to keep playing to win (and
-failing in the process) worried about it might ruin their stats". Every
-rate falls after a rough session, so a rate-only board tells a player
-minding their rating to stop; the win count is the only figure on the board
-that playing cannot lower. It is scored as the raw percentile of the count,
-**never blended** (`COUNT_METRICS` in `lib/rating.ts` — a count already
-carries its own volume, and blending would hand a thirty-game player wins
-they never had), and it earns a badge (🏅, top 10%) so the incentive is
-visible, not buried in a weight. Kept at 5% on purpose: wins track matches
-closely (correlation 0.90 across the Trio field), so a heavier weight is the
-rejected games-played bonus in all but name. The 5% came out of KDA and KPM
-together, at the user's direction, split in proportion (18 → 15, 16 → 14 in
-Trio; 25 → 22 KPM, 20 → 18 K/D in Solo); the win rate kept its 15. The W–L
-column's field is `wins`, so it sorts on the count and moves into the rated
-group where the mode rates it; in Gauntlet it stays unrated among the
-context columns. Re-rank at the time moved nobody more than three places.
+| Event | Points |
+|---|---|
+| Kill | **+1** |
+| Assist | **+0.5** (applied in Solo too, where it reads 0 or 1 and is inert) |
+| Death | **−1** |
 
-**Rapid Royale Solo (Season 5 on), set 2026-10-27; placement retuned
-2026-11-03** ("account for TOP5 instead of TOP3 and also give some credit
-for TOP10" — the user's words); **wins over kills 2026-11-07** ("wins (win
-rate, number of wins) should matter a bit more than KPM/DPM/KD than it is
-now" — shown a 6-point and a 10-point shift, they chose "SOLO only B", the
-10):
+The numbers are the user's, settled against the live board in passes:
+10/6/3/−3, then −6 for a loss ("does it leave many people to 0 or negative
+points" — 7 of 68 Trio ranked did), then 15/10/5/−5. Constants:
+`PLACEMENT_POINTS`, `FIGHT_POINTS`, `MEDAL_RUNGS`. Medals are differences of
+the nested API counters (gold = wins, silver = silver-rung count − wins,
+bronze = bronze-rung − silver-rung, losses = matches − bronze-rung), so a
+2nd and a 3rd in Trio are indistinguishable by design. A rung that fails
+`computeMetrics`' trust test makes the whole ledger **null** (never a
+partial total from fight points alone); such a player sits in Provisional
+with dashes.
 
-| Weight | Metric | Why |
-|---|---|---|
-| 20% | Win rate | Heads the table since 2026-11-07 (was 15). Top of a placement ladder — win 20 / top 5 10 / top 10 5. The rungs nest, so a win earns all three, a 4th place two, an 8th place one |
-| 18% | Kills per minute | Was 25, then 22 when total wins took 3 (11-06), then 18 when wins took 4 more (11-07) |
-| 15% | Score per minute | |
-| 14% | K/D | Plain K/D, **not KDA** (the user's call) — a Solo assist is only damage on someone else's kill. `kda` is null on Solo rows. Was 20 → 18 → 14 on the same two days |
-| 10% | Top-5 rate | In place of top 3. Guarded like top 3, and must also be ≥ the top-3 count |
-| 10% | **Total wins** | The one count in the rating; 5 on 11-06, 10 on 11-07 |
-| 8% | Damage per minute | Was 10 |
-| 5% | Top-10 rate | "Some credit" for outlasting most of the lobby. The 15/10/5 ladder split was my call, not the user's numbers |
+**Who is ranked:** 30+ matches **and a total above zero**. "All 0 and
+negative players can go back to provisional" — the user. Provisional holds
+newcomers, players at or below break-even, and null-ledger players, all
+with their points showing and sorted by points. Ties break on gold, then
+fight points, then EA ID (the build's idempotence needs a total order).
 
-Win figures 30 against kill figures 40, from 20 against 50. The ten points
-came out of KPM, K/D and DPM in proportion. Trio was deliberately left
-alone: its placement already sits level with its kill stats and it rates
-KDA, not K/D, so the imbalance the user saw was Solo's.
+**No blending.** The K-games blend toward the field mean (2026-10-31 to
+2026-11-09) left with the rates it blended — "no more mixing 30 games with
+average logic right?? the system is now purely accumulation base". No
+archived board was ever rated with it. `meta.confidenceGames` is a legacy
+field `rerankBoard` strips.
 
-No revives in Solo — nobody to pick up. **No Assists column on Solo either**
-(2026-11-03, "get rid of Assists"): a Solo assist is damage on someone else's
-kill, and the column read 0 or 1 all the way down. `MODES[mode].squadSize`
-(4 / 3 / 1) is what hides it; Trio keeps the column as the count behind KDA.
-`top3Pct` is still computed on Solo rows, unrated and not shown.
-Tried and dropped, don't re-add without asking: **top-5 rate in Trio** (nests a
-third time there — Solo rates it since 2026-11-03), **objective score per
-minute** (`score_objective_total`), **assists per minute** (double-counts
-assists once KDA carries them). Kricked's objective
-formula is Gauntlet-only — Rapid Royale has nothing for it to count.
+**The board** (Rapid Royale tabs) is styled as an **Olympic medal table**
+at the user's request: rank, player, then 🥇 🥈 🥉 columns tinted their
+metal (`MEDAL_TINT`), Losses muted, Kills / Assists / Deaths, and **Points**
+bold in the accent closing the group like the medal table's Total. After
+it, plain and unlit, the **reference columns**: KDA (Trio) or K/D (Solo),
+KPM, DPM, Rev/h (Trio) and Matches — "just reference metrics that don't
+directly affect rating". Gone from Rapid Royale: Win %, Top-N %, W–L, SPM,
+HS, K/match (the user's first instruction), Time, plain K/D on Trio, and
+**all badges** (`standouts` is `[]` on every Rapid Royale row). Hovering
+Points shows the split: placement points with the medal counts, fight
+points with the kill / assist / death counts. Column order is
+`ledgerFields(mode)` in `components/LeaderboardTable.tsx`; the lit set is
+`LEDGER_FIELDS` plus `rating`, and tests pin both.
 
-**Gauntlet (Seasons 3–4, archived), set 2026-09-15.** Frozen with the seasons;
-changing these weights changes nothing on the board.
+Where the standings moved on 2026-11-07 data: Grizzzvg #10 → #1 (12,294
+pts on 683 matches), DIA6711 #45 → #2 (879 matches), Antimere99 #1 → #6,
+Bourn3A #31 → #20 in Trio and #8 → #6 in Solo. Totals correlate ~0.7 with
+matches in Trio by design: a median player banks about 13 points a match,
+so playing more almost always ranks higher and only players below
+break-even fall as they play. The user saw these tables and accepted them.
+
+Consequences: `rating` on a Rapid Royale row is the points total, not
+0–100 — including on the public `/api/leaderboard` route (no known
+consumer); the join form says "N points across M matches" there and shows
+a Provisional player their points; `lib/ledger.ts` is framework-free like
+the rest of `lib/`.
+
+**Not in the ledger, by the user's direction or mine:** damage (the user's
+per-event list — kill, assist, death — did not include it; DPM is
+reference), score, time, revives, headshots. **No points per match
+anywhere** in the rating — a rate is what was removed. **No games-played
+bonus** — volume already flows through the total.
+
+### Gauntlet (Seasons 3–4, archived), set 2026-09-15
+
+Frozen with the seasons; changing these weights changes nothing on the board.
 
 | Weight | Metric | Why |
 |---|---|---|
@@ -355,37 +378,14 @@ average measures how deep the team went rather than the player's own rate.
 Kricked's sheet runs this over lifetime totals; the board runs it per season
 like every other stat, so the figures will not match the sheet one-for-one.
 
-Scoring is **percentile against the season's ranked field**, not a points
-formula — the units aren't comparable (a 3.0 K/D and 420 DPM), and any
+Gauntlet scoring is **percentile against the season's ranked field**, not a
+points formula — the units aren't comparable (a 3.0 K/D and 420 DPM), and any
 coefficient making them comparable would be invented and need retuning as the
-field changed. Consequence worth knowing: *a rating moves when other people
-play.* A metric that is `null` for a player is dropped and the remaining
-weights renormalise, so missing data never reads as a bad score.
-
-**Rates are blended with K games of league-average play before scoring**
-(2026-10-31, the user's direction: "60% win rate with 30 games isn't the same
-as 60% with 300 — the one with 300 should be rewarded for consistent
-performance"). A player's own figure counts for `games / (games + K)`; the
-board shows the raw figures and only the score uses the blended ones. K is
-**10 × the week of the season** (launch week is 1: 10, 20, 30 …), from
-`meta.seasonStart`, which the build takes from the game events feed's
-`validUntil.start`; `meta.confidenceGames` records the K a board was rated
-with, and the join route re-ranks with that same K so a signup and a build
-agree. With no launch known the fallback is a fixed 30. The user floated the
-numbers themselves — +1 per day, then +1 per two days, then +3 per week —
-and left the choice to me: weekly steps move the standings once a week
-instead of creeping daily. 3 a week went live first and was raised to 10 the
-same day when the user asked whether it was enough: this field's median
-ranked player plays 48 games a week, so at 3 the median kept 94% of their
-own rate and only the bottom quarter felt it. At 10, thirty games by week 3
-is exactly half-trusted, the median keeps 83%, and K ends a 14-week season
-at 140 (a 300-game player 68% own, a 700-game grinder 83%). Considered
-and dropped: a fixed K of 30 (right for one week only) and a direct weight
-on games played (rewards playing a lot badly; a 672-game 29% would climb).
-Consequences: standings move a little when K steps up even if nobody plays;
-a late joiner is measured from launch week like everyone else; badges stay
-on the raw figures. The constant is `CONFIDENCE_GAMES_PER_WEEK` in
-`lib/rating.ts`; the `/rating` page and the rating tooltip read it from there.
+field changed. Consequence: *a Gauntlet rating moved when other people
+played* (moot now the seasons are frozen). A metric that is `null` for a
+player is dropped and the remaining weights renormalise, so missing data
+never reads as a bad score. The raw figures are scored: the games-blended
+variant only ever ran on Rapid Royale (see above) and is gone.
 
 **Kills per minute, not per match.** Every other rate in the rating is per unit
 of time, and a Gauntlet match has no fixed length, so per-match quietly
@@ -394,7 +394,9 @@ rewarded whoever survived into long rounds — which win rate already measures.
 **The badge set is deliberately not the rated set** (`STANDOUT_TRAITS` vs
 `RATING_WEIGHTS`). `killsPerMatch` still earns a badge although it no longer
 scores: both are columns on the board, and "most kills in a round" is what
-people recognise in each other. Don't "fix" the divergence.
+people recognise in each other. Don't "fix" the divergence. Badges are
+Gauntlet-only now; the 🏅 total-wins badge (2026-11-06) left with the Rapid
+Royale rating on 2026-11-09.
 
 When the user writes weights out (e.g. "kd 12%, kpm 12%"), they are naming
 **board column headers**, not field names. `kpm` is the KPM column (kills per
@@ -450,16 +452,20 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 
 | Decision | Why |
 |---|---|
-| Rank on a **weighted rating**, not raw Win % | Winning alone doesn't say whether you carried your squad or were carried by it. Win rate still dominates at 50% |
-| **Percentile scoring**, not a points formula | Incomparable units; any coefficient making them comparable would be invented and need retuning as the field changed |
-| **Blend rates toward the field mean by games played**, K = 10 × week of season (2026-10-31) | 60% over 30 games is luck, over 300 it is skill. A volume bonus would reward playing a lot badly; a fixed K is only right for one week |
-| **30-match floor**, Provisional shown not hidden | Stops a short fluke topping the board; hiding people hurts morale. `MIN_MATCHES` in `lib/ranking.ts`. (An earlier draft used 10 — stray comments may still say so; the value is 30) |
+| **Rapid Royale ranks on a points ledger, not rates** (2026-11-09) | "Tracking traditional stats in a hectic mode … only discourages people and gives people too much stress." Every match can bank points; the only way down is finishing out of the medals or dying more than you kill |
+| **Loss −5**, after −3 and −6 were tried (2026-11-09) | The user asked how many land at or below zero and settled here: 5 of 68 Trio ranked negative, 1 of 11 Solo |
+| **Zero or below is Provisional**, whatever the match count (2026-11-09) | "All 0 and negative players can go back to provisional." The number still shows; the rank does not |
+| **No damage points**; KPM, DPM, revives reference only (2026-11-09) | The user's per-event list was kill, assist, death. "KPM/DPM/revives are just reference metrics that don't directly affect rating" |
+| **Medal-table styling** on Rapid Royale (2026-11-09) | "Imitate Olympic country leaderboard style" — medals first, total bold, everything else quiet |
+| Gauntlet: rank on a **weighted rating**, not raw Win % | Winning alone doesn't say whether you carried your squad or were carried by it (archived) |
+| Gauntlet: **percentile scoring**, not a points formula | Incomparable units; any coefficient making them comparable would be invented and need retuning as the field changed (archived) |
+| ~~Blend rates toward the field mean by games played~~ (2026-10-31 → 2026-11-09) | Superseded: a ledger has no rates to blend. "No more mixing 30 games with average logic" |
+| **30-match floor**, Provisional shown not hidden | Stops a short fluke topping the board; hiding people hurts morale. `MIN_MATCHES` in `lib/ranking.ts`. On Rapid Royale a rank also needs a positive total |
 | Badges are **top 10%**, not an absolute floor | Absolute floors decay into noise — a 65%-automatic-kills floor sounded selective and covered nearly the whole board. A tenth of the field stays a tenth whatever the meta does |
 | ✈ badge instead of excluding jet players | The two Gauntlet variants can't be separated; be honest rather than fabricate a split |
 | **No filters at all** (2026-09-13) | Region / platform / main-mode chips were removed at the user's request — the board is Gauntlet-only, so slicing by community metadata added confusion rather than signal. `region`, `platform` and `mainMode` are still parsed into `roster.json` and carried on each row, so re-adding a filter later is cheap |
-| **Solo placement is a ladder**: win 15 / top 5 10 / top 10 5 (2026-11-03) | The user asked for top 5 in place of top 3 "and some credit for top 10". A Solo lobby is big enough that top ten ran 52–76%, where Trio's sat near 100% — so Trio stays on top 3 alone |
-| **Total wins at 5%, raw count, never blended** (2026-11-06) | The only figure playing cannot lower, so a rough session is never a reason to stop. Small because it tracks games played (0.90); taken from KDA/KPM, not win rate, at the user's direction. A games-played weight stays rejected |
-| **Solo: win figures 30 vs kill figures 40** (2026-11-07) | The user wanted wins to "matter a bit more than KPM/DPM/KD" in Solo and chose the larger of two shifts. Total wins at 10 there is tolerable because Solo wins track games played loosely (0.54), where Trio's 0.90 keeps it at 5 |
+| **Solo's medal rungs are wider than Trio's** (top 5 / top 10 vs top 3 / top 5) | Carried over from the 2026-11-03 ladder: a Solo lobby is big enough that top ten ran 52–76%, where Trio's sat near 100% |
+| ~~Total wins at 5%~~, ~~Solo win figures 30 vs kill 40~~ (2026-11-06/07 → 2026-11-09) | Superseded by the ledger, which keeps their intent: a win is the biggest single credit (+15) and playing can bank points every match |
 | `getRowId` = `eaId`, not a composite | `eaId` is the roster key; a duplicate should throw loudly, not be papered over |
 | GitHub Actions, not Vercel Cron | Committing each run gives free **git snapshot history**, which makes a rolling-form board possible later with no redesign. Vercel Hobby caps cron at daily anyway |
 | Retry only 5xx + transport errors | 422 is what this API returns for a malformed bulk body — masking it behind retries turns an instant diagnosable failure into a slow confusing one |
@@ -474,6 +480,9 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
   the committed board from GitHub with Next's `fetch` cache options on the
   request, and statically imports the generated JSON as the fallback snapshot.
 - **`buildBoard` is pure.** Network and filesystem live only in `scripts/build.ts`.
+- **`rankPlayers` dispatches on mode** (`lib/ranking.ts`): Rapid Royale rows
+  go through `scoreLedger` and the positive-total rule; Gauntlet rows through
+  `rateAll` percentiles. The join route and the build share it.
 - **Seasons are discovered, never hardcoded.** `fetchCurrentSeason` reads the
   active `Season\d+` from the live `/bf6/gameevents/` feed, and `lib/pipeline.ts`
   unions it into the season list. When EA flips to Season 5 the next daily build
@@ -540,3 +549,9 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 - A member skipped (`fetch_failed`) in the last build before a season rolls
   over is missing from that season's archive, since the archive is that
   build's output and is never recomputed.
+- `/api/leaderboard` serves `rating` as the points total on Rapid Royale rows
+  since 2026-11-09 (0–100 on Gauntlet rows). No consumer of the route is
+  known; if one appears, give it a `points` field rather than changing
+  `rating` back.
+- Medal tints were checked in headless Chrome at 1680px on 2026-11-09, not
+  on a phone.
