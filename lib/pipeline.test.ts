@@ -374,9 +374,9 @@ describe('buildBoard', () => {
     const board = buildBoard([dark], [soloResponse('Season5')], 'Season5');
     expect(board.meta.seasons).toEqual(['Season5']);
     // The Trio slice has 85 matches and no wins or placements: 85 losses at
-    // −5 is −425 points, which is Provisional however many matches it is.
+    // −10 is −850 points, which is Provisional however many matches it is.
     expect(board.seasons.Season5).toEqual([]);
-    expect(board.provisional.Season5[0]).toMatchObject({ matches: 85, rating: -425, unplaced: 85 });
+    expect(board.provisional.Season5[0]).toMatchObject({ matches: 85, rating: -850, unplaced: 85 });
     const solo = board.seasons['Season5-solo'][0];
     expect(solo.matches).toBe(40);
     expect(solo.top3Pct).toBe(25);
@@ -388,7 +388,7 @@ describe('buildBoard', () => {
     // Solo's ledger: 4 wins, 9 more top fives, 16 more top tens, 11 losses;
     // 120 kills, 30 assists, 36 deaths.
     expect(solo).toMatchObject({
-      gold: 4, silver: 9, bronze: 16, unplaced: 11, placementPts: 115, fightPts: 99, rating: 214, rank: 1, standouts: [],
+      gold: 4, silver: 9, bronze: 16, unplaced: 11, placementPts: 60, fightPts: 99, rating: 159, rank: 1, standouts: [],
     });
   });
 
@@ -433,7 +433,7 @@ describe('buildBoard', () => {
     // losses; 989 kills, 446 assists, 147 deaths.
     expect(row).toMatchObject({
       top3: 68, top5: 75, top10: 83,
-      gold: 52, silver: 16, bronze: 7, unplaced: 10, placementPts: 1150, fightPts: 1065, rating: 2215, standouts: [],
+      gold: 52, silver: 16, bronze: 7, unplaced: 10, placementPts: 1100, fightPts: 1065, rating: 2165, standouts: [],
     });
   });
 

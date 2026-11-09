@@ -284,7 +284,7 @@ rungs differ, because a Solo lobby is far bigger.
 | Gold | 1st | 1st | **+20** |
 | Silver | 2nd–3rd | 2nd–5th | **+10** |
 | Bronze | 4th–5th | 6th–10th | **0** — neither earns nor costs |
-| Loss | 6th or worse | 11th or worse | **−5** |
+| Loss | 6th or worse | 11th or worse | **−10** |
 
 | Event | Points |
 |---|---|
@@ -295,7 +295,8 @@ rungs differ, because a Solo lobby is far bigger.
 The numbers are the user's, settled against the live board in passes:
 10/6/3/−3, then −6 for a loss ("does it leave many people to 0 or negative
 points" — 7 of 68 Trio ranked did), then 15/10/5/−5 (shipped first), then
-the same day 20/10/0/−5: a win worth two silvers, a bronze worth nothing.
+the same day 20/10/0: a win worth two silvers, a bronze worth nothing; then
+the loss to −10, what a silver earns.
 Constants:
 `PLACEMENT_POINTS`, `FIGHT_POINTS`, `MEDAL_RUNGS`. Medals are differences of
 the nested API counters (gold = wins, silver = silver-rung count − wins,
@@ -323,7 +324,7 @@ metal (`MEDAL_TINT`), Losses muted, Kills / Assists / Deaths, and **Points**
 bold in the accent closing the group like the medal table's Total. Every
 ledger header is two lines — the icon or name, then what earns it and what
 it is worth: "Winner · +20", "Top 3 · +10", "Top 5 · +0" (Solo: Top 5, Top
-10), and "−5", "+1", "+0.5", "−1" under Losses, Kills, Assists, Deaths
+10), and "−10", "+1", "+0.5", "−1" under Losses, Kills, Assists, Deaths
 (`ledgerHeader`, `medalCaption`; asked for the same day after bare icons
 shipped: "state what medals mean … also the point for each column"). After
 it, plain and unlit, the **reference columns**: KDA (Trio) or K/D (Solo),
@@ -460,7 +461,7 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
 | Decision | Why |
 |---|---|
 | **Rapid Royale ranks on a points ledger, not rates** (2026-11-09) | "Tracking traditional stats in a hectic mode … only discourages people and gives people too much stress." Every match can bank points; the only way down is finishing out of the medals or dying more than you kill |
-| **Gold 20 / silver 10 / bronze 0 / loss −5**, after 10/6/3/−3, a −6 loss and 15/10/5/−5 (2026-11-09) | The user asked how many land at or below zero at each step and settled on a win worth two silvers and a bronze worth nothing; the −5 loss stays as the brake on volume |
+| **Gold 20 / silver 10 / bronze 0 / loss −10**, after 10/6/3/−3, −6, 15/10/5/−5 and 20/10/0/−5 (all 2026-11-09) | The user asked how many land at or below zero at each step and settled on a win worth two silvers, a bronze worth nothing, and a loss costing a silver; the loss is the brake on volume |
 | **Zero or below is Provisional**, whatever the match count (2026-11-09) | "All 0 and negative players can go back to provisional." The number still shows; the rank does not |
 | **No damage points**; KPM, DPM, revives reference only (2026-11-09) | The user's per-event list was kill, assist, death. "KPM/DPM/revives are just reference metrics that don't directly affect rating" |
 | **Medal-table styling** on Rapid Royale (2026-11-09) | "Imitate Olympic country leaderboard style" — medals first, total bold, everything else quiet |

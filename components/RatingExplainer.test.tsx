@@ -19,7 +19,7 @@ describe('RatingExplainer', () => {
     expect(rowFor('Bronze')).toHaveTextContent('+0');
     expect(rowFor('Loss')).toHaveTextContent('6th or worse');
     expect(rowFor('Loss')).toHaveTextContent('11th or worse');
-    expect(rowFor('Loss')).toHaveTextContent('−5');
+    expect(rowFor('Loss')).toHaveTextContent('−10');
   });
 
   it('lets the point tables scroll inside themselves on a narrow screen', () => {

@@ -324,7 +324,7 @@ describe('LeaderboardTable', () => {
       expect(header('bronze')).toContain('+0');
       // Every column that moves the total says by how much, right in the header.
       expect(header('unplaced')).toContain('Losses');
-      expect(header('unplaced')).toContain('−5');
+      expect(header('unplaced')).toContain('−10');
       expect(header('kills')).toContain('+1');
       expect(header('assists')).toContain('+0.5');
       expect(header('deaths')).toContain('−1');
@@ -349,7 +349,7 @@ describe('LeaderboardTable', () => {
       expect(header('gold')).toContain('Winner');
       expect(header('silver')).toContain('Top 5');
       expect(header('bronze')).toContain('Top 10');
-      expect(header('unplaced')).toContain('−5');
+      expect(header('unplaced')).toContain('−10');
     });
   });
 
@@ -359,7 +359,7 @@ describe('LeaderboardTable', () => {
     expect(columnDescription('gold', undefined, '🥇', 'rapidRoyale')).toBe('Gold · 1st place · +20 each');
     expect(columnDescription('silver', undefined, '🥈', 'rapidRoyale')).toBe('Silver · 2nd–3rd place · +10 each');
     expect(columnDescription('silver', undefined, '🥈', 'rapidRoyaleSolo')).toBe('Silver · 2nd–5th place · +10 each');
-    expect(columnDescription('unplaced', undefined, 'Losses', 'rapidRoyaleSolo')).toBe('11th or worse · −5 each');
+    expect(columnDescription('unplaced', undefined, 'Losses', 'rapidRoyaleSolo')).toBe('11th or worse · −10 each');
     expect(columnDescription('assists', undefined, 'Assists', 'rapidRoyale')).toBe('+0.5 each');
     expect(columnDescription('deaths', undefined, 'Deaths', 'rapidRoyale')).toBe('−1 each');
     expect(columnDescription('kpm', 'Kills per minute', 'KPM', 'rapidRoyale')).toBe('Kills per minute · reference only, not part of the points');
