@@ -36,8 +36,8 @@ const trio = (over: Partial<BoardRow>): BoardRow =>
 const MEDALS: Medal[] = ['gold', 'silver', 'bronze', 'unplaced'];
 
 describe('the ledger constants', () => {
-  it("scores the owner's table: 15/10/5/−5 and 1/0.5/−1", () => {
-    expect(PLACEMENT_POINTS).toEqual({ gold: 15, silver: 10, bronze: 5, unplaced: -5 });
+  it("scores the owner's table: 20/10/0/−5 and 1/0.5/−1", () => {
+    expect(PLACEMENT_POINTS).toEqual({ gold: 20, silver: 10, bronze: 0, unplaced: -5 });
     expect(FIGHT_POINTS).toEqual({ kill: 1, assist: 0.5, death: -1 });
     expect(MEDAL_RUNGS).toEqual({ rapidRoyale: { silver: 3, bronze: 5 }, rapidRoyaleSolo: { silver: 5, bronze: 10 } });
   });
@@ -52,19 +52,19 @@ describe('medalCounts and ledgerOf', () => {
   it('derives Trio medals from wins, top three and top five', () => {
     expect(medalCounts(trio({}), 'rapidRoyale')).toEqual({ gold: 20, silver: 20, bronze: 15, unplaced: 45 });
     expect(ledgerOf(trio({}), 'rapidRoyale')).toEqual({
-      gold: 20, silver: 20, bronze: 15, unplaced: 45, placementPts: 350, fightPts: 150, rating: 500,
+      gold: 20, silver: 20, bronze: 15, unplaced: 45, placementPts: 375, fightPts: 150, rating: 525,
     });
   });
 
   it('derives Solo medals from wins, top five and top ten — same points, wider rungs', () => {
     expect(ledgerOf(trio({}), 'rapidRoyaleSolo')).toEqual({
-      gold: 20, silver: 35, bronze: 15, unplaced: 30, placementPts: 575, fightPts: 150, rating: 725,
+      gold: 20, silver: 35, bronze: 15, unplaced: 30, placementPts: 600, fightPts: 150, rating: 750,
     });
   });
 
   it('goes negative for a player below break-even', () => {
     const l = ledgerOf(trio({ matches: 50, wins: 0, top3: 2, top5: 5, kills: 40, assists: 0, deaths: 90 }), 'rapidRoyale');
-    expect(l).toMatchObject({ placementPts: -190, fightPts: -50, rating: -240 });
+    expect(l).toMatchObject({ placementPts: -205, fightPts: -50, rating: -255 });
   });
 
   it('keeps the half point an assist earns', () => {
@@ -99,7 +99,7 @@ describe('scoreLedger', () => {
       'rapidRoyale',
     );
     expect(a).toMatchObject({
-      gold: 20, silver: 20, bronze: 15, unplaced: 45, placementPts: 350, fightPts: 150, rating: 500, standouts: [],
+      gold: 20, silver: 20, bronze: 15, unplaced: 45, placementPts: 375, fightPts: 150, rating: 525, standouts: [],
     });
     expect(b).toMatchObject({
       gold: null, silver: null, bronze: null, unplaced: null, placementPts: null, fightPts: null, rating: null,
@@ -131,7 +131,7 @@ describe('labels', () => {
   });
 
   it('labels point values with a true minus sign', () => {
-    expect([15, 0.5, -5].map(pointsEach)).toEqual(['+15 each', '+0.5 each', '−5 each']);
+    expect([20, 0.5, -5].map(pointsEach)).toEqual(['+20 each', '+0.5 each', '−5 each']);
   });
 
   it('writes ordinals', () => {

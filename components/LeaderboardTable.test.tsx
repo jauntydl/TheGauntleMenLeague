@@ -315,13 +315,13 @@ describe('LeaderboardTable', () => {
       const header = (f: string) => container.querySelector(`.MuiDataGrid-columnHeader[data-field="${f}"]`)!.textContent!;
       expect(header('gold')).toContain('🥇');
       expect(header('gold')).toContain('Winner');
-      expect(header('gold')).toContain('+15');
+      expect(header('gold')).toContain('+20');
       expect(header('silver')).toContain('🥈');
       expect(header('silver')).toContain('Top 3');
       expect(header('silver')).toContain('+10');
       expect(header('bronze')).toContain('🥉');
       expect(header('bronze')).toContain('Top 5');
-      expect(header('bronze')).toContain('+5');
+      expect(header('bronze')).toContain('+0');
       // Every column that moves the total says by how much, right in the header.
       expect(header('unplaced')).toContain('Losses');
       expect(header('unplaced')).toContain('−5');
@@ -356,7 +356,7 @@ describe('LeaderboardTable', () => {
   it('says what each ledger column is worth, by mode', () => {
     // Through columnDescription, as the weight-tooltip test does: jsdom never
     // opens a tooltip, and the description is what the header shows.
-    expect(columnDescription('gold', undefined, '🥇', 'rapidRoyale')).toBe('Gold · 1st place · +15 each');
+    expect(columnDescription('gold', undefined, '🥇', 'rapidRoyale')).toBe('Gold · 1st place · +20 each');
     expect(columnDescription('silver', undefined, '🥈', 'rapidRoyale')).toBe('Silver · 2nd–3rd place · +10 each');
     expect(columnDescription('silver', undefined, '🥈', 'rapidRoyaleSolo')).toBe('Silver · 2nd–5th place · +10 each');
     expect(columnDescription('unplaced', undefined, 'Losses', 'rapidRoyaleSolo')).toBe('11th or worse · −5 each');

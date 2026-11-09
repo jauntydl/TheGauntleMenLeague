@@ -100,7 +100,7 @@ describe('rankPlayers', () => {
 });
 
 describe('rankPlayers on a Rapid Royale board', () => {
-  /** A hundred Trio matches: 20 wins, 40 top threes, 55 top fives — 500 points. */
+  /** A hundred Trio matches: 20 wins, 40 top threes, 55 top fives — 525 points. */
   const trio = (over: Partial<BoardRow>): BoardRow =>
     row({ matches: 100, wins: 20, top3: 40, top5: 55, top10: 70, kills: 300, assists: 100, deaths: 200, rating: null, ...over });
 
@@ -119,17 +119,17 @@ describe('rankPlayers on a Rapid Royale board', () => {
     expect(ranked[0].rank).toBe(1);
     expect(provisional.map((r) => r.eaId)).toEqual(['rookie', 'zero', 'negative']);
     expect(provisional.map((r) => r.rank)).toEqual([null, null, null]);
-    expect(provisional.map((r) => r.rating)).toEqual([expect.any(Number), 0, -240]);
+    expect(provisional.map((r) => r.rating)).toEqual([expect.any(Number), 0, -255]);
   });
 
   it('orders by points, then gold, then fight points, then EA ID', () => {
-    // All three total 500: more-gold trades 20 fight points for one more win
-    // (placement 370, fights 130); a and b are identical but for their IDs.
+    // All three total 525: more-gold trades 25 fight points for one more win
+    // (placement 400, fights 125); a and b are identical but for their IDs.
     const { ranked } = rankFor(
-      [trio({ eaId: 'b' }), trio({ eaId: 'a' }), trio({ eaId: 'more-gold', wins: 21, top3: 41, top5: 56, kills: 280 })],
+      [trio({ eaId: 'b' }), trio({ eaId: 'a' }), trio({ eaId: 'more-gold', wins: 21, top3: 41, top5: 56, kills: 275 })],
       'rapidRoyale',
     );
-    expect(ranked.map((r) => r.rating)).toEqual([500, 500, 500]);
+    expect(ranked.map((r) => r.rating)).toEqual([525, 525, 525]);
     expect(ranked.map((r) => r.eaId)).toEqual(['more-gold', 'a', 'b']);
     expect(ranked.map((r) => r.rank)).toEqual([1, 2, 3]);
   });
@@ -150,6 +150,6 @@ describe('rankPlayers on a Rapid Royale board', () => {
 
   it('uses Solo\'s wider rungs on the Solo board', () => {
     const { ranked } = rankFor([trio({ eaId: 's' })], 'rapidRoyaleSolo');
-    expect(ranked[0]).toMatchObject({ gold: 20, silver: 35, bronze: 15, unplaced: 30, rating: 725 });
+    expect(ranked[0]).toMatchObject({ gold: 20, silver: 35, bronze: 15, unplaced: 30, rating: 750 });
   });
 });

@@ -10,13 +10,13 @@ describe('RatingExplainer', () => {
     const t = screen.getByRole('table', { name: 'Rapid Royale placement points' });
     const rowFor = (label: string) => within(t).getByText(label).closest('tr')!;
     expect(rowFor('Gold')).toHaveTextContent('1st place');
-    expect(rowFor('Gold')).toHaveTextContent('+15');
+    expect(rowFor('Gold')).toHaveTextContent('+20');
     expect(rowFor('Silver')).toHaveTextContent('2nd–3rd place');
     expect(rowFor('Silver')).toHaveTextContent('2nd–5th place');
     expect(rowFor('Silver')).toHaveTextContent('+10');
     expect(rowFor('Bronze')).toHaveTextContent('4th–5th place');
     expect(rowFor('Bronze')).toHaveTextContent('6th–10th place');
-    expect(rowFor('Bronze')).toHaveTextContent('+5');
+    expect(rowFor('Bronze')).toHaveTextContent('+0');
     expect(rowFor('Loss')).toHaveTextContent('6th or worse');
     expect(rowFor('Loss')).toHaveTextContent('11th or worse');
     expect(rowFor('Loss')).toHaveTextContent('−5');

@@ -388,7 +388,7 @@ describe('buildBoard', () => {
     // Solo's ledger: 4 wins, 9 more top fives, 16 more top tens, 11 losses;
     // 120 kills, 30 assists, 36 deaths.
     expect(solo).toMatchObject({
-      gold: 4, silver: 9, bronze: 16, unplaced: 11, placementPts: 175, fightPts: 99, rating: 274, rank: 1, standouts: [],
+      gold: 4, silver: 9, bronze: 16, unplaced: 11, placementPts: 115, fightPts: 99, rating: 214, rank: 1, standouts: [],
     });
   });
 
@@ -433,7 +433,7 @@ describe('buildBoard', () => {
     // losses; 989 kills, 446 assists, 147 deaths.
     expect(row).toMatchObject({
       top3: 68, top5: 75, top10: 83,
-      gold: 52, silver: 16, bronze: 7, unplaced: 10, placementPts: 925, fightPts: 1065, rating: 1990, standouts: [],
+      gold: 52, silver: 16, bronze: 7, unplaced: 10, placementPts: 1150, fightPts: 1065, rating: 2215, standouts: [],
     });
   });
 

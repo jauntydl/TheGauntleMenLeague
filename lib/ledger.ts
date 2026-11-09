@@ -15,13 +15,15 @@ import type { ModeKey } from './modes';
  * now the Gauntlet archive's alone) could never say.
  *
  * The numbers are the owner's, settled over several passes against the
- * live Season 5 board (10/6/3/−3, then −6, then this). The −5 loss is the
- * brake on volume: a player who dies more than they kill and finishes
- * outside the medals most matches goes negative however much they play.
+ * live Season 5 board: 10/6/3/−3, then a −6 loss, then 15/10/5/−5 (shipped
+ * 2026-11-09), then the same day 20/10/0/−5 — the win worth twice a silver,
+ * and a bronze worth nothing either way. The −5 loss is the brake on volume:
+ * a player who dies more than they kill and finishes outside the medals
+ * most matches goes negative however much they play.
  */
 
 /** Points for how a match ended. `unplaced` is shown on the board as "Losses". */
-export const PLACEMENT_POINTS = { gold: 15, silver: 10, bronze: 5, unplaced: -5 } as const satisfies Record<string, number>;
+export const PLACEMENT_POINTS = { gold: 20, silver: 10, bronze: 0, unplaced: -5 } as const satisfies Record<string, number>;
 export type Medal = keyof typeof PLACEMENT_POINTS;
 
 /** Points for what happened in the fight. Applied in Solo too, where an assist count of 0 or 1 makes it inert. */
