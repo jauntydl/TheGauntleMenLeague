@@ -154,6 +154,25 @@ export function finishLabel(mode: LedgerMode, medal: Medal): string {
   }
 }
 
+/**
+ * The word under a medal's icon in the board header: what finish earns it,
+ * in this mode's rungs. "Winner" · "Top 3" · "Top 5" on Trio; "Winner" ·
+ * "Top 5" · "Top 10" on Solo. Losses is already a word.
+ */
+export function medalCaption(mode: LedgerMode, medal: Medal): string {
+  const { silver, bronze } = MEDAL_RUNGS[mode];
+  switch (medal) {
+    case 'gold':
+      return 'Winner';
+    case 'silver':
+      return `Top ${silver}`;
+    case 'bronze':
+      return `Top ${bronze}`;
+    case 'unplaced':
+      return 'Losses';
+  }
+}
+
 /** "+15 each", "+0.5 each", "−5 each" — a true minus sign, not a hyphen. */
 export function pointsEach(points: number): string {
   return `${points < 0 ? '−' : '+'}${Math.abs(points)} each`;

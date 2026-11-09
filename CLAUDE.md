@@ -318,7 +318,12 @@ field `rerankBoard` strips.
 **The board** (Rapid Royale tabs) is styled as an **Olympic medal table**
 at the user's request: rank, player, then 🥇 🥈 🥉 columns tinted their
 metal (`MEDAL_TINT`), Losses muted, Kills / Assists / Deaths, and **Points**
-bold in the accent closing the group like the medal table's Total. After
+bold in the accent closing the group like the medal table's Total. Every
+ledger header is two lines — the icon or name, then what earns it and what
+it is worth: "Winner · +15", "Top 3 · +10", "Top 5 · +5" (Solo: Top 5, Top
+10), and "−5", "+1", "+0.5", "−1" under Losses, Kills, Assists, Deaths
+(`ledgerHeader`, `medalCaption`; asked for the same day after bare icons
+shipped: "state what medals mean … also the point for each column"). After
 it, plain and unlit, the **reference columns**: KDA (Trio) or K/D (Solo),
 KPM, DPM, Rev/h (Trio) and Matches — "just reference metrics that don't
 directly affect rating". Gone from Rapid Royale: Win %, Top-N %, W–L, SPM,

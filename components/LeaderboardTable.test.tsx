@@ -310,8 +310,26 @@ describe('LeaderboardTable', () => {
       const { container } = render(
         <LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'Medals', gold: 20, silver: 7, bronze: 3, unplaced: 4 })]} />,
       );
-      const header = (f: string) => container.querySelector(`.MuiDataGrid-columnHeader[data-field="${f}"]`)!.textContent;
-      expect([header('gold'), header('silver'), header('bronze')]).toEqual(['🥇', '🥈', '🥉']);
+      // The icon says which metal; the caption says what finish earns it,
+      // in this mode's rungs. Solo's captions are checked below.
+      const header = (f: string) => container.querySelector(`.MuiDataGrid-columnHeader[data-field="${f}"]`)!.textContent!;
+      expect(header('gold')).toContain('🥇');
+      expect(header('gold')).toContain('Winner');
+      expect(header('gold')).toContain('+15');
+      expect(header('silver')).toContain('🥈');
+      expect(header('silver')).toContain('Top 3');
+      expect(header('silver')).toContain('+10');
+      expect(header('bronze')).toContain('🥉');
+      expect(header('bronze')).toContain('Top 5');
+      expect(header('bronze')).toContain('+5');
+      // Every column that moves the total says by how much, right in the header.
+      expect(header('unplaced')).toContain('Losses');
+      expect(header('unplaced')).toContain('−5');
+      expect(header('kills')).toContain('+1');
+      expect(header('assists')).toContain('+0.5');
+      expect(header('deaths')).toContain('−1');
+      // The reference columns say nothing of the sort.
+      expect(header('kpm')).not.toMatch(/[+−]\d/);
       // jsdom lays out nothing and resolves no stylesheet, so the tint is
       // asserted by class, as the pinned columns are.
       const cell = (f: string) => container.querySelector(`.MuiDataGrid-cell[data-field="${f}"]`)!;
@@ -321,6 +339,17 @@ describe('LeaderboardTable', () => {
       expect(cell('unplaced').className).not.toContain('medal-');
       expect(cell('gold').textContent).toBe('20');
       expect(screen.getByText('Losses')).toBeInTheDocument();
+    });
+  });
+
+  it('captions Solo\'s medals by its wider rungs', () => {
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable mode="rapidRoyaleSolo" rows={[row({ displayName: 'SoloMedals' })]} />);
+      const header = (f: string) => container.querySelector(`.MuiDataGrid-columnHeader[data-field="${f}"]`)!.textContent!;
+      expect(header('gold')).toContain('Winner');
+      expect(header('silver')).toContain('Top 5');
+      expect(header('bronze')).toContain('Top 10');
+      expect(header('unplaced')).toContain('−5');
     });
   });
 

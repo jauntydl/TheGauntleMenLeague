@@ -11,6 +11,7 @@ import {
   scoreLedger,
   ordinal,
   finishLabel,
+  medalCaption,
   pointsEach,
   type Medal,
 } from './ledger';
@@ -120,6 +121,13 @@ describe('labels', () => {
     expect(MEDALS.map((m) => finishLabel('rapidRoyaleSolo', m))).toEqual([
       '1st place', '2nd–5th place', '6th–10th place', '11th or worse',
     ]);
+  });
+
+  it('captions the medal columns by what finish earns them', () => {
+    const medals: Medal[] = ['gold', 'silver', 'bronze'];
+    expect(medals.map((m) => medalCaption('rapidRoyale', m))).toEqual(['Winner', 'Top 3', 'Top 5']);
+    expect(medals.map((m) => medalCaption('rapidRoyaleSolo', m))).toEqual(['Winner', 'Top 5', 'Top 10']);
+    expect(medalCaption('rapidRoyale', 'unplaced')).toBe('Losses');
   });
 
   it('labels point values with a true minus sign', () => {

@@ -19,6 +19,7 @@ import {
   LEDGER_FIELDS,
   isLedgerMode,
   finishLabel,
+  medalCaption,
   pointsEach,
   type FightEvent,
   type LedgerMode,
@@ -389,10 +390,10 @@ const countColumn = (field: keyof BoardRow, headerName: string, width = 80): Gri
  * header tooltip (ledgerDescription), not here.
  */
 const LEDGER_COLUMNS: Record<string, GridColDef<BoardRow>> = {
-  gold: { ...countColumn('gold', '🥇', 64), cellClassName: 'medal-col medal-gold' },
-  silver: { ...countColumn('silver', '🥈', 64), cellClassName: 'medal-col medal-silver' },
-  bronze: { ...countColumn('bronze', '🥉', 64), cellClassName: 'medal-col medal-bronze' },
-  unplaced: { ...countColumn('unplaced', 'Losses', 76), cellClassName: 'losses-col' },
+  gold: { ...countColumn('gold', 'Gold', 84), cellClassName: 'medal-col medal-gold' },
+  silver: { ...countColumn('silver', 'Silver', 84), cellClassName: 'medal-col medal-silver' },
+  bronze: { ...countColumn('bronze', 'Bronze', 84), cellClassName: 'medal-col medal-bronze' },
+  unplaced: { ...countColumn('unplaced', 'Losses', 80), cellClassName: 'losses-col' },
   kills: countColumn('kills', 'Kills'),
   assists: countColumn('assists', 'Assists'),
   deaths: countColumn('deaths', 'Deaths'),
@@ -401,6 +402,63 @@ const LEDGER_COLUMNS: Record<string, GridColDef<BoardRow>> = {
     description: `Matches this season · ${MIN_MATCHES} for a rank`,
   },
 };
+
+const MEDAL_ICON: Record<Exclude<Medal, 'unplaced'>, string> = { gold: '🥇', silver: '🥈', bronze: '🥉' };
+
+/**
+ * A ledger column's header says what the column is and what each one is
+ * worth, in two lines: the medal's icon (or the column's name) above, and
+ * below it the finish that earns the medal and the signed points — "Winner ·
+ * +15", "Top 3 · +10", or just "−5", "+1", "+0.5", "−1". The owner asked for
+ * both after seeing bare icons: a reader should not need the tooltip to know
+ * what a silver is or what a death costs.
+ */
+function ledgerHeader(field: string, mode: LedgerMode): Pick<GridColDef<BoardRow>, 'renderHeader'> {
+  const medal = medalOf(field);
+  const event = fightEventOf(field);
+  const points = medal ? PLACEMENT_POINTS[medal] : event ? FIGHT_POINTS[event] : null;
+  if (points === null) return {};
+  const icon = medal && medal !== 'unplaced' ? MEDAL_ICON[medal] : null;
+  const top = icon ?? (medal ? MEDAL_NAME[medal] : LEDGER_COLUMNS[field].headerName);
+  const caption = [medal && medal !== 'unplaced' ? medalCaption(mode, medal) : null, fmtSignedPoint(points)]
+    .filter(Boolean)
+    .join(' · ');
+  // A custom header renders outside .MuiDataGrid-columnHeaderTitle, so the
+  // lit-column title style (display face, bold, accent) is applied here by
+  // hand; the caption takes the medal's metal where there is one.
+  const tint = medal && medal !== 'unplaced' ? MEDAL_TINT[medal] : undefined;
+  return {
+    renderHeader: () => (
+      <Box
+        component="span"
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1, py: 0.25 }}
+      >
+        <Box
+          component="span"
+          sx={
+            icon
+              ? { fontSize: '1.15rem' }
+              : {
+                  fontFamily: 'var(--font-display), sans-serif',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  color: 'primary.main',
+                }
+          }
+        >
+          {top}
+        </Box>
+        <Box
+          component="span"
+          className="tnum"
+          sx={{ fontSize: '0.66rem', letterSpacing: '0.04em', color: tint ?? 'text.secondary' }}
+        >
+          {caption}
+        </Box>
+      </Box>
+    ),
+  };
+}
 
 /** A Rapid Royale board's columns, in medal-table order; the rating column is the Points total. */
 function ledgerFields(mode: LedgerMode): string[] {
@@ -600,7 +658,9 @@ export function LeaderboardTable({
     // Olympic medal-table order on a Rapid Royale board: the medals, the
     // losses, the fight counts, the total, then the rates kept for reference.
     const ledgerColumns: GridColDef<BoardRow>[] = isLedgerMode(mode)
-      ? ledgerFields(mode).map((f) => (f === 'rating' ? rating : (LEDGER_COLUMNS[f] ?? RATED_COLUMNS[f])))
+      ? ledgerFields(mode).map((f) =>
+          f === 'rating' ? rating : { ...(LEDGER_COLUMNS[f] ?? RATED_COLUMNS[f]), ...ledgerHeader(f, mode) },
+        )
       : [];
 
     const gauntletColumns: GridColDef<BoardRow>[] = isLedgerMode(mode) ? [] : [
@@ -797,7 +857,6 @@ export function LeaderboardTable({
               `& .MuiDataGrid-columnHeader.medal-${m}`,
               { boxShadow: `inset 0 -2px 0 ${alpha(MEDAL_TINT[m], 0.9)}`, bgcolor: alpha(MEDAL_TINT[m], 0.08) },
             ],
-            [`& .MuiDataGrid-columnHeader.medal-${m} .MuiDataGrid-columnHeaderTitle`, { fontSize: '1.15rem', lineHeight: 1 }],
             [`& .MuiDataGrid-cell.medal-${m}`, { color: MEDAL_TINT[m], fontWeight: 600, bgcolor: alpha(MEDAL_TINT[m], 0.04) }],
           ]),
         ),
