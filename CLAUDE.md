@@ -31,7 +31,7 @@ the board from GitHub" below), so a data commit no longer redeploys anything.
 Current state (2026-11-09, data of 09:58 UTC): 147 roster members · Season 5
 Trio has 65 ranked, 29 provisional; Solo has 10 ranked, 60 provisional (on
 the points ledger — see below); 3 unresolved · Seasons 3–4 archived, Season 2
-dropped · 374 tests passing · `tsc --noEmit` clean.
+dropped · 383 tests passing · `tsc --noEmit` clean.
 
 ---
 
@@ -507,6 +507,12 @@ sitting side by side in `Metrics` — confirm before swapping one for the other.
   **one** commit via `lib/github.ts`. The site re-reads the board within a
   minute of the push (no deploy — the build is skipped for data commits), so
   the player is live in about a minute. Git is the store; a bad signup is a revert.
+  After the commit the route posts one line to a **Discord incoming webhook**
+  (`JOIN_WEBHOOK_URL` Vercel env var; `lib/notify.ts`, 2026-11-09, the
+  owner's pick over a phone push or a GitHub issue per signup): "🆕 **Name**
+  joined the board — EA ID … · Season 5 Trio #18, 3,859 points over 287
+  matches · <site>". Awaited with a 3 s timeout and best-effort: unset,
+  refused or down, the signup still succeeds and a warning is logged.
 - **The join route re-reads from GitHub, never from its own bundle.**
   `lib/data.ts` holds a build-time snapshot; two signups a minute apart would
   both write on top of it and the second would erase the first. It also means a

@@ -1,4 +1,5 @@
 import { processJoin, type JoinFailure } from '@/lib/join';
+import { joinMessage, notifyJoin } from '@/lib/notify';
 import { commitFiles, readConfig, readFile, RefMovedError } from '@/lib/github';
 import { fetchBulk, fetchCurrentSeason, fetchPersonas, resolvePlayer } from '@/lib/gametools';
 import { clientKey, take } from '@/lib/ratelimit';
@@ -75,6 +76,13 @@ export async function POST(req: Request): Promise<Response> {
       },
       (e) => e instanceof RefMovedError,
     );
+
+    // Tell the owner. Awaited, because a serverless function may be frozen
+    // the moment the response goes out; bounded, so Discord can never hold
+    // a signup open; best-effort, so it can never fail one.
+    if (result.ok) {
+      await notifyJoin(process.env.JOIN_WEBHOOK_URL, joinMessage(result, new URL(req.url).origin));
+    }
 
     return Response.json(result, { status: result.ok ? 200 : STATUS[result.reason] });
   } catch (e) {

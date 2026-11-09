@@ -26,6 +26,10 @@ import {
   type Medal,
 } from '@/lib/ledger';
 import { MIN_MATCHES } from '@/lib/ranking';
+import { fmtPoints } from '@/lib/format';
+
+// Re-exported for the join form and the tests, which have always read it from here.
+export { fmtPoints };
 
 const DASH = '—';
 const MINUS = '−';
@@ -98,17 +102,6 @@ function ledgerDescription(
   if (REFERENCE_FIELDS.has(field)) return `${base ?? headerName} · reference only, not part of the points`;
   return base;
 }
-
-/**
- * The season total as the board shows it: a whole number with thousands
- * separators and a true minus sign. The half point an assist earns rounds
- * away from zero for display only; the sort is on the exact value.
- */
-export const fmtPoints = (v: number | null | undefined): string => {
-  if (v == null) return DASH;
-  const whole = Math.round(Math.abs(v));
-  return `${v < 0 && whole > 0 ? MINUS : ''}${INT.format(whole)}`;
-};
 
 /**
  * A signed half of the total, exact: the cell rounds its total for display,
