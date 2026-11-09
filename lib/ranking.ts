@@ -1,5 +1,5 @@
 import type { BoardRow } from './types';
-import { rateAll, FALLBACK_CONFIDENCE_GAMES } from './rating';
+import { rateAll } from './rating';
 import { isLedgerMode, scoreLedger } from './ledger';
 import type { ModeKey } from './modes';
 
@@ -56,12 +56,7 @@ const byPoints = (a: BoardRow, b: BoardRow): number =>
  * provisional Gauntlet player carries no rating: a percentile is
  * meaningless against a population you were excluded from.
  */
-export function rankPlayers(
-  rows: BoardRow[],
-  mode: ModeKey,
-  /** Gauntlet only: games of league-average play blended into every rate — see rating.ts. */
-  confidenceGames: number = FALLBACK_CONFIDENCE_GAMES,
-): { ranked: BoardRow[]; provisional: BoardRow[] } {
+export function rankPlayers(rows: BoardRow[], mode: ModeKey): { ranked: BoardRow[]; provisional: BoardRow[] } {
   if (isLedgerMode(mode)) {
     const scored = scoreLedger(rows, mode).map((r) => ({ ...r, rank: null }));
     const ranked = scored.filter((r) => r.matches >= MIN_MATCHES && r.rating !== null && r.rating > 0);
@@ -88,7 +83,7 @@ export function rankPlayers(
   // Rate against the ranked field only: a percentile is meaningless against a
   // population you were excluded from, so provisional players keep rating null
   // and are ordered on win rate alone.
-  const rated = rateAll(eligible, mode, confidenceGames);
+  const rated = rateAll(eligible, mode);
   rated.sort(byStanding);
   provisional.sort(byStanding);
 

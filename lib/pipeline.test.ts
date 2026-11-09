@@ -103,22 +103,32 @@ describe('buildBoard', () => {
     expect(typeof board.meta.builtAt).toBe('string');
   });
 
-  it('records the season launch and the K it rated with, from the day of the season', () => {
+  it('records the season launch, and no K — nothing is blended any more', () => {
     const launch = new Date('2026-10-13T12:00:00Z');
     const board = buildBoard([dark], [rawSample], 'Season4', new Date('2026-10-31T00:00:00Z'), null, new Set(), launch);
     expect(board.meta.seasonStart).toBe('2026-10-13T12:00:00.000Z');
-    expect(board.meta.confidenceGames).toBe(30);
+    expect('confidenceGames' in board.meta).toBe(false);
   });
 
-  it('re-ranks the current season from committed rows with the K its own dates give, keeping builtAt', () => {
+  it('re-ranks the current season from committed rows, keeping builtAt and dropping a legacy K', () => {
     const launch = new Date('2026-10-13T12:00:00Z');
     const at = new Date('2026-10-31T00:00:00Z');
     const live = buildBoard([dark], [rawSample], 'Season4', at, null, new Set(), launch);
-    // Ratings cleared and K wrong, as after a constant changes under a committed board.
+    // Ratings cleared and a K left over from before 2026-11-09, as a board
+    // committed under the old code carries.
     const stale = {
       ...live,
-      meta: { ...live.meta, confidenceGames: 999 },
+      meta: { ...live.meta, confidenceGames: 40 },
       seasons: { Season4: live.seasons.Season4.map((r) => ({ ...r, rating: 0, rank: 42, standouts: [] })) },
+    };
+    expect(rerankBoard(stale)).toEqual(live);
+  });
+
+  it('re-ranks a Rapid Royale board from committed rows through the ledger', () => {
+    const live = buildBoard([dark], [soloResponse('Season5')], 'Season5');
+    const stale = {
+      ...live,
+      seasons: { ...live.seasons, 'Season5-solo': live.seasons['Season5-solo'].map((r) => ({ ...r, rating: 0, rank: 9, gold: null })) },
     };
     expect(rerankBoard(stale)).toEqual(live);
   });
@@ -136,10 +146,9 @@ describe('buildBoard', () => {
     expect(rerankBoard(board).seasons.Season3).toEqual([frozen]);
   });
 
-  it('falls back to a fixed K when the launch is unknown, and says so in meta', () => {
+  it('records a null launch when the feed never said', () => {
     const board = buildBoard([dark], [rawSample], 'Season4');
     expect(board.meta.seasonStart).toBeNull();
-    expect(board.meta.confidenceGames).toBe(30);
   });
 
   it('lists roster members with no ids as unresolved', () => {

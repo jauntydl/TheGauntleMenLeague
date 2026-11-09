@@ -45,6 +45,33 @@ describe('JoinForm', () => {
     expect(screen.getByText(/4 Season4 matches/)).toBeInTheDocument();
   });
 
+  it('reports points, not a rating, on a Rapid Royale board', async () => {
+    vi.stubGlobal('fetch', answer({
+      ok: true, eaId: 'Trio', season: 'Season5 Trio', rank: 7, rating: 1990, matches: 85, provisional: false, ledger: true,
+    }));
+
+    render(<JoinForm />);
+    await userEvent.type(screen.getByLabelText('EA ID'), 'Trio');
+    await userEvent.click(screen.getByRole('button', { name: /add me/i }));
+
+    await waitFor(() => expect(screen.getByText(/Trio is in at #7/)).toBeInTheDocument());
+    expect(screen.getByText(/1,990 points across 85 Season5 Trio matches/)).toBeInTheDocument();
+  });
+
+  it('tells a Provisional Rapid Royale player their points and what earns a rank', async () => {
+    vi.stubGlobal('fetch', answer({
+      ok: true, eaId: 'Below', season: 'Season5 Trio', rank: null, rating: -40, matches: 12, provisional: true, ledger: true,
+    }));
+
+    render(<JoinForm />);
+    await userEvent.type(screen.getByLabelText('EA ID'), 'Below');
+    await userEvent.click(screen.getByRole('button', { name: /add me/i }));
+
+    await waitFor(() => expect(screen.getByText(/provisionally/i)).toBeInTheDocument());
+    expect(screen.getByText(/12 Season5 Trio matches and −40 points/)).toBeInTheDocument();
+    expect(screen.getByText(/30 matches and a total above zero/)).toBeInTheDocument();
+  });
+
   it('shows the server’s own wording when it refuses', async () => {
     // The route explains why in terms the visitor can act on, so the form
     // must not paper over it with a generic failure message.

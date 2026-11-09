@@ -1,16 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  percentile,
-  rateAll as rateFor,
-  RATING_WEIGHTS,
-  ratedMetrics,
-  confidenceGames,
-  ownRateShare,
-  shrinkRate,
-  weekOfSeason,
-  CONFIDENCE_GAMES_PER_WEEK,
-  FALLBACK_CONFIDENCE_GAMES,
-} from './rating';
+import { percentile, rateAll as rateFor, RATING_WEIGHTS, STANDOUT_TRAITS, ratedMetrics } from './rating';
 
 const rateAll = (rows: BoardRow[]) => rateFor(rows, 'gauntlet');
 import type { BoardRow } from './types';
@@ -43,121 +32,19 @@ describe('percentile', () => {
   });
 });
 
-describe('confidenceGames', () => {
-  const launch = new Date('2026-10-13T12:00:00Z');
-
-  it('is 10 in launch week and climbs by 10 each week', () => {
-    expect(CONFIDENCE_GAMES_PER_WEEK).toBe(10);
-    expect(weekOfSeason(launch, launch)).toBe(1);
-    expect(confidenceGames(launch, launch)).toBe(10);
-    expect(confidenceGames(launch, new Date('2026-10-20T11:59:00Z'))).toBe(10);
-    expect(confidenceGames(launch, new Date('2026-10-20T12:00:00Z'))).toBe(20);
-    expect(weekOfSeason(launch, new Date('2026-10-31T00:00:00Z'))).toBe(3);
-    expect(confidenceGames(launch, new Date('2026-10-31T00:00:00Z'))).toBe(30);
-  });
-
-  it('never drops below launch week, even before launch', () => {
-    expect(weekOfSeason(launch, new Date('2026-10-01T00:00:00Z'))).toBe(1);
-    expect(confidenceGames(launch, new Date('2026-10-01T00:00:00Z'))).toBe(10);
-  });
-
-  it('has a fallback for a season whose launch is unknown', () => {
-    expect(FALLBACK_CONFIDENCE_GAMES).toBe(30);
-  });
-});
-
-describe('shrinkRate', () => {
-  it('counts a rate for the games behind it: half at K games', () => {
-    expect(ownRateShare(30, 30)).toBeCloseTo(0.5);
-    expect(ownRateShare(90, 30)).toBeCloseTo(0.75);
-    expect(ownRateShare(300, 30)).toBeCloseTo(10 / 11);
-  });
-
-  it('pulls a short sample toward the field and leaves a long one nearly alone', () => {
-    // 60% over 30 games with a 40% field: half yours, half theirs.
-    expect(shrinkRate(60, 30, 40, 30)).toBeCloseTo(50);
-    expect(shrinkRate(60, 300, 40, 30)).toBeCloseTo(58.18, 1);
-  });
-});
-
 describe('rateAll', () => {
-  it('rates the same good rate higher over more games, and the same bad rate lower', () => {
-    // Three players identical on everything but win rate and games. The
-    // average player anchors the field mean between the other two, so the
-    // short sample is pulled toward it and the long one barely moves.
-    const field = [
-      row({ eaId: 'avg', matches: 100, winPct: 50 }),
-      row({ eaId: 'luckyShort', matches: 30, winPct: 70 }),
-      row({ eaId: 'provenLong', matches: 300, winPct: 70 }),
-      row({ eaId: 'unluckyShort', matches: 30, winPct: 30 }),
-      row({ eaId: 'provenBad', matches: 300, winPct: 30 }),
-    ];
-    const by = Object.fromEntries(rateFor(field, 'gauntlet', 30).map((r) => [r.eaId, r.rating!]));
-    expect(by.provenLong).toBeGreaterThan(by.luckyShort);
-    expect(by.provenBad).toBeLessThan(by.unluckyShort);
-    // Without the weighting the pairs would tie: the raw rates are equal.
-    const raw = Object.fromEntries(rateFor(field, 'gauntlet', 0).map((r) => [r.eaId, r.rating!]));
-    expect(raw.provenLong).toBe(raw.luckyShort);
-  });
-
-  it('weights harder as K rises: a long 62% overtakes a short 66% once K is high enough', () => {
-    const field = [
-      row({ eaId: 'avg', matches: 100, winPct: 50 }),
-      row({ eaId: 'short', matches: 30, winPct: 66 }),
-      row({ eaId: 'long', matches: 300, winPct: 62 }),
-    ];
-    const by = (k: number) => Object.fromEntries(rateFor(field, 'gauntlet', k).map((r) => [r.eaId, r.rating!]));
-    expect(by(0).short).toBeGreaterThan(by(0).long);
-    expect(by(30).short).toBeGreaterThan(by(30).long);
-    expect(by(90).long).toBeGreaterThan(by(90).short);
-  });
-
-  it('leaves badges on the raw figures — a badge marks what the board shows', () => {
-    const field = [
-      row({ eaId: 'a', matches: 100, winPct: 50 }),
-      row({ eaId: 'b', matches: 100, winPct: 50 }),
-      row({ eaId: 'c', matches: 100, winPct: 50 }),
-      row({ eaId: 'd', matches: 100, winPct: 50 }),
-      row({ eaId: 'e', matches: 100, winPct: 50 }),
-      row({ eaId: 'f', matches: 100, winPct: 50 }),
-      row({ eaId: 'g', matches: 100, winPct: 50 }),
-      row({ eaId: 'h', matches: 100, winPct: 50 }),
-      row({ eaId: 'i', matches: 100, winPct: 50 }),
-      row({ eaId: 'short', matches: 30, winPct: 90 }),
-    ];
-    const short = rateFor(field, 'gauntlet', 300).find((r) => r.eaId === 'short')!;
-    expect(short.standouts).toContain('winPct');
-  });
-
-  it('totals one in every mode, and weights each mode as set', () => {
+  it('weights Gauntlet as set, totalling one, and rates Rapid Royale on no weights at all', () => {
     // The weights total one so the explainer's percentages add up on the page.
-    for (const mode of ['gauntlet', 'rapidRoyale', 'rapidRoyaleSolo'] as const) {
-      const weights = Object.values(RATING_WEIGHTS[mode]);
-      expect(weights.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
-    }
-    // Gauntlet: winning leads, objective work is second.
     const g = RATING_WEIGHTS.gauntlet;
+    expect(Object.values(g).reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
+    // Gauntlet: winning leads, objective work is second.
     expect(g.winPct).toBe(Math.max(...Object.values(g)));
     expect(g.objPtsPerHour).toBe(Math.max(...Object.values(g).filter((w) => w !== g.winPct)));
-    // Trio: every win is a top three, so placement splits evenly rather
-    // than counting the win twice.
-    expect(RATING_WEIGHTS.rapidRoyale.winPct).toBe(RATING_WEIGHTS.rapidRoyale.top3Pct);
-    // Solo: a ladder, each rung lighter than the one above — a win earns all
-    // three, a fourth place two, an eighth place one.
-    const s = RATING_WEIGHTS.rapidRoyaleSolo;
-    expect(s.winPct!).toBeGreaterThan(s.top5Pct!);
-    expect(s.top5Pct!).toBeGreaterThan(s.top10Pct!);
-    expect(s.winPct! + s.top5Pct! + s.top10Pct!).toBeCloseTo(0.35, 6);
-    // Solo (2026-11-07): the win leads the table, and the two win figures
-    // together (30) sit nearer the three kill figures (40) than they did.
-    expect(s.winPct).toBe(Math.max(...Object.values(s)));
-    expect(s.winPct! + s.wins!).toBeCloseTo(0.3, 6);
-    expect(s.kpm! + s.kd! + s.dpm!).toBeCloseTo(0.4, 6);
-    // Total wins in both Rapid Royale modes (2026-11-06): the one figure
-    // playing cannot lower. Gauntlet is archived and never gained it.
-    expect(RATING_WEIGHTS.rapidRoyale.wins).toBe(0.05);
-    expect(s.wins).toBe(0.1);
-    expect(RATING_WEIGHTS.gauntlet.wins).toBeUndefined();
+    // Rapid Royale is ranked on the points ledger (lib/ledger.ts) since
+    // 2026-11-09, so neither board carries a weight; the table and the
+    // explainer read the ledger instead.
+    expect(RATING_WEIGHTS.rapidRoyale).toEqual({});
+    expect(RATING_WEIGHTS.rapidRoyaleSolo).toEqual({});
   });
 
   it('rates the metrics the explainer promises, and nothing else', () => {
@@ -166,101 +53,33 @@ describe('rateAll', () => {
     expect(Object.keys(RATING_WEIGHTS.gauntlet)).toEqual([
       'winPct', 'objPtsPerHour', 'kd', 'kpm', 'spm', 'revivesPerHour', 'dpm',
     ]);
-    expect(Object.keys(RATING_WEIGHTS.rapidRoyale)).toEqual([
-      'winPct', 'top3Pct', 'wins', 'kda', 'kpm', 'spm', 'revivesPerHour', 'dpm',
-    ]);
-    expect(Object.keys(RATING_WEIGHTS.rapidRoyaleSolo)).toEqual([
-      'winPct', 'top5Pct', 'top10Pct', 'wins', 'kpm', 'kd', 'spm', 'dpm',
-    ]);
-  });
-
-  it('rates Solo on plain K/D and leaves revives out — there is nobody to revive', () => {
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.kda).toBeUndefined();
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.revivesPerHour).toBeUndefined();
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.objPtsPerHour).toBeUndefined();
-  });
-
-  it('rates Solo placement on top five and top ten, not top three (2026-11-03)', () => {
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.top3Pct).toBeUndefined();
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.top5Pct).toBeDefined();
-    expect(RATING_WEIGHTS.rapidRoyaleSolo.top10Pct).toBeDefined();
-  });
-
-  it('keeps Gauntlet\'s objective formula out of Rapid Royale, and top five and ten out of Trio', () => {
-    expect(RATING_WEIGHTS.rapidRoyale.objPtsPerHour).toBeUndefined();
-    // Rapid Royale rates KDA in K/D's place; rating both would count kills twice.
-    expect(RATING_WEIGHTS.rapidRoyale.kd).toBeUndefined();
-    // Trio keeps top three alone: top five would nest the same finish a third time.
-    expect(RATING_WEIGHTS.rapidRoyale.top5Pct).toBeUndefined();
-    expect(RATING_WEIGHTS.rapidRoyale.top10Pct).toBeUndefined();
-    for (const m of ['top3Pct', 'top5Pct', 'top10Pct']) {
+    for (const m of ['top3Pct', 'top5Pct', 'top10Pct', 'kda', 'wins']) {
       expect(Object.keys(RATING_WEIGHTS.gauntlet)).not.toContain(m);
     }
   });
 
-  it('rates a Solo field on its placement ladder, and not on top three', () => {
-    const [low, high] = rateFor([
-      row({ eaId: 'low', top5Pct: 30, top10Pct: 50 }),
-      row({ eaId: 'high', top5Pct: 60, top10Pct: 80 }),
-    ], 'rapidRoyaleSolo');
-    expect(high.rating!).toBeGreaterThan(low.rating!);
-    // Top three is on every Solo row but rates nothing there.
-    const [a, b] = rateFor([
-      row({ eaId: 'a', top3Pct: 10 }),
-      row({ eaId: 'b', top3Pct: 90 }),
-    ], 'rapidRoyaleSolo');
-    expect(a.rating).toBe(b.rating);
-  });
-
   it('lists a mode\'s rated metrics heaviest first', () => {
-    const order = ratedMetrics('rapidRoyale');
-    const w = RATING_WEIGHTS.rapidRoyale;
+    const order = ratedMetrics('gauntlet');
+    const w = RATING_WEIGHTS.gauntlet;
     for (let i = 1; i < order.length; i++) expect(w[order[i - 1]]!).toBeGreaterThanOrEqual(w[order[i]]!);
-    // Total wins is Trio's lightest weight, so its W–L column sits at the end
-    // of the rated group. Solo leads with the win rate since 2026-11-07.
-    expect(order.at(-1)).toBe('wins');
-    expect(ratedMetrics('rapidRoyaleSolo')[0]).toBe('winPct');
-    expect(ratedMetrics('rapidRoyaleSolo').at(-1)).toBe('top10Pct');
+    expect(order[0]).toBe('winPct');
+    expect(order.at(-1)).toBe('dpm');
+    expect(ratedMetrics('rapidRoyale')).toEqual([]);
   });
 
-  it('scores total wins as a count: more wins rate higher, however many games they took', () => {
-    // Identical on every rate; apart only on how many wins they have banked.
-    // A count is not blended toward the field mean — the count already
-    // carries its own volume — so the short sample's 20 wins stay 20, and
-    // the rating is the same whatever K is.
+  it('keeps total wins out of the badge set — it left with the Rapid Royale weights', () => {
+    expect(STANDOUT_TRAITS).not.toContain('wins');
+    expect(STANDOUT_TRAITS).toContain('killsPerMatch');
+  });
+
+  it('awards a badge to the top tenth of the field on a stat, on the raw figures', () => {
     const field = [
-      row({ eaId: 'mid', matches: 100, wins: 50 }),
-      row({ eaId: 'few', matches: 30, wins: 20 }),
-      row({ eaId: 'many', matches: 300, wins: 100 }),
+      ...'abcdefghi'.split('').map((id) => row({ eaId: id, matches: 100, winPct: 50 })),
+      row({ eaId: 'short', matches: 30, winPct: 90 }),
     ];
-    const by = (k: number) => Object.fromEntries(rateFor(field, 'rapidRoyale', k).map((r) => [r.eaId, r.rating!]));
-    expect(by(40).many).toBeGreaterThan(by(40).mid);
-    expect(by(40).mid).toBeGreaterThan(by(40).few);
-    expect(by(1000)).toEqual(by(0));
-  });
-
-  it('awards a badge for total wins — the figure people count in each other', () => {
-    const field = [
-      ...'abcdefghi'.split('').map((id) => row({ eaId: id, matches: 100, wins: 50 })),
-      row({ eaId: 'grinder', matches: 600, wins: 300 }),
-    ];
-    const grinder = rateFor(field, 'rapidRoyale').find((r) => r.eaId === 'grinder')!;
-    expect(grinder.standouts).toContain('wins');
-    expect(rateFor(field, 'rapidRoyale').find((r) => r.eaId === 'a')!.standouts).not.toContain('wins');
-  });
-
-  it('rates a Rapid Royale field on its own metrics', () => {
-    // Identical on every Gauntlet metric, apart only on Rapid Royale ones.
-    const [low, high] = rateFor([
-      row({ eaId: 'low', top3Pct: 40, kda: 2 }),
-      row({ eaId: 'high', top3Pct: 80, kda: 6 }),
-    ], 'rapidRoyale');
-    expect(high.rating!).toBeGreaterThan(low.rating!);
-    const [a, b] = rateAll([
-      row({ eaId: 'low', top3Pct: 40, kda: 2 }),
-      row({ eaId: 'high', top3Pct: 80, kda: 6 }),
-    ]);
-    expect(a.rating).toBe(b.rating);
+    const rated = rateAll(field);
+    expect(rated.find((r) => r.eaId === 'short')!.standouts).toContain('winPct');
+    expect(rated.find((r) => r.eaId === 'a')!.standouts).not.toContain('winPct');
   });
 
   it('scores a stronger player above a weaker one', () => {
@@ -269,6 +88,13 @@ describe('rateAll', () => {
       row({ eaId: 'strong', winPct: 90, kd: 5, kpm: 2.4, dpm: 400, spm: 1400, objPtsPerHour: 140, revivesPerHour: 9 }),
     ]);
     expect(strong.rating!).toBeGreaterThan(weak.rating!);
+  });
+
+  it('scores the raw figures — the same rate over more games rates the same', () => {
+    // The games-blended rating left with the Rapid Royale weights on
+    // 2026-11-09; Gauntlet's archive was never rated with it.
+    const [short, long] = rateAll([row({ eaId: 'short', matches: 30, winPct: 70 }), row({ eaId: 'long', matches: 300, winPct: 70 })]);
+    expect(short.rating).toBe(long.rating);
   });
 
   it('drops a missing metric instead of scoring it as bad', () => {

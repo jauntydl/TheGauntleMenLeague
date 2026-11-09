@@ -10,16 +10,33 @@ import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { MIN_MATCHES } from '@/lib/ranking';
+import { fmtPoints } from './LeaderboardTable';
 
 type Success = {
   ok: true;
   eaId: string;
   season: string;
   rank: number | null;
+  /** Points on a Rapid Royale board; the 0–100 rating on a Gauntlet one. */
   rating: number | null;
   matches: number;
   provisional: boolean;
+  /** True when the board ranks on points — see lib/ledger.ts. */
+  ledger?: boolean;
 };
+
+/** The sentence under the headline: what the player has, and what earns a rank if they lack one. */
+function standing(r: Success): string {
+  const games = `${r.matches} ${r.season} matches`;
+  if (r.ledger) {
+    return r.provisional
+      ? `You have ${games} and ${fmtPoints(r.rating)} points. ${MIN_MATCHES} matches and a total above zero puts you in the standings.`
+      : `${fmtPoints(r.rating)} points across ${games}.`;
+  }
+  return r.provisional
+    ? `You have ${games}. ${MIN_MATCHES} gets you a rating and a place in the standings.`
+    : `Rating ${r.rating?.toFixed(1)} across ${games}.`;
+}
 type Failure = { ok: false; reason: string; message: string };
 
 export function JoinForm() {
@@ -90,9 +107,7 @@ export function JoinForm() {
               : `${result.eaId} is in at #${result.rank}.`}
           </Typography>
           <Typography variant="body2">
-            {result.provisional
-              ? `You have ${result.matches} ${result.season} matches. ${MIN_MATCHES} gets you a rating and a place in the standings.`
-              : `Rating ${result.rating?.toFixed(1)} across ${result.matches} ${result.season} matches.`}{' '}
+            {standing(result)}{' '}
             The board rebuilds itself when someone joins, so give it about a minute,
             then <Link href="/">go and look</Link>.
           </Typography>

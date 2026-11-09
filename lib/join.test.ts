@@ -84,6 +84,24 @@ describe('mergePlayer', () => {
     expect(after).not.toEqual(before);
   });
 
+  it("leaves everyone else's points alone on a Rapid Royale board", () => {
+    // A ledger total is the player's own sum, not a position in the field,
+    // so a signup moves ranks but never anyone else's number.
+    const trio = (over: Partial<BoardRow>) => row({ top3: 70, top5: 80, rating: null, ...over });
+    const existing: BoardFile = {
+      meta: { currentSeason: 'Season5', seasons: ['Season5'], builtAt: '2026-11-09T00:00:00.000Z' },
+      seasons: { Season5: [trio({ eaId: 'a', wins: 50 }), trio({ eaId: 'b', wins: 40 })] },
+      provisional: { Season5: [] },
+      unresolved: [],
+    };
+    const first = mergePlayer(existing, { ...existing, seasons: { Season5: [] } });
+    const before = Object.fromEntries(first.seasons.Season5.map((r) => [r.eaId, r.rating]));
+    const merged = mergePlayer(first, { ...existing, seasons: { Season5: [trio({ eaId: 'new', wins: 60 })] } });
+    const after = Object.fromEntries(merged.seasons.Season5.filter((r) => r.eaId !== 'new').map((r) => [r.eaId, r.rating]));
+    expect(after).toEqual(before);
+    expect(merged.seasons.Season5.map((r) => r.eaId)).toEqual(['new', 'a', 'b']);
+  });
+
   it('puts a short-record player in the provisional section', () => {
     const merged = mergePlayer(
       board([row({ eaId: 'a' })]),
@@ -131,9 +149,20 @@ describe('mergePlayer', () => {
 describe('placementOf', () => {
   it('reports a rank for a ranked player and null for a provisional one', () => {
     const b = board([row({ eaId: 'a', rank: 1, rating: 70 })], [row({ eaId: 'p', matches: 3 })]);
-    expect(placementOf(b, 'a')).toMatchObject({ rank: 1, rating: 70, provisional: false });
-    expect(placementOf(b, 'p')).toMatchObject({ rank: null, provisional: true, matches: 3 });
+    expect(placementOf(b, 'a')).toMatchObject({ rank: 1, rating: 70, provisional: false, ledger: false });
+    // A Gauntlet provisional carries no rating: a percentile needs the field.
+    expect(placementOf(b, 'p')).toMatchObject({ rank: null, rating: null, provisional: true, matches: 3, ledger: false });
     expect(placementOf(b, 'nobody')).toBeNull();
+  });
+
+  it("reports a Provisional Rapid Royale player's points, and that the board is a ledger", () => {
+    const b: BoardFile = {
+      meta: { currentSeason: 'Season5', seasons: ['Season5'], builtAt: '2026-11-09T00:00:00.000Z' },
+      seasons: { Season5: [], 'Season5-solo': [] },
+      provisional: { Season5: [row({ eaId: 'below', matches: 50, rating: -240 })], 'Season5-solo': [] },
+      unresolved: [],
+    };
+    expect(placementOf(b, 'below')).toMatchObject({ rank: null, rating: -240, provisional: true, ledger: true });
   });
 
   it('finds a Solo-only player on the Solo board, and prefers a ranked place', () => {

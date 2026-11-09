@@ -2,7 +2,6 @@ import type { BoardFile, BoardRow, RawResponse, RosterEntry, UnresolvedEntry } f
 import { extractSlices, readPlayerIds, hasStatData } from './extract';
 import { computeMetrics } from './metrics';
 import { rankPlayers } from './ranking';
-import { confidenceGames, FALLBACK_CONFIDENCE_GAMES } from './rating';
 import { boardKey, compareBoardKeys, modeForBoard, modesForSeason, parseBoardKey } from './modes';
 import type { BulkPlayer } from './gametools';
 
@@ -47,9 +46,9 @@ const roundRate = (v: number | null): number | null =>
  * compute from — and are listed as unresolved with a reason that says it was
  * the API's fault, not their privacy settings.
  *
- * `seasonStart` sets the K every rate is blended with (rating.ts), from the
- * week of the season `now` falls in; without it the fallback K applies, and
- * meta records which so the page can say.
+ * `seasonStart` is recorded in meta as the season's launch, when the feed
+ * gave one; nothing is computed from it since the games-blended rating left
+ * on 2026-11-09.
  */
 export function buildBoard(
   roster: RosterEntry[],
@@ -60,7 +59,6 @@ export function buildBoard(
   failed: ReadonlySet<string> = new Set(),
   seasonStart: Date | null = null,
 ): BoardFile {
-  const k = seasonStart ? confidenceGames(seasonStart, now) : FALLBACK_CONFIDENCE_GAMES;
   const byPersona = new Map(roster.filter((r) => r.personaId).map((r) => [r.personaId!, r]));
 
   const rowsByBoard = new Map<string, BoardRow[]>();
@@ -165,7 +163,7 @@ export function buildBoard(
     // which is documented-unstable. Sort by eaId first so tied rows land in
     // the same place on every run, keeping the daily build idempotent.
     const sorted = [...rows].sort((a, b) => a.eaId.localeCompare(b.eaId));
-    const split = rankPlayers(sorted, modeForBoard(key).key, k);
+    const split = rankPlayers(sorted, modeForBoard(key).key);
     seasons[key] = split.ranked;
     provisional[key] = split.provisional;
   }
@@ -192,7 +190,6 @@ export function buildBoard(
       seasons: seasonNames,
       builtAt: now.toISOString(),
       seasonStart: seasonStart ? seasonStart.toISOString() : null,
-      confidenceGames: k,
     },
     seasons,
     provisional,
@@ -202,16 +199,16 @@ export function buildBoard(
 
 /**
  * Re-rank a committed board without re-reading anyone's stats. The current
- * season's boards go through rankPlayers again, with the K the board's own
- * launch date and builtAt give; archived seasons are untouched, and builtAt
- * is kept, since no stat was read. For a change to the rating alone — a
- * weight, CONFIDENCE_GAMES_PER_WEEK — this is what `npm run data:rerank` does
- * instead of making the API serve the whole roster again.
+ * season's boards go through rankPlayers again; archived seasons are
+ * untouched, and builtAt is kept, since no stat was read. For a change to
+ * the rating alone — a point value in the ledger, a Gauntlet weight — this is
+ * what `npm run data:rerank` does instead of making the API serve the whole
+ * roster again. A `confidenceGames` left in meta by a board built before
+ * 2026-11-09 is dropped, so the next build is not a meta-only commit.
  */
 export function rerankBoard(board: BoardFile): BoardFile {
-  const now = new Date(board.meta.builtAt);
-  const seasonStart = board.meta.seasonStart ? new Date(board.meta.seasonStart) : null;
-  const k = seasonStart ? confidenceGames(seasonStart, now) : FALLBACK_CONFIDENCE_GAMES;
+  const meta = { ...board.meta };
+  delete meta.confidenceGames;
   const seasons = { ...board.seasons };
   const provisional = { ...board.provisional };
   for (const key of new Set([...Object.keys(board.seasons), ...Object.keys(board.provisional)])) {
@@ -221,9 +218,9 @@ export function rerankBoard(board: BoardFile): BoardFile {
     const all = [...(board.seasons[key] ?? []), ...(board.provisional[key] ?? [])].sort((a, b) =>
       a.eaId.localeCompare(b.eaId),
     );
-    const split = rankPlayers(all, modeForBoard(key).key, k);
+    const split = rankPlayers(all, modeForBoard(key).key);
     seasons[key] = split.ranked;
     provisional[key] = split.provisional;
   }
-  return { ...board, meta: { ...board.meta, confidenceGames: k }, seasons, provisional };
+  return { ...board, meta, seasons, provisional };
 }

@@ -1,7 +1,7 @@
 import type { BoardFile, BoardRow, RawResponse, RosterEntry } from './types';
 import { buildBoard, toBulkPlayer } from './pipeline';
 import { rankPlayers } from './ranking';
-import { FALLBACK_CONFIDENCE_GAMES } from './rating';
+import { isLedgerMode } from './ledger';
 import { hasStatData } from './extract';
 import { pickInGameNameFor } from './naming';
 import { boardKey, compareSeasons, modeForBoard, modesForSeason } from './modes';
@@ -54,9 +54,12 @@ export type JoinResult =
       season: string;
       /** Null when they landed in the provisional section. */
       rank: number | null;
+      /** Points on a Rapid Royale board (also for a provisional player); the 0–100 rating on Gauntlet, null if provisional. */
       rating: number | null;
       matches: number;
       provisional: boolean;
+      /** True when the board ranks on the points ledger, so the form can say "points". */
+      ledger: boolean;
     }
   | { ok: false; reason: JoinFailure; message: string };
 
@@ -68,10 +71,12 @@ export type JoinResult =
  * nothing else), and every season it does not carry is left exactly as it
  * stands — archived seasons are frozen, so a signup never touches them.
  *
- * Re-ranking is not optional: rating is a percentile against the field, so
- * adding a player moves everyone else's rating a little. rankPlayers is the
- * same function the daily build uses, so a board merged here and a board
- * rebuilt from scratch agree.
+ * Re-ranking is not optional: everyone's rank and the Provisional split
+ * depend on the whole field, and on a Gauntlet board (archived, so never in
+ * practice) the rating itself is a percentile of it. On a Rapid Royale board
+ * nobody else's points move — a ledger total is the player's own sum.
+ * rankPlayers is the same function the scheduled build uses, so a board
+ * merged here and a board rebuilt from scratch agree.
  */
 export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
   const seasons: Record<string, BoardRow[]> = {};
@@ -96,9 +101,7 @@ export function mergePlayer(board: BoardFile, addition: BoardFile): BoardFile {
       ...(addition.seasons[season] ?? []),
       ...(addition.provisional[season] ?? []),
     ];
-    // The K the committed board was rated with, so a signup re-ranks everyone
-    // on the same footing as the last build did.
-    const ranked = rankPlayers(all, modeForBoard(season).key, board.meta.confidenceGames ?? FALLBACK_CONFIDENCE_GAMES);
+    const ranked = rankPlayers(all, modeForBoard(season).key);
     seasons[season] = ranked.ranked;
     provisional[season] = ranked.provisional;
   }
@@ -141,13 +144,15 @@ export function placementOf(board: BoardFile, eaId: string): {
   rating: number | null;
   matches: number;
   provisional: boolean;
+  ledger: boolean;
 } | null {
   const season = board.meta.currentSeason;
   const boards = modesForSeason(season).map((mode) => ({
     key: boardKey(season, mode),
     label: mode.variant ? `${season} ${mode.variant}` : season,
+    ledger: isLedgerMode(mode.key),
   }));
-  for (const { key, label } of boards) {
+  for (const { key, label, ledger } of boards) {
     const ranked = (board.seasons[key] ?? []).find((r) => r.eaId === eaId);
     if (ranked) {
       return {
@@ -156,12 +161,15 @@ export function placementOf(board: BoardFile, eaId: string): {
         rating: ranked.rating,
         matches: ranked.matches,
         provisional: false,
+        ledger,
       };
     }
   }
-  for (const { key, label } of boards) {
+  for (const { key, label, ledger } of boards) {
     const prov = (board.provisional[key] ?? []).find((r) => r.eaId === eaId);
-    if (prov) return { season: label, rank: null, rating: null, matches: prov.matches, provisional: true };
+    // A Provisional player's points are as real as anyone's; a Provisional
+    // Gauntlet rating is not (a percentile needs the field), so it stays null.
+    if (prov) return { season: label, rank: null, rating: ledger ? prov.rating : null, matches: prov.matches, provisional: true, ledger };
   }
   return null;
 }
@@ -311,6 +319,7 @@ export async function processJoin(
       rating: placement?.rating ?? null,
       matches: placement?.matches ?? 0,
       provisional: placement?.provisional ?? true,
+      ledger: placement?.ledger ?? false,
     };
   }
 

@@ -100,7 +100,6 @@ describe('badges', () => {
 
   it('says what the badge was for and what the figure was', () => {
     expect(badges(row({ standouts: ['kd'], kd: 5.07 }))[0].detail).toBe('Top 10% — K/D — 5.07');
-    expect(badges(row({ standouts: ['wins'], wins: 1298 }))[0].detail).toBe('Top 10% — wins — 1,298 all season');
     expect(badges(row({ standouts: ['autoPerMatch'], autoPerMatch: 21.4, autoKills: 8132 }))[0].detail)
       .toBe('Top 10% — automatic kills — 21.4 per match, 8,132 all season');
     expect(badges(row({ jetPct: 34.6 }))[0].detail)
@@ -435,20 +434,6 @@ describe('LeaderboardTable', () => {
     expect(columnDescription('timeSec', undefined, 'Time', 'gauntlet')).toBeUndefined();
     // Rated in one mode is not rated in the other.
     expect(columnDescription('objPtsPerHour', 'Objective points', 'OBJ/h', 'rapidRoyale')).toBe('Objective points');
-  });
-
-  it('says on each rating how much of it is the player\'s own', () => {
-    withViewport([], () => {
-      render(
-        <LeaderboardTable
-          mode="gauntlet"
-          confidenceGames={30}
-          rows={[row({ eaId: 'Thirty', matches: 30 }), row({ eaId: 'Ninety', matches: 90 })]}
-        />,
-      );
-      expect(screen.getByLabelText(/30 games: 50% their own rates, 50% league average/)).toBeInTheDocument();
-      expect(screen.getByLabelText(/90 games: 75% their own rates, 25% league average/)).toBeInTheDocument();
-    });
   });
 
   it('shows no match-count column — W-L already carries it', () => {

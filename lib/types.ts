@@ -173,7 +173,8 @@ export type BoardFile = {
     builtAt: string;
     /** When the current season launched, from the game events feed; null if it never said. */
     seasonStart?: string | null;
-    /** The K every rate was blended with when this board was rated — see rating.ts. */
+    /** Legacy: the K the games-blended rating used, written until 2026-11-09.
+     *  Nothing reads it; rerankBoard drops it. */
     confidenceGames?: number;
   };
   /** Keyed by board key — the season, or season-variant (Season5-solo). See

@@ -11,14 +11,7 @@ import type { BoardRow } from '@/lib/types';
 import { JET_BADGE_THRESHOLD } from '@/lib/metrics';
 import { MODES, type ModeKey } from '@/lib/modes';
 import { shownName } from '@/lib/naming';
-import {
-  RATING_WEIGHTS,
-  FALLBACK_CONFIDENCE_GAMES,
-  ownRateShare,
-  ratedMetrics,
-  type RatedMetric,
-  type StandoutTrait,
-} from '@/lib/rating';
+import { RATING_WEIGHTS, ratedMetrics, type RatedMetric, type StandoutTrait } from '@/lib/rating';
 import {
   PLACEMENT_POINTS,
   FIGHT_POINTS,
@@ -235,8 +228,6 @@ export type Badge = { id: StandoutTrait | 'jet'; icon: React.ReactNode; detail: 
 
 const TRAIT_BADGES: Record<StandoutTrait, { icon: React.ReactNode; detail: (r: BoardRow) => string }> = {
   winPct: { icon: '🏆', detail: (r) => `win rate — ${r.winPct?.toFixed(1)}%` },
-  // The count, not the rate: a medal for the wins banked over the season.
-  wins: { icon: '🏅', detail: (r) => `wins — ${fmtInt(r.wins)} all season` },
   kd: { icon: '🛡️', detail: (r) => `K/D — ${r.kd?.toFixed(2)}` },
   killsPerMatch: { icon: '💀', detail: (r) => `kills — ${r.killsPerMatch?.toFixed(1)} per match` },
   spm: { icon: '⭐', detail: (r) => `score — ${fmtInt(Math.round(r.spm ?? 0))} per minute` },
@@ -438,21 +429,11 @@ function pointsDescription(): string {
 
 const fmtSignedPoint = (v: number): string => `${v < 0 ? MINUS : '+'}${Math.abs(v)}`;
 
-function ratingDescription(mode: ModeKey, confidenceGames: number): string {
+function ratingDescription(mode: ModeKey): string {
   const parts = ratedMetrics(mode).map(
     (m) => `${RATED_LABEL[m]} ${Math.round(RATING_WEIGHTS[mode][m]! * 100)}%`,
   );
-  return (
-    `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field, ` +
-    `after blending in ${confidenceGames} games of league-average play so a rate counts for the games behind it (total wins counts as it stands). ` +
-    'Hover a rating for the split; see How the rating works.'
-  );
-}
-
-/** What a rating's tooltip says: how much of it is the player's own figures. */
-export function ownShareLabel(matches: number, confidenceGames: number): string {
-  const pct = Math.round(ownRateShare(matches, confidenceGames) * 100);
-  return `${fmtInt(matches)} games: ${pct}% their own rates, ${100 - pct}% league average`;
+  return `Overall rating out of 100: ${parts.join(', ')} — each scored against the rest of the ranked field. See How the rating works.`;
 }
 
 export function LeaderboardTable({
@@ -460,11 +441,8 @@ export function LeaderboardTable({
   mode,
   provisional = false,
   fill = false,
-  confidenceGames = FALLBACK_CONFIDENCE_GAMES,
 }: {
   rows: BoardRow[];
-  /** The K these rows were rated with (board meta), for the rating tooltip. */
-  confidenceGames?: number;
   /** The mode the season is ranked on, which decides the rated columns. */
   mode: ModeKey;
   provisional?: boolean;
@@ -597,16 +575,14 @@ export function LeaderboardTable({
           field: 'rating',
           headerName: 'Rating',
           width: isNarrow ? 88 : 96,
-          description: ratingDescription(mode, confidenceGames),
+          description: ratingDescription(mode),
           renderCell: (p) =>
-            p.row.rating === null ? (
+            p.row.rating == null ? (
               <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
             ) : (
-              <Tooltip title={ownShareLabel(p.row.matches, confidenceGames)} placement="right">
-                <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                  {p.row.rating.toFixed(1)}
-                </Box>
-              </Tooltip>
+              <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                {p.row.rating.toFixed(1)}
+              </Box>
             ),
           getSortComparator: nullsLastComparator,
         };
@@ -666,15 +642,10 @@ export function LeaderboardTable({
       // retuned weight moves its column, and a mode only shows what it rates.
       ...ratedMetrics(mode).map((m) => RATED_COLUMNS[m]),
 
-      // Everything below here is context, not rating input: volume, record and
-      // the counts the rating deliberately does not read.
-      //
-      // Plain K/D leads it where the mode rates KDA instead, kept for
-      // reference because it is the figure everyone already knows. The W–L
-      // record follows, where the mode does not rate total wins (Gauntlet);
-      // where it does, the column sits in the rated group above.
-      ...(RATING_WEIGHTS[mode].kd === undefined ? [RATED_COLUMNS.kd] : []),
-      ...(RATING_WEIGHTS[mode].wins === undefined ? [RATED_COLUMNS.wins] : []),
+      // Everything below here is context, not rating input: the W–L record,
+      // volume, and the counts the rating deliberately does not read. (K/D is
+      // rated in Gauntlet, so it already sits in the group above.)
+      RATED_COLUMNS.wins,
       {
         field: 'kills',
         headerName: 'Kills',
@@ -736,7 +707,7 @@ export function LeaderboardTable({
         description: columnDescription(c.field, c.description, c.headerName, mode),
       };
     });
-  }, [isNarrow, mode, confidenceGames]);
+  }, [isNarrow, mode]);
 
   if (rows.length === 0) {
     return (

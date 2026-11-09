@@ -239,7 +239,6 @@ export function BoardView({ board }: { board: BoardFile }) {
           rows={rows}
           mode={mode.key}
           provisional={showingProvisional}
-          confidenceGames={board.meta.confidenceGames}
           fill
         />
       </Box>

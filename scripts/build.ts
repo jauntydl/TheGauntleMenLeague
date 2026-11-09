@@ -18,7 +18,6 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { writeBoardFiles } from './write';
 import { fetchCurrentSeasonInfo, resolvePlayer, fetchBulkSkippingFailures, fetchPersonas } from '../lib/gametools';
-import { confidenceGames, weekOfSeason } from '../lib/rating';
 import { pickInGameNameFor } from '../lib/naming';
 import { buildBoard, toBulkPlayer } from '../lib/pipeline';
 import type { BoardFile, RosterEntry } from '../lib/types';
@@ -160,9 +159,9 @@ async function main() {
   const previous: BoardFile | null = existsSync('data/board.json')
     ? JSON.parse(readFileSync('data/board.json', 'utf8'))
     : null;
-  // The season's launch sets the K every rate is blended with. The feed
-  // normally carries it; failing that, the last board's — but only for the
-  // same season, or a rollover would inherit the finished season's clock.
+  // The season's launch is recorded in meta. The feed normally carries it;
+  // failing that, the last board's — but only for the same season, or a
+  // rollover would inherit the finished season's date.
   const now = new Date();
   const seasonStart =
     startsAt ??
@@ -170,11 +169,9 @@ async function main() {
       ? new Date(previous.meta.seasonStart)
       : null);
   if (seasonStart) {
-    console.log(
-      `${currentSeason} week ${weekOfSeason(seasonStart, now)}: rates blended with ${confidenceGames(seasonStart, now)} games of league-average play`,
-    );
+    console.log(`${currentSeason} launched ${seasonStart.toISOString()}`);
   } else {
-    console.warn('No launch date for the season from the feed or the last board — rating with the fallback K');
+    console.warn('No launch date for the season from the feed or the last board');
   }
   const board = buildBoard(roster, responses, currentSeason, now, previous, failed, seasonStart);
 
