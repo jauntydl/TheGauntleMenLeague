@@ -19,8 +19,22 @@ import {
   type RatedMetric,
   type StandoutTrait,
 } from '@/lib/rating';
+import {
+  PLACEMENT_POINTS,
+  FIGHT_POINTS,
+  FIGHT_FIELDS,
+  LEDGER_FIELDS,
+  isLedgerMode,
+  finishLabel,
+  pointsEach,
+  type FightEvent,
+  type LedgerMode,
+  type Medal,
+} from '@/lib/ledger';
+import { MIN_MATCHES } from '@/lib/ranking';
 
 const DASH = '—';
+const MINUS = '−';
 
 /** The Player column flexes; this is the floor it will not go below. */
 export const PLAYER_MIN_WIDTH_PX = 150;
@@ -48,10 +62,89 @@ export function columnDescription(
   headerName: string | undefined,
   mode: ModeKey,
 ): string | undefined {
+  if (isLedgerMode(mode)) return ledgerDescription(field, base, headerName, mode);
   const weight = RATING_WEIGHTS[mode][field as RatedMetric];
   if (weight === undefined) return base;
   return `${base ?? headerName} · ${Math.round(weight * 100)}% of the Rating`;
 }
+
+/** The medal a column shows, or undefined. Losses is a medal column in the ledger's sense, not the board's. */
+const medalOf = (field: string): Medal | undefined =>
+  (Object.keys(PLACEMENT_POINTS) as Medal[]).find((m) => m === field);
+const fightEventOf = (field: string): FightEvent | undefined =>
+  (Object.keys(FIGHT_FIELDS) as FightEvent[]).find((e) => FIGHT_FIELDS[e] === field);
+
+/** The rate columns a Rapid Royale board shows to read, not to rank on. */
+const REFERENCE_FIELDS: ReadonlySet<string> = new Set(['kda', 'kd', 'kpm', 'dpm', 'revivesPerHour']);
+
+/** The word behind a medal header, which is an icon. */
+const MEDAL_NAME: Record<Medal, string> = { gold: 'Gold', silver: 'Silver', bronze: 'Bronze', unplaced: 'Losses' };
+
+/**
+ * A Rapid Royale header's tooltip says what the column is worth: the medal's
+ * finishes and its points, a fight count's points, or that a rate column is
+ * reference only. Read from the ledger constants so a changed value cannot
+ * leave a tooltip quoting the old one.
+ */
+function ledgerDescription(
+  field: string,
+  base: string | undefined,
+  headerName: string | undefined,
+  mode: LedgerMode,
+): string | undefined {
+  const medal = medalOf(field);
+  if (medal) {
+    const finish = `${finishLabel(mode, medal)} · ${pointsEach(PLACEMENT_POINTS[medal])}`;
+    // The three medal headers are icons, so the word goes in the tooltip;
+    // Losses is already a word.
+    return medal === 'unplaced' ? finish : `${MEDAL_NAME[medal]} · ${finish}`;
+  }
+  const event = fightEventOf(field);
+  if (event) return pointsEach(FIGHT_POINTS[event]);
+  if (REFERENCE_FIELDS.has(field)) return `${base ?? headerName} · reference only, not part of the points`;
+  return base;
+}
+
+/**
+ * The season total as the board shows it: a whole number with thousands
+ * separators and a true minus sign. The half point an assist earns rounds
+ * away from zero for display only; the sort is on the exact value.
+ */
+export const fmtPoints = (v: number | null | undefined): string => {
+  if (v == null) return DASH;
+  const whole = Math.round(Math.abs(v));
+  return `${v < 0 && whole > 0 ? MINUS : ''}${INT.format(whole)}`;
+};
+
+const fmtSigned = (v: number): string => `${v < 0 ? MINUS : '+'}${INT.format(Math.round(Math.abs(v)))}`;
+
+/**
+ * What a Points cell says on hover: the two halves of the total and the
+ * counts behind each. Assists are left out of a Solo split, where the
+ * column is hidden too — an assist there is damage on a kill somebody else
+ * took, and the count reads 0 or 1.
+ */
+export function pointsSplitLabel(row: BoardRow, mode: LedgerMode): string {
+  const medals = `${fmtInt(row.gold)} gold · ${fmtInt(row.silver)} silver · ${fmtInt(row.bronze)} bronze · ${fmtInt(row.unplaced)} losses`;
+  const fights = [
+    `${fmtInt(row.kills)} kills`,
+    MODES[mode].squadSize > 1 ? `${fmtInt(row.assists)} assists` : null,
+    `${fmtInt(row.deaths)} deaths`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return `Placement ${fmtSigned(row.placementPts ?? 0)} (${medals}) · Fights ${fmtSigned(row.fightPts ?? 0)} (${fights})`;
+}
+
+/**
+ * The metal each medal column is set in, on the dark panel: a warm gold, a
+ * cool silver, a copper bronze. The medal table's one loud element.
+ */
+export const MEDAL_TINT: Record<Exclude<Medal, 'unplaced'>, string> = {
+  gold: '#FFD15C',
+  silver: '#C9D1D9',
+  bronze: '#D08A4E',
+};
 
 
 // Grids with 100 rows or fewer show every row without paging, so the footer
@@ -74,7 +167,9 @@ export const fmtHours = (sec: number): string => `${(sec / 3600).toFixed(1)}h`;
  * and the browser can disagree on it, and that is a hydration mismatch.
  */
 const INT = new Intl.NumberFormat('en-US');
-export const fmtInt = (v: number): string => INT.format(v);
+// `== null` for the same reason as fmtNum: a count can be absent from an
+// archived row as well as null.
+export const fmtInt = (v: number | null | undefined): string => (v == null ? DASH : INT.format(v));
 
 /**
  * lib/ranking.ts documents "nulls sort last regardless of direction" for the
@@ -198,7 +293,7 @@ export function badges(row: BoardRow): Badge[] {
  * The rated columns, keyed by the metric they show. Which of them a board
  * carries, and in what order, is the mode's weights — see the column list.
  */
-const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
+const RATED_COLUMNS: Record<string, GridColDef<BoardRow>> = {
   winPct: {
     field: 'winPct',
     headerName: 'Win %',
@@ -215,30 +310,6 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
     width: 80,
     description: 'Wins–losses this season',
     renderCell: (p) => `${p.row.wins}–${p.row.losses}`,
-  },
-  top3Pct: {
-    field: 'top3Pct',
-    headerName: 'Top 3',
-    width: 72,
-    description: 'Share of matches finished in the top three',
-    renderCell: (p) => fmtPct(p.row.top3Pct),
-    getSortComparator: nullsLastComparator,
-  },
-  top5Pct: {
-    field: 'top5Pct',
-    headerName: 'Top 5',
-    width: 72,
-    description: 'Share of matches finished in the top five',
-    renderCell: (p) => fmtPct(p.row.top5Pct),
-    getSortComparator: nullsLastComparator,
-  },
-  top10Pct: {
-    field: 'top10Pct',
-    headerName: 'Top 10',
-    width: 76,
-    description: 'Share of matches finished in the top ten',
-    renderCell: (p) => fmtPct(p.row.top10Pct),
-    getSortComparator: nullsLastComparator,
   },
   objPtsPerHour: {
     field: 'objPtsPerHour',
@@ -302,8 +373,44 @@ const RATED_COLUMNS: Record<RatedMetric, GridColDef<BoardRow>> = {
   },
 };
 
+/** A whole-number count, right-aligned by COLUMN_ALIGN where it is a kill count. */
+const countColumn = (field: keyof BoardRow, headerName: string, width = 80): GridColDef<BoardRow> => ({
+  field,
+  headerName,
+  width,
+  renderCell: (p) => fmtInt(p.row[field] as number | null),
+});
+
+/**
+ * The points ledger's columns, shared by both Rapid Royale boards: the three
+ * medals under their icons, the losses, the fight counts, and the matches
+ * that stand behind the 30-match rule. What each is worth is said in the
+ * header tooltip (ledgerDescription), not here.
+ */
+const LEDGER_COLUMNS: Record<string, GridColDef<BoardRow>> = {
+  gold: { ...countColumn('gold', '🥇', 64), cellClassName: 'medal-col medal-gold' },
+  silver: { ...countColumn('silver', '🥈', 64), cellClassName: 'medal-col medal-silver' },
+  bronze: { ...countColumn('bronze', '🥉', 64), cellClassName: 'medal-col medal-bronze' },
+  unplaced: { ...countColumn('unplaced', 'Losses', 76), cellClassName: 'losses-col' },
+  kills: countColumn('kills', 'Kills'),
+  assists: countColumn('assists', 'Assists'),
+  deaths: countColumn('deaths', 'Deaths'),
+  matches: {
+    ...countColumn('matches', 'Matches', 84),
+    description: `Matches this season · ${MIN_MATCHES} for a rank`,
+  },
+};
+
+/** A Rapid Royale board's columns, in medal-table order; the rating column is the Points total. */
+function ledgerFields(mode: LedgerMode): string[] {
+  const squad = MODES[mode].squadSize > 1;
+  const ledger = LEDGER_FIELDS.filter((f) => f !== 'assists' || squad);
+  const reference = [squad ? 'kda' : 'kd', 'kpm', 'dpm', ...(squad ? ['revivesPerHour'] : [])];
+  return [...ledger, 'rating', ...reference, 'matches'];
+}
+
 /** The Rating header's tooltip, written from the mode's weights. */
-const RATED_LABEL: Record<RatedMetric, string> = {
+const RATED_LABEL: Partial<Record<string, string>> = {
   winPct: 'win rate',
   wins: 'total wins',
   top3Pct: 'top-three rate',
@@ -317,6 +424,19 @@ const RATED_LABEL: Record<RatedMetric, string> = {
   revivesPerHour: 'revives per hour',
   dpm: 'damage per minute',
 };
+
+/** The Points header's tooltip, written from the ledger constants. */
+function pointsDescription(): string {
+  const placement = (Object.keys(PLACEMENT_POINTS) as Medal[])
+    .map((m) => `${MEDAL_NAME[m].toLowerCase().replace('losses', 'loss')} ${fmtSignedPoint(PLACEMENT_POINTS[m])}`)
+    .join(', ');
+  const fights = (Object.keys(FIGHT_POINTS) as FightEvent[])
+    .map((e) => `${e} ${fmtSignedPoint(FIGHT_POINTS[e])}`)
+    .join(', ');
+  return `Season points: ${placement}; ${fights}. Hover a total for the split; see How the rating works.`;
+}
+
+const fmtSignedPoint = (v: number): string => `${v < 0 ? MINUS : '+'}${Math.abs(v)}`;
 
 function ratingDescription(mode: ModeKey, confidenceGames: number): string {
   const parts = ratedMetrics(mode).map(
@@ -450,23 +570,55 @@ export function LeaderboardTable({
           );
         },
       },
-      {
-        field: 'rating',
-        headerName: 'Rating',
-        width: isNarrow ? 88 : 96,
-        description: ratingDescription(mode, confidenceGames),
-        renderCell: (p) =>
-          p.row.rating === null ? (
-            <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
-          ) : (
-            <Tooltip title={ownShareLabel(p.row.matches, confidenceGames)} placement="right">
-              <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                {p.row.rating.toFixed(1)}
-              </Box>
-            </Tooltip>
-          ),
-        getSortComparator: nullsLastComparator,
-      },
+    ];
+
+    // The Points total on a Rapid Royale board, the medal table's bold
+    // "Total" closing the ledger group; the 0–100 Rating on a Gauntlet one.
+    const rating: GridColDef<BoardRow> = isLedgerMode(mode)
+      ? {
+          field: 'rating',
+          headerName: 'Points',
+          width: isNarrow ? 84 : 96,
+          description: pointsDescription(),
+          cellClassName: 'points-col',
+          renderCell: (p) =>
+            p.row.rating == null ? (
+              <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
+            ) : (
+              <Tooltip title={pointsSplitLabel(p.row, mode)} placement="right">
+                <Box component="span" className="tnum" sx={{ fontWeight: 700, color: 'primary.main', fontSize: '1.05em' }}>
+                  {fmtPoints(p.row.rating)}
+                </Box>
+              </Tooltip>
+            ),
+          getSortComparator: nullsLastComparator,
+        }
+      : {
+          field: 'rating',
+          headerName: 'Rating',
+          width: isNarrow ? 88 : 96,
+          description: ratingDescription(mode, confidenceGames),
+          renderCell: (p) =>
+            p.row.rating === null ? (
+              <Box component="span" sx={{ color: 'text.secondary' }}>{DASH}</Box>
+            ) : (
+              <Tooltip title={ownShareLabel(p.row.matches, confidenceGames)} placement="right">
+                <Box component="span" className="tnum" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  {p.row.rating.toFixed(1)}
+                </Box>
+              </Tooltip>
+            ),
+          getSortComparator: nullsLastComparator,
+        };
+
+    // Olympic medal-table order on a Rapid Royale board: the medals, the
+    // losses, the fight counts, the total, then the rates kept for reference.
+    const ledgerColumns: GridColDef<BoardRow>[] = isLedgerMode(mode)
+      ? ledgerFields(mode).map((f) => (f === 'rating' ? rating : (LEDGER_COLUMNS[f] ?? RATED_COLUMNS[f])))
+      : [];
+
+    const gauntletColumns: GridColDef<BoardRow>[] = isLedgerMode(mode) ? [] : [
+      rating,
       {
         field: 'sniperPct',
         headerName: 'Badges',
@@ -563,17 +715,24 @@ export function LeaderboardTable({
 
     // Alignment applied in one place rather than on fifteen definitions.
     // headerClassName and description land after the spread so a column
-    // cannot opt out of being marked as rated by setting its own.
-    return base.map((c) => {
-      const rated = RATING_WEIGHTS[mode][c.field as RatedMetric] !== undefined;
+    // cannot opt out of being marked as rated by setting its own. On a
+    // Rapid Royale board the lit set is the ledger — every column that
+    // carries a point value — and the total they make.
+    return [...base, ...ledgerColumns, ...gauntletColumns].map((c) => {
+      const lit = isLedgerMode(mode)
+        ? LEDGER_FIELDS.includes(c.field) || c.field === 'rating'
+        : RATING_WEIGHTS[mode][c.field as RatedMetric] !== undefined;
+      const medal = isLedgerMode(mode) ? medalOf(c.field) : undefined;
+      const pinned = isNarrow && PINNED_LEFT[c.field] !== undefined;
       return {
         align: COLUMN_ALIGN[c.field] ?? 'center',
         headerAlign: COLUMN_ALIGN[c.field] ?? 'center',
         ...c,
-        headerClassName: [rated && 'rated-col', isNarrow && PINNED_LEFT[c.field] !== undefined && 'pinned-col']
-          .filter(Boolean)
-          .join(' ') || undefined,
-        cellClassName: isNarrow && PINNED_LEFT[c.field] !== undefined ? 'pinned-col' : undefined,
+        headerClassName:
+          [lit && 'rated-col', medal && medal !== 'unplaced' && `medal-col medal-${medal}`, pinned && 'pinned-col']
+            .filter(Boolean)
+            .join(' ') || undefined,
+        cellClassName: [c.cellClassName, pinned && 'pinned-col'].filter(Boolean).join(' ') || undefined,
         description: columnDescription(c.field, c.description, c.headerName, mode),
       };
     });
@@ -648,6 +807,20 @@ export function LeaderboardTable({
           color: 'primary.main',
           fontWeight: 700,
         },
+        // The medal table's one loud element: each medal column is set in
+        // its metal, header rule and counts alike, so the eye reads gold,
+        // silver, bronze before it reads a single number. Losses stay quiet.
+        ...Object.fromEntries(
+          (Object.keys(MEDAL_TINT) as (keyof typeof MEDAL_TINT)[]).flatMap((m) => [
+            [
+              `& .MuiDataGrid-columnHeader.medal-${m}`,
+              { boxShadow: `inset 0 -2px 0 ${alpha(MEDAL_TINT[m], 0.9)}`, bgcolor: alpha(MEDAL_TINT[m], 0.08) },
+            ],
+            [`& .MuiDataGrid-columnHeader.medal-${m} .MuiDataGrid-columnHeaderTitle`, { fontSize: '1.15rem', lineHeight: 1 }],
+            [`& .MuiDataGrid-cell.medal-${m}`, { color: MEDAL_TINT[m], fontWeight: 600, bgcolor: alpha(MEDAL_TINT[m], 0.04) }],
+          ]),
+        ),
+        '& .MuiDataGrid-cell.losses-col': { color: 'text.secondary' },
         // A scanning highlight rather than a card hover: the row lights up
         // along its leading edge, like a selected line on an instrument panel.
         '& .MuiDataGrid-row:hover': {

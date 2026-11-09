@@ -7,11 +7,14 @@ import {
   fmtNum,
   fmtHours,
   fmtInt,
+  fmtPoints,
   badges,
   columnDescription,
 } from './LeaderboardTable';
 import type { BoardRow } from '@/lib/types';
 import { RATING_WEIGHTS, STANDOUT_TRAITS, type RatedMetric } from '@/lib/rating';
+import { LEDGER_FIELDS } from '@/lib/ledger';
+import { MIN_MATCHES } from '@/lib/ranking';
 
 const row = (over: Partial<BoardRow>): BoardRow => {
   const base: BoardRow = {
@@ -28,6 +31,17 @@ const row = (over: Partial<BoardRow>): BoardRow => {
 };
 
 describe('formatters', () => {
+  it('formats points', () => {
+    // A whole number with thousands separators and a true minus sign; the
+    // half point an assist earns rounds away from zero for display only.
+    expect(fmtPoints(2653.5)).toBe('2,654');
+    expect(fmtPoints(-1188)).toBe('−1,188');
+    expect(fmtPoints(-2.5)).toBe('−3');
+    expect(fmtPoints(0)).toBe('0');
+    expect(fmtPoints(null)).toBe('—');
+    expect(fmtPoints(undefined)).toBe('—');
+  });
+
   it('formats percentages to one decimal', () => {
     expect(fmtPct(77.7777)).toBe('77.8%');
   });
@@ -244,42 +258,142 @@ describe('LeaderboardTable', () => {
       (el) => el.getAttribute('data-field') as RatedMetric,
     );
 
-  it.each(MODE_KEYS)('marks exactly the rated columns in the header, and no others (%s)', (mode) => {
+  it('marks exactly the rated columns in the header, and no others (gauntlet)', () => {
     // Derived from RATING_WEIGHTS on both sides, so this cannot be satisfied
     // by a hand-kept list drifting alongside the weights. It asserts the set
     // is exact: a context column picking up the marking would claim to feed
     // the rating when it does not.
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Marked' })]} />);
-      expect(new Set(markedFields(container))).toEqual(new Set(Object.keys(RATING_WEIGHTS[mode])));
+      const { container } = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Marked' })]} />);
+      expect(new Set(markedFields(container))).toEqual(new Set(Object.keys(RATING_WEIGHTS.gauntlet)));
     });
   });
 
-  it.each(MODE_KEYS)('orders the rated columns by weight, heaviest first (%s)', (mode) => {
-    // The legend promises "heaviest first". This is what makes that true.
+  it('orders the rated columns by weight, heaviest first (gauntlet)', () => {
     withViewport([], () => {
-      const { container } = render(<LeaderboardTable mode={mode} rows={[row({ displayName: 'Ordered' })]} />);
+      const { container } = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'Ordered' })]} />);
       const marked = markedFields(container);
-      const w = RATING_WEIGHTS[mode];
+      const w = RATING_WEIGHTS.gauntlet;
       expect(marked).toEqual([...marked].sort((a, b) => w[b]! - w[a]!));
     });
   });
 
-  it('shows each mode only the columns it rates', () => {
+  it('shows Gauntlet its rated columns and none of Rapid Royale\'s', () => {
     withViewport([], () => {
-      const g = render(<LeaderboardTable mode="gauntlet" rows={[row({ displayName: 'G' })]} />);
-      const gFields = [...g.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
-      expect(gFields).toContain('objPtsPerHour');
-      expect(gFields).not.toContain('top3Pct');
-      g.unmount();
-      const r = render(<LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'R' })]} />);
-      const rFields = [...r.container.querySelectorAll('.MuiDataGrid-columnHeader')].map((el) => el.getAttribute('data-field'));
-      expect(rFields).toEqual(expect.arrayContaining(['top3Pct', 'kda', 'kd']));
-      expect(rFields).not.toContain('objSpm');
-      expect(rFields).not.toContain('apm');
-      // KDA is rated; K/D stays, unmarked, for reference.
-      expect(markedFields(r.container)).not.toContain('kd');
-      expect(rFields).not.toContain('objPtsPerHour');
+      const fields = fieldsOf('gauntlet');
+      expect(fields).toContain('objPtsPerHour');
+      expect(fields).not.toContain('top3Pct');
+      expect(fields).not.toContain('gold');
+      expect(fields).not.toContain('kda');
+    });
+  });
+
+  // Olympic medal-table order: rank, name, the medals, then the rest of the
+  // ledger, and the total closing the group; the reference columns after.
+  const LEDGER_ORDER = {
+    rapidRoyale: ['rank', 'eaId', 'gold', 'silver', 'bronze', 'unplaced', 'kills', 'assists', 'deaths', 'rating', 'kda', 'kpm', 'dpm', 'revivesPerHour', 'matches'],
+    rapidRoyaleSolo: ['rank', 'eaId', 'gold', 'silver', 'bronze', 'unplaced', 'kills', 'deaths', 'rating', 'kd', 'kpm', 'dpm', 'matches'],
+  } as const;
+
+  it.each(['rapidRoyale', 'rapidRoyaleSolo'] as const)('shows a Rapid Royale board the ledger, then the reference columns (%s)', (mode) => {
+    withViewport([], () => expect(fieldsOf(mode)).toEqual([...LEDGER_ORDER[mode]]));
+  });
+
+  it('lights exactly the columns that carry a point value, and the total', () => {
+    withViewport([], () => {
+      const { container } = render(<LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'Lit' })]} />);
+      expect(markedFields(container)).toEqual([...LEDGER_FIELDS, 'rating']);
+    });
+  });
+
+  it('heads the medal columns with the medals and tints their counts', () => {
+    withViewport([], () => {
+      const { container } = render(
+        <LeaderboardTable mode="rapidRoyale" rows={[row({ displayName: 'Medals', gold: 20, silver: 7, bronze: 3, unplaced: 4 })]} />,
+      );
+      const header = (f: string) => container.querySelector(`.MuiDataGrid-columnHeader[data-field="${f}"]`)!.textContent;
+      expect([header('gold'), header('silver'), header('bronze')]).toEqual(['🥇', '🥈', '🥉']);
+      // jsdom lays out nothing and resolves no stylesheet, so the tint is
+      // asserted by class, as the pinned columns are.
+      const cell = (f: string) => container.querySelector(`.MuiDataGrid-cell[data-field="${f}"]`)!;
+      expect(cell('gold').className).toContain('medal-gold');
+      expect(cell('silver').className).toContain('medal-silver');
+      expect(cell('bronze').className).toContain('medal-bronze');
+      expect(cell('unplaced').className).not.toContain('medal-');
+      expect(cell('gold').textContent).toBe('20');
+      expect(screen.getByText('Losses')).toBeInTheDocument();
+    });
+  });
+
+  it('says what each ledger column is worth, by mode', () => {
+    // Through columnDescription, as the weight-tooltip test does: jsdom never
+    // opens a tooltip, and the description is what the header shows.
+    expect(columnDescription('gold', undefined, '🥇', 'rapidRoyale')).toBe('Gold · 1st place · +15 each');
+    expect(columnDescription('silver', undefined, '🥈', 'rapidRoyale')).toBe('Silver · 2nd–3rd place · +10 each');
+    expect(columnDescription('silver', undefined, '🥈', 'rapidRoyaleSolo')).toBe('Silver · 2nd–5th place · +10 each');
+    expect(columnDescription('unplaced', undefined, 'Losses', 'rapidRoyaleSolo')).toBe('11th or worse · −5 each');
+    expect(columnDescription('assists', undefined, 'Assists', 'rapidRoyale')).toBe('+0.5 each');
+    expect(columnDescription('deaths', undefined, 'Deaths', 'rapidRoyale')).toBe('−1 each');
+    expect(columnDescription('kpm', 'Kills per minute', 'KPM', 'rapidRoyale')).toBe('Kills per minute · reference only, not part of the points');
+    expect(columnDescription('matches', `Matches this season · ${MIN_MATCHES} for a rank`, 'Matches', 'rapidRoyale')).toBe(
+      `Matches this season · ${MIN_MATCHES} for a rank`,
+    );
+  });
+
+  it('shows the split on hover', () => {
+    withViewport([], () => {
+      render(
+        <LeaderboardTable
+          mode="rapidRoyale"
+          rows={[row({ eaId: 'Split', gold: 20, silver: 20, bronze: 15, unplaced: 45, kills: 300, assists: 100, deaths: 200, placementPts: 350, fightPts: 150, rating: 500 })]}
+        />,
+      );
+      expect(
+        screen.getByLabelText('Placement +350 (20 gold · 20 silver · 15 bronze · 45 losses) · Fights +150 (300 kills · 100 assists · 200 deaths)'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('500')).toBeInTheDocument();
+    });
+  });
+
+  it('leaves assists out of a Solo split', () => {
+    withViewport([], () => {
+      render(
+        <LeaderboardTable
+          mode="rapidRoyaleSolo"
+          rows={[row({ eaId: 'Solo', gold: 4, silver: 9, bronze: 16, unplaced: 11, kills: 120, assists: 1, deaths: 36, placementPts: 175, fightPts: 84.5, rating: 259.5 })]}
+        />,
+      );
+      expect(screen.getByLabelText('Placement +175 (4 gold · 9 silver · 16 bronze · 11 losses) · Fights +85 (120 kills · 36 deaths)')).toBeInTheDocument();
+    });
+  });
+
+  it('renders a dash for null points and medals', () => {
+    withViewport([], () => {
+      const { container } = render(
+        <LeaderboardTable mode="rapidRoyale" rows={[row({ eaId: 'Broken', rating: null, gold: null, silver: null, bronze: null, unplaced: null })]} />,
+      );
+      const text = (f: string) => container.querySelector(`.MuiDataGrid-cell[data-field="${f}"]`)!.textContent;
+      expect([text('rating'), text('gold'), text('unplaced')]).toEqual(['—', '—', '—']);
+    });
+  });
+
+  it('shows a Provisional Rapid Royale player\'s points', () => {
+    withViewport([], () => {
+      const { container } = render(
+        <LeaderboardTable mode="rapidRoyale" provisional rows={[row({ eaId: 'Below', rank: null, rating: -240, gold: 0, silver: 2, bronze: 3, unplaced: 45 })]} />,
+      );
+      expect(screen.getByText('−240')).toBeInTheDocument();
+      expect(container.querySelector('.MuiDataGrid-cell[data-field="rank"]')!.textContent).toBe('—');
+    });
+  });
+
+  it('renders an archived Gauntlet row that predates the ledger fields', () => {
+    const archived = { ...row({ eaId: 'Old', rating: 61.4, standouts: ['kd'] }) } as Record<string, unknown>;
+    for (const k of ['top3', 'top5', 'top10', 'gold', 'silver', 'bronze', 'unplaced', 'placementPts', 'fightPts']) delete archived[k];
+    withViewport([], () => {
+      render(<LeaderboardTable mode="gauntlet" rows={[archived as unknown as BoardRow]} />);
+      expect(screen.getByText('61.4')).toBeInTheDocument();
+      expect(screen.getByText('🛡️')).toBeInTheDocument();
     });
   });
 
@@ -290,27 +404,6 @@ describe('LeaderboardTable', () => {
     return fields;
   };
 
-  it('shows Solo its placement ladder — Top 5 and Top 10, and no Top 3', () => {
-    withViewport([], () => {
-      const fields = fieldsOf('rapidRoyaleSolo');
-      expect(fields).toEqual(expect.arrayContaining(['top5Pct', 'top10Pct']));
-      expect(fields).not.toContain('top3Pct');
-      // Trio is unchanged: top three, and neither of the wider rungs.
-      const trio = fieldsOf('rapidRoyale');
-      expect(trio).toContain('top3Pct');
-      expect(trio).not.toContain('top5Pct');
-      expect(trio).not.toContain('top10Pct');
-    });
-  });
-
-  it('labels the Solo placement columns', () => {
-    withViewport([], () => {
-      render(<LeaderboardTable mode="rapidRoyaleSolo" rows={[row({ displayName: 'Labels' })]} />);
-      expect(screen.getByText('Top 5')).toBeInTheDocument();
-      expect(screen.getByText('Top 10')).toBeInTheDocument();
-    });
-  });
-
   it('shows no Assists column on Solo, where nobody has a kill to assist', () => {
     withViewport([], () => {
       expect(fieldsOf('rapidRoyaleSolo')).not.toContain('assists');
@@ -320,17 +413,15 @@ describe('LeaderboardTable', () => {
     });
   });
 
-  it('gives every rated column a tooltip naming its weight', () => {
+  it('gives every rated Gauntlet column a tooltip naming its weight', () => {
     // The accent marks these columns as special; the tooltip says why, and
     // how much. Both sides read RATING_WEIGHTS, so a retuned weight cannot
     // leave a tooltip quoting the old one.
     //
     // Asserted on the description rather than by hovering: MUI opens the
     // tooltip on a real pointer, and jsdom never opens it.
-    for (const mode of MODE_KEYS) {
-      for (const [m, w] of Object.entries(RATING_WEIGHTS[mode])) {
-        expect(columnDescription(m, undefined, 'Header', mode)).toContain(`${Math.round(w * 100)}% of the Rating`);
-      }
+    for (const [m, w] of Object.entries(RATING_WEIGHTS.gauntlet)) {
+      expect(columnDescription(m, undefined, 'Header', 'gauntlet')).toContain(`${Math.round(w * 100)}% of the Rating`);
     }
   });
 
