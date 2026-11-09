@@ -109,7 +109,17 @@ export const fmtPoints = (v: number | null | undefined): string => {
   return `${v < 0 && whole > 0 ? MINUS : ''}${INT.format(whole)}`;
 };
 
-const fmtSigned = (v: number): string => `${v < 0 ? MINUS : '+'}${INT.format(Math.round(Math.abs(v)))}`;
+/**
+ * A signed half of the total, exact: the cell rounds its total for display,
+ * but a split that rounded each half on its own could read +100 and −51
+ * against a cell that says 50. Keeping the half point (an odd assist count)
+ * means the two halves always add up to the exact total.
+ */
+const HALF = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtSigned = (v: number): string => {
+  const abs = Math.abs(v);
+  return `${v < 0 ? MINUS : '+'}${Number.isInteger(abs) ? INT.format(abs) : HALF.format(abs)}`;
+};
 
 /**
  * What a Points cell says on hover: the two halves of the total and the

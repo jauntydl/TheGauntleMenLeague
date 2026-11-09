@@ -4,6 +4,7 @@ import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
@@ -60,84 +61,90 @@ const rr = MODE_ACCENT.rapidRoyale;
 
 function PlacementTable() {
   return (
-    <Table size="small" sx={{ mb: 3 }} aria-label="Rapid Royale placement points">
-      <TableHead>
-        <TableRow>
-          <TableCell>Result</TableCell>
-          <TableCell>Trio finish</TableCell>
-          <TableCell>Solo finish</TableCell>
-          <TableCell align="right">Points</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {(Object.keys(PLACEMENT_POINTS) as Medal[]).map((m) => (
-          <TableRow key={m}>
-            <TableCell sx={{ whiteSpace: 'nowrap' }}>
-              {MEDAL_ICON[m] && (
-                <Box component="span" aria-hidden sx={{ mr: 0.75 }}>
-                  {MEDAL_ICON[m]}
-                </Box>
-              )}
-              {MEDAL_LABEL[m]}
-            </TableCell>
-            <TableCell sx={{ whiteSpace: 'nowrap' }}>{finishLabel('rapidRoyale', m)}</TableCell>
-            <TableCell sx={{ whiteSpace: 'nowrap' }}>{finishLabel('rapidRoyaleSolo', m)}</TableCell>
-            <TableCell align="right" className="tnum" sx={{ color: rr, fontWeight: 600 }}>
-              {signed(PLACEMENT_POINTS[m])}
-            </TableCell>
+    <TableContainer sx={{ mb: 3 }}>
+      <Table size="small" aria-label="Rapid Royale placement points">
+        <TableHead>
+          <TableRow>
+            <TableCell>Result</TableCell>
+            <TableCell>Trio finish</TableCell>
+            <TableCell>Solo finish</TableCell>
+            <TableCell align="right">Points</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {(Object.keys(PLACEMENT_POINTS) as Medal[]).map((m) => (
+            <TableRow key={m}>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {MEDAL_ICON[m] && (
+                  <Box component="span" aria-hidden sx={{ mr: 0.75 }}>
+                    {MEDAL_ICON[m]}
+                  </Box>
+                )}
+                {MEDAL_LABEL[m]}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>{finishLabel('rapidRoyale', m)}</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>{finishLabel('rapidRoyaleSolo', m)}</TableCell>
+              <TableCell align="right" className="tnum" sx={{ color: rr, fontWeight: 600 }}>
+                {signed(PLACEMENT_POINTS[m])}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
 function FightTable() {
   return (
-    <Table size="small" sx={{ mb: 3, maxWidth: 320 }} aria-label="Rapid Royale fight points">
-      <TableHead>
-        <TableRow>
-          <TableCell>Each</TableCell>
-          <TableCell align="right">Points</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {(Object.keys(FIGHT_POINTS) as FightEvent[]).map((e) => (
-          <TableRow key={e}>
-            <TableCell>{FIGHT_LABEL[e]}</TableCell>
-            <TableCell align="right" className="tnum" sx={{ color: rr, fontWeight: 600 }}>
-              {signed(FIGHT_POINTS[e])}
-            </TableCell>
+    <TableContainer sx={{ mb: 3 }}>
+      <Table size="small" sx={{ maxWidth: 320 }} aria-label="Rapid Royale fight points">
+        <TableHead>
+          <TableRow>
+            <TableCell>Each</TableCell>
+            <TableCell align="right">Points</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {(Object.keys(FIGHT_POINTS) as FightEvent[]).map((e) => (
+            <TableRow key={e}>
+              <TableCell>{FIGHT_LABEL[e]}</TableCell>
+              <TableCell align="right" className="tnum" sx={{ color: rr, fontWeight: 600 }}>
+                {signed(FIGHT_POINTS[e])}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
 function GauntletWeightTable() {
   const weights = RATING_WEIGHTS.gauntlet;
   return (
-    <Table size="small" sx={{ mb: 3 }} aria-label="Gauntlet weights">
-      <TableHead>
-        <TableRow>
-          <TableCell>Counts for</TableCell>
-          <TableCell>What</TableCell>
-          <TableCell>Why</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {ratedMetrics('gauntlet').map((m) => (
-          <TableRow key={m}>
-            <TableCell className="tnum" sx={{ whiteSpace: 'nowrap', color: MODE_ACCENT.gauntlet }}>
-              {Math.round(weights[m]! * 100)}%
-            </TableCell>
-            <TableCell sx={{ whiteSpace: 'nowrap' }}>{REASONS[m]?.label ?? m}</TableCell>
-            <TableCell sx={{ color: 'text.secondary' }}>{REASONS[m]?.why}</TableCell>
+    <TableContainer sx={{ mb: 3 }}>
+      <Table size="small" aria-label="Gauntlet weights">
+        <TableHead>
+          <TableRow>
+            <TableCell>Counts for</TableCell>
+            <TableCell>What</TableCell>
+            <TableCell>Why</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {ratedMetrics('gauntlet').map((m) => (
+            <TableRow key={m}>
+              <TableCell className="tnum" sx={{ whiteSpace: 'nowrap', color: MODE_ACCENT.gauntlet }}>
+                {Math.round(weights[m]! * 100)}%
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>{REASONS[m]?.label ?? m}</TableCell>
+              <TableCell sx={{ color: 'text.secondary' }}>{REASONS[m]?.why}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 

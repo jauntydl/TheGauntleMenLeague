@@ -354,7 +354,7 @@ describe('LeaderboardTable', () => {
     });
   });
 
-  it('leaves assists out of a Solo split', () => {
+  it('leaves assists out of a Solo split, and keeps the half point so the halves add up', () => {
     withViewport([], () => {
       render(
         <LeaderboardTable
@@ -362,7 +362,22 @@ describe('LeaderboardTable', () => {
           rows={[row({ eaId: 'Solo', gold: 4, silver: 9, bronze: 16, unplaced: 11, kills: 120, assists: 1, deaths: 36, placementPts: 175, fightPts: 84.5, rating: 259.5 })]}
         />,
       );
-      expect(screen.getByLabelText('Placement +175 (4 gold · 9 silver · 16 bronze · 11 losses) · Fights +85 (120 kills · 36 deaths)')).toBeInTheDocument();
+      // The cell rounds (260); the split shows the exact halves, so a reader
+      // who adds them lands on the same total, not one off.
+      expect(screen.getByLabelText('Placement +175 (4 gold · 9 silver · 16 bronze · 11 losses) · Fights +84.5 (120 kills · 36 deaths)')).toBeInTheDocument();
+      expect(screen.getByText('260')).toBeInTheDocument();
+    });
+  });
+
+  it('shows a negative half in the split exactly', () => {
+    withViewport([], () => {
+      render(
+        <LeaderboardTable
+          mode="rapidRoyale"
+          rows={[row({ eaId: 'Half', gold: 10, silver: 0, bronze: 0, unplaced: 10, kills: 40, assists: 1, deaths: 91, placementPts: 100, fightPts: -50.5, rating: 49.5 })]}
+        />,
+      );
+      expect(screen.getByLabelText(/Fights −50\.5 \(40 kills · 1 assists · 91 deaths\)/)).toBeInTheDocument();
     });
   });
 

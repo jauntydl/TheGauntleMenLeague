@@ -28,10 +28,10 @@ the board from GitHub" below), so a data commit no longer redeploys anything.
   `git@github.com:` URL pushes as the wrong identity.
 - Design spec: `docs/superpowers/specs/2026-09-12-gauntlet-leaderboard-design.md`
 
-Current state (2026-11-09): 147 roster members · Season 5 Trio has 63
-ranked, 30 provisional; Solo has 10 ranked, 59 provisional (on the points
-ledger — see below); 3 unresolved · Seasons 3–4 archived, Season 2 dropped ·
-372 tests passing · `tsc --noEmit` clean.
+Current state (2026-11-09, data of 09:58 UTC): 147 roster members · Season 5
+Trio has 65 ranked, 29 provisional; Solo has 10 ranked, 60 provisional (on
+the points ledger — see below); 3 unresolved · Seasons 3–4 archived, Season 2
+dropped · 374 tests passing · `tsc --noEmit` clean.
 
 ---
 

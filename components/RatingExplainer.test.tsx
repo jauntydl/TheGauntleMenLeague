@@ -22,6 +22,14 @@ describe('RatingExplainer', () => {
     expect(rowFor('Loss')).toHaveTextContent('−5');
   });
 
+  it('lets the point tables scroll inside themselves on a narrow screen', () => {
+    // Four nowrap columns outrun a phone; the table, not the page, must scroll.
+    render(<RatingExplainer />);
+    for (const name of ['Rapid Royale placement points', 'Rapid Royale fight points', 'Gauntlet weights']) {
+      expect(screen.getByRole('table', { name }).closest('.MuiTableContainer-root')).not.toBeNull();
+    }
+  });
+
   it('shows the fight points from the constants', () => {
     render(<RatingExplainer />);
     const t = screen.getByRole('table', { name: 'Rapid Royale fight points' });
