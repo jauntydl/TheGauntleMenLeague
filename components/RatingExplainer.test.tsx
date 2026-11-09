@@ -5,63 +5,66 @@ import { RATING_WEIGHTS } from '@/lib/rating';
 import { MIN_MATCHES } from '@/lib/ranking';
 
 describe('RatingExplainer', () => {
-  it('lists every weighted metric of every mode, so none can be silently unexplained', () => {
+  it("shows the placement points and both modes' rungs from the constants", () => {
     render(<RatingExplainer />);
-    for (const [mode, label] of [
-      ['gauntlet', 'Gauntlet'],
-      ['rapidRoyale', 'Rapid Royale Trio'],
-      ['rapidRoyaleSolo', 'Rapid Royale Solo'],
-    ] as const) {
-      const table = screen.getByRole('table', { name: `${label} weights` });
-      expect(table.querySelectorAll('tbody tr')).toHaveLength(Object.keys(RATING_WEIGHTS[mode]).length);
-    }
+    const t = screen.getByRole('table', { name: 'Rapid Royale placement points' });
+    const rowFor = (label: string) => within(t).getByText(label).closest('tr')!;
+    expect(rowFor('Gold')).toHaveTextContent('1st place');
+    expect(rowFor('Gold')).toHaveTextContent('+15');
+    expect(rowFor('Silver')).toHaveTextContent('2nd–3rd place');
+    expect(rowFor('Silver')).toHaveTextContent('2nd–5th place');
+    expect(rowFor('Silver')).toHaveTextContent('+10');
+    expect(rowFor('Bronze')).toHaveTextContent('4th–5th place');
+    expect(rowFor('Bronze')).toHaveTextContent('6th–10th place');
+    expect(rowFor('Bronze')).toHaveTextContent('+5');
+    expect(rowFor('Loss')).toHaveTextContent('6th or worse');
+    expect(rowFor('Loss')).toHaveTextContent('11th or worse');
+    expect(rowFor('Loss')).toHaveTextContent('−5');
   });
 
-  it('shows the weights the code actually uses, against the right metric', () => {
-    // Read from RATING_WEIGHTS rather than repeated in prose: retuning a
-    // weight must not leave the page quietly lying about it. Pinned per row —
-    // win rate and objective work are both 25%, so merely finding the text
-    // somewhere on the page would no longer prove either row is right.
+  it('shows the fight points from the constants', () => {
     render(<RatingExplainer />);
-    const rowFor = (table: string, label: string) =>
-      within(screen.getByRole('table', { name: `${table} weights` })).getByText(label).closest('tr');
-    expect(rowFor('Gauntlet', 'Win rate')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.gauntlet.winPct! * 100)}%`,
-    );
-    expect(rowFor('Gauntlet', 'Objective points per hour')).toHaveTextContent(
+    const t = screen.getByRole('table', { name: 'Rapid Royale fight points' });
+    expect(within(t).getByText('Kill').closest('tr')).toHaveTextContent('+1');
+    expect(within(t).getByText('Assist').closest('tr')).toHaveTextContent('+0.5');
+    expect(within(t).getByText('Death').closest('tr')).toHaveTextContent('−1');
+  });
+
+  it("says the total is a plain sum that only the player's own games move", () => {
+    render(<RatingExplainer />);
+    expect(screen.getAllByText(/season total/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/only when you play/i)).toBeInTheDocument();
+    // The blend is gone with the rates it blended.
+    expect(screen.queryByText(/league-average/i)).toBeNull();
+    expect(screen.queryByText(/games ÷/)).toBeNull();
+  });
+
+  it('names the reference columns as not part of the points', () => {
+    render(<RatingExplainer />);
+    const reference = screen.getByText(/reference only/i).closest('p')!;
+    expect(reference).toHaveTextContent(/kills per minute/i);
+    expect(reference).toHaveTextContent(/damage per minute/i);
+    expect(reference).toHaveTextContent(/revives/i);
+  });
+
+  it('states who is ranked: the match floor and a total above zero', () => {
+    render(<RatingExplainer />);
+    const rule = screen.getByText(/a total above zero/i);
+    expect(rule).toHaveTextContent(new RegExp(`${MIN_MATCHES} matches`));
+    expect(rule).toHaveTextContent(/Provisional/);
+  });
+
+  it('keeps the Gauntlet weights for the archive, and no Rapid Royale weights', () => {
+    render(<RatingExplainer />);
+    const table = screen.getByRole('table', { name: 'Gauntlet weights' });
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(Object.keys(RATING_WEIGHTS.gauntlet).length);
+    const rowFor = (label: string) => within(table).getByText(label).closest('tr');
+    expect(rowFor('Win rate')).toHaveTextContent(`${Math.round(RATING_WEIGHTS.gauntlet.winPct! * 100)}%`);
+    expect(rowFor('Objective points per hour')).toHaveTextContent(
       `${Math.round(RATING_WEIGHTS.gauntlet.objPtsPerHour! * 100)}%`,
     );
-    expect(rowFor('Rapid Royale Trio', 'Win rate')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyale.winPct! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Trio', 'KDA')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyale.kda! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Solo', 'Kills per minute')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.kpm! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Solo', 'Top-five rate')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.top5Pct! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Solo', 'Top-ten rate')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.top10Pct! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Trio', 'Total wins')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyale.wins! * 100)}%`,
-    );
-    expect(rowFor('Rapid Royale Solo', 'Total wins')).toHaveTextContent(
-      `${Math.round(RATING_WEIGHTS.rapidRoyaleSolo.wins! * 100)}%`,
-    );
-  });
-
-  it('names total wins as the one count in the rating, and says why', () => {
-    render(<RatingExplainer />);
-    expect(screen.getByText(/only figure on the board that playing cannot lower/i)).toBeInTheDocument();
-  });
-
-  it('explains Solo\'s placement ladder beside Trio\'s top three', () => {
-    render(<RatingExplainer />);
-    expect(screen.getByText(/top ten/i)).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Rapid Royale Trio weights' })).toBeNull();
+    expect(screen.queryByRole('table', { name: 'Rapid Royale Solo weights' })).toBeNull();
   });
 
   it('credits the objective formula to its author and states it in full', () => {
@@ -69,28 +72,6 @@ describe('RatingExplainer', () => {
     expect(screen.getAllByText(/Kricked/).length).toBeGreaterThan(0);
     expect(screen.getByText(/0\.1 per second on the objective/)).toBeInTheDocument();
     expect(screen.getByText(/elimination format and match length varies/)).toBeInTheDocument();
-  });
-
-  it('states the match floor from the constant', () => {
-    render(<RatingExplainer />);
-    expect(screen.getByText(new RegExp(`${MIN_MATCHES} matches`))).toBeInTheDocument();
-  });
-
-  it('explains that a rate counts for the games behind it, from the day of the season', () => {
-    render(<RatingExplainer confidenceGames={30} weekOfSeason={3} />);
-    expect(screen.getAllByText(/10 games a week/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/week 3/).length).toBeGreaterThan(0);
-  });
-
-  it('warns that a rating moves when other people play', () => {
-    render(<RatingExplainer />);
-    expect(screen.getByText(/can move when other people/i)).toBeInTheDocument();
-  });
-
-  it('explains what is deliberately excluded', () => {
-    render(<RatingExplainer />);
-    expect(screen.getByText(/headshot rate/i)).toBeInTheDocument();
-    expect(screen.getByText(/finishing position/i)).toBeInTheDocument();
   });
 
   it('links back to the board', () => {
