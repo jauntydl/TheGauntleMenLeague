@@ -13,5 +13,15 @@
     "eaId": "kathemkh9",
     "displayName": "Kathem",
     "reason": "no_data"
+  },
+  {
+    "eaId": "Exclusiive_9",
+    "displayName": "Exclusiive_9",
+    "reason": "fetch_failed"
+  },
+  {
+    "eaId": "dirtymcrae",
+    "displayName": "dirtymcrae",
+    "reason": "fetch_failed"
   }
 ]
